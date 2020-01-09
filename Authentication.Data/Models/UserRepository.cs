@@ -16,9 +16,9 @@ namespace Authentication.Data.Models
             _context = context;
         }
 
-        public IEnumerable<UserEntity> GetAllUsers()
+        public async Task<IEnumerable<UserEntity>> GetAllUsers()
         {
-            return _context.Users.ToList();
+            return await _context.Users.ToListAsync();
         }
 
 
@@ -32,19 +32,17 @@ namespace Authentication.Data.Models
             return await _context.Users.FirstOrDefaultAsync(x => x.Id == id, token);
         }
 
-        public UserEntity GetUserByName(string userName)
+        public async Task<UserEntity> GetUserByName(string userName, CancellationToken token)
         {
-            var user = _context.Users.SingleOrDefault(obj => obj.Login == userName);
+            var user = await _context.Users.SingleOrDefaultAsync(obj => obj.Login == userName, token);
             return user;
         }
 
-        public UserEntity CreateUser(UserEntity user)
+
+        public async Task<UserEntity> CreateUser(UserEntity user, CancellationToken token)
         {
-            if (!_context.Users.Any())
-            {
-                var newUser = new UserEntity()
+            var newUser = new UserEntity()
                 {
-                    Id = 1,
                     Created = DateTime.Today,
                     IsActive = true,
                     Login = user.Login,
@@ -53,38 +51,20 @@ namespace Authentication.Data.Models
                 };
 
                 _context.Users.Add(newUser);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync(token);
 
                 return newUser;
-            }
-            else
-            {
-                var newUser = new UserEntity()
-                {
-                    Id = _context.Users.Max(x => x.Id) + 1,
-                    Created = DateTime.Today,
-                    IsActive = true,
-                    Login = user.Login,
-                    Password = user.Password,
-                    Role = user.Role
-                };
-
-                _context.Users.Add(newUser);
-                _context.SaveChanges();
-
-                return newUser;
-            }
         }
 
-        public UserEntity DeleteUser(int id)
+        public async Task<UserEntity> DeleteUser(int id, CancellationToken token)
         {
-            return BlockUser(id);
+            return await BlockUser(id, token);
         }
 
-        public UserEntity BlockUser(int id)
+        public async Task<UserEntity> BlockUser(int id, CancellationToken token)
         {
-            var user = _context.Users.FirstOrDefault(x => x.Id == id);
 
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id, token);
             user.IsActive = false;
 
             return user;

@@ -46,38 +46,48 @@ namespace Authentication.Host.Controllers
         }
 
         [HttpPost("Create")]
-        public IActionResult CreateUser([FromBody]UserEntity model)
+        public async Task<IActionResult> CreateUser([FromBody]UserEntity model)
         {
-            var pass = _passwordService.Hash(model.Password);
-            var user = _userRepo.CreateUser(new UserEntity()
+            if (await _userRepo.GetUserByName(model.Login, CancellationToken.None) != null)
             {
-                Login = model.Login,
-                Password = pass.Hash,
-                Created = DateTime.Now,
-                IsActive = true,
-                Role = model.Role
-            });
+                return Conflict($"Login {model.Login} is already used");
+            }
+            else
+            {
+                var pass = _passwordService.Hash(model.Password);
 
-            
-            return Ok($"User {user.Login} created" );
+                var user = await _userRepo.CreateUser(new UserEntity()
+                {
+                    Login = model.Login,
+                    Password = pass.Hash,
+                    Role = model.Role
+                }, CancellationToken.None);
+
+                return Ok($"User {model.Login} created");
+            }
         }
 
 
-        [HttpPost("signin")]
-        public IActionResult SignIn([FromBody]CredentialModel model)
+        [HttpPost("Signin")]
+        public async Task<IActionResult> SignIn([FromBody]CredentialModel model)
         {
-            var user = _userRepo.GetUserByName(model.UserName);
+            var user = await _userRepo.GetUserByName(model.UserName, CancellationToken.None);
             if (user != null)
             {
                 var validateResult = _passwordService.Validate(model.Password, user.Password);
                 if (validateResult.Result == PasswordValidateResult.ValidateResult.Ok)
                 {
-                    var jwtService = JwtServiceFactory.Create(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(5),
-                        TimeSpan.FromSeconds(10));
-                    var access = jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role.Split(','));
+                    if (user.IsActive)
+                    {
+                        var jwtService = JwtServiceFactory.Create(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(5), TimeSpan.FromSeconds(10));
+                        var access = jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role.Split(','));
 
-
-                    return Ok(access.Tokens);
+                        return Ok(access.Tokens);
+                    }
+                    else
+                    {
+                        return NotFound("User is blocked");
+                    }
                 }
             }
 
