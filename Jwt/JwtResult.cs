@@ -4,13 +4,19 @@
     { 
         public TokenModel Tokens { get; }
         public TokenResult Result { get; }
+        public string RefreshTokenJti { get; }
+        public string UserId { get; }
 
         public JwtTokenResult(
             TokenResult result = TokenResult.Ok, 
-            TokenModel model = null)
+            TokenModel model = null,
+            string refreshTokenJti = null,
+            string userId = null)
         {
             Tokens = model;
             Result = result;
+            RefreshTokenJti = refreshTokenJti;
+            UserId = userId;
         }
 
         public enum TokenResult
@@ -22,12 +28,14 @@
             RefreshTokenExpired
         }
 
-        internal static JwtTokenResult Ok(TokenModel model)
+        internal static JwtTokenResult Ok(TokenModel model, string jti, string userId)
         {
             return new JwtTokenResult
             (
-                model : model,
-                result : TokenResult.Ok
+                model: model,
+                result: TokenResult.Ok,
+                refreshTokenJti: jti,
+                userId: userId
             );
         }
         internal static JwtTokenResult RefreshInvalid()

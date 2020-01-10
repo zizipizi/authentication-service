@@ -20,21 +20,23 @@ using PasswordOptions = NSV.Security.Password.PasswordOptions;
 
 namespace Authentication.Host.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthController : Controller
     {
         private readonly ILogger<AuthController> _logger;
         private readonly IUserRepository _userRepo;
         private readonly IPasswordService _passwordService;
+        private readonly IJwtService _jwtService;
 
-        public AuthController(ILogger<AuthController> logger, IUserRepository userRepo)
+        public AuthController(ILogger<AuthController> logger, IUserRepository userRepo, IJwtService jwtService)
         {
             _userRepo = userRepo;
             _logger = logger;
-
+            _jwtService = jwtService;
 
             _passwordService = PasswordServiceFactory.Create(new PasswordOptions());
+
         }
 
         [HttpGet("all")]
@@ -45,33 +47,26 @@ namespace Authentication.Host.Controllers
             return Ok(all);
         }
 
-        [HttpPost("Create")]
-        public async Task<IActionResult> CreateUser([FromBody]UserEntity model)
+        [HttpPost("refresh")]
+        public async Task<IActionResult> RefreshToken(TokenModel model)
         {
-            if (await _userRepo.GetUserByName(model.Login, CancellationToken.None) != null)
+            var validateResult = _jwtService.RefreshAccessToken(model.AccessToken.Value, model.RefreshToken.Value);
+            if (validateResult.Result != JwtTokenResult.TokenResult.Ok)
             {
-                return Conflict($"Login {model.Login} is already used");
+                return Unauthorized();
             }
             else
             {
-                var pass = _passwordService.Hash(model.Password);
-
-                var user = await _userRepo.CreateUser(new UserEntity()
-                {
-                    Login = model.Login,
-                    Password = pass.Hash,
-                    Role = model.Role
-                }, CancellationToken.None);
-
-                return Ok($"User {model.Login} created");
+                return Ok(validateResult.Tokens);
             }
         }
 
 
-        [HttpPost("Signin")]
-        public async Task<IActionResult> SignIn([FromBody]CredentialModel model)
+        [HttpPost("signin")]
+        public async Task<IActionResult> SignIn([FromBody]SignInModel model)
         {
-            var user = await _userRepo.GetUserByName(model.UserName, CancellationToken.None);
+            var user = await _userRepo.GetUserByNameAsync(model.UserName, CancellationToken.None);
+
             if (user != null)
             {
                 var validateResult = _passwordService.Validate(model.Password, user.Password);
@@ -79,19 +74,18 @@ namespace Authentication.Host.Controllers
                 {
                     if (user.IsActive)
                     {
-                        var jwtService = JwtServiceFactory.Create(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(5), TimeSpan.FromSeconds(10));
-                        var access = jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role.Split(','));
+                        var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role.Split(','));
 
                         return Ok(access.Tokens);
                     }
                     else
                     {
-                        return NotFound("User is blocked");
+                        return Forbid("User is blocked");
                     }
                 }
             }
 
-            return BadRequest("User not found");
+            return NotFound("User not found");
         }
 
     }

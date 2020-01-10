@@ -11,13 +11,15 @@ namespace Authentication.Data.Models
 
         Task<UserEntity> GetUserAsync(int id, CancellationToken token);
 
-        Task<UserEntity> CreateUser(UserEntity user, CancellationToken token);
+        Task<UserEntity> CreateUserAsync(UserEntity user, CancellationToken token);
 
-        Task<UserEntity> GetUserByName(string userName, CancellationToken token);
+        Task<UserEntity> GetUserByNameAsync(string userName, CancellationToken token);
 
-        Task<UserEntity> DeleteUser(int id, CancellationToken token);
+        Task<UserEntity> GetUserByIdAsync(int id, CancellationToken token);
 
-        Task<UserEntity> BlockUser(int id, CancellationToken token);
+        Task<UserEntity> DeleteUserAsync(int id, CancellationToken token);
+
+        Task<UserEntity> BlockUserAsync(int id, CancellationToken token);
 
         AccessTokenEntity GetAccessToken(int id);
 

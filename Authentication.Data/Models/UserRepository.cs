@@ -32,14 +32,19 @@ namespace Authentication.Data.Models
             return await _context.Users.FirstOrDefaultAsync(x => x.Id == id, token);
         }
 
-        public async Task<UserEntity> GetUserByName(string userName, CancellationToken token)
+        public async Task<UserEntity> GetUserByNameAsync(string userName, CancellationToken token)
         {
             var user = await _context.Users.SingleOrDefaultAsync(obj => obj.Login == userName, token);
             return user;
         }
 
+        public async Task<UserEntity> GetUserByIdAsync(int id, CancellationToken token)
+        {
+            return await _context.Users.FirstOrDefaultAsync(obj => obj.Id == id, token);
+        }
 
-        public async Task<UserEntity> CreateUser(UserEntity user, CancellationToken token)
+
+        public async Task<UserEntity> CreateUserAsync(UserEntity user, CancellationToken token)
         {
             var newUser = new UserEntity()
                 {
@@ -56,12 +61,12 @@ namespace Authentication.Data.Models
                 return newUser;
         }
 
-        public async Task<UserEntity> DeleteUser(int id, CancellationToken token)
+        public async Task<UserEntity> DeleteUserAsync(int id, CancellationToken token)
         {
-            return await BlockUser(id, token);
+            return await BlockUserAsync(id, token);
         }
 
-        public async Task<UserEntity> BlockUser(int id, CancellationToken token)
+        public async Task<UserEntity> BlockUserAsync(int id, CancellationToken token)
         {
 
             var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id, token);

@@ -10,6 +10,8 @@ using System.IO;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using NSV.Security.JWT;
+using NSV.Security.Password;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace Authentication.Host
@@ -30,12 +32,13 @@ namespace Authentication.Host
             services.AddDbContext<AuthContext>(options => options.UseSqlite(@"Data Source=C:\Projects\authentication-service\Authentication.Data\AuthDatabase.db"));
             services.AddScoped<IUserRepository, UserRepository>();
 
-
+            services.AddJwt();
+            services.AddPassword();
             services.AddControllers();
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Auth API", Version = "v1" });
             });
 
 
@@ -55,7 +58,7 @@ namespace Authentication.Host
 
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Auth API V1");
                 c.RoutePrefix = string.Empty;
             });
 
