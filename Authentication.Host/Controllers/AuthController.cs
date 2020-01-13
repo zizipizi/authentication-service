@@ -1,22 +1,12 @@
-﻿using System;
-using System.Collections;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
+using Authentication.Data.Interfaces;
 using Authentication.Data.Models;
 using Authentication.Host.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using NSV.Security.JWT;
 using NSV.Security.Password;
-using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
-using PasswordOptions = NSV.Security.Password.PasswordOptions;
 
 namespace Authentication.Host.Controllers
 {
@@ -29,14 +19,12 @@ namespace Authentication.Host.Controllers
         private readonly IPasswordService _passwordService;
         private readonly IJwtService _jwtService;
 
-        public AuthController(ILogger<AuthController> logger, IUserRepository userRepo, IJwtService jwtService)
+        public AuthController(ILogger<AuthController> logger, IUserRepository userRepo, IJwtService jwtService, IPasswordService passwordService)
         {
             _userRepo = userRepo;
             _logger = logger;
             _jwtService = jwtService;
-
-            _passwordService = PasswordServiceFactory.Create(new PasswordOptions());
-
+            _passwordService = passwordService;
         }
 
         [HttpGet("all")]
@@ -55,15 +43,11 @@ namespace Authentication.Host.Controllers
             {
                 return Unauthorized();
             }
-            else
-            {
-                return Ok(validateResult.Tokens);
-            }
+            return Ok(validateResult.Tokens);
         }
 
-
         [HttpPost("signin")]
-        public async Task<IActionResult> SignIn([FromBody]SignInModel model)
+        public async Task<IActionResult> SignIn([FromBody]LoginModel model)
         {
             var user = await _userRepo.GetUserByNameAsync(model.UserName, CancellationToken.None);
 
@@ -78,13 +62,9 @@ namespace Authentication.Host.Controllers
 
                         return Ok(access.Tokens);
                     }
-                    else
-                    {
-                        return Forbid("User is blocked");
-                    }
+                    return Forbid("User is blocked");
                 }
             }
-
             return NotFound("User not found");
         }
 

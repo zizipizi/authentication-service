@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
+using Authentication.Data.Interfaces;
 using Authentication.Data.Models;
 using Authentication.Host.Models;
-using Microsoft.AspNetCore.Http;
+using Authentication.Host.Services;
 using Microsoft.AspNetCore.Mvc;
-using NSV.Security.Password;
 
 namespace Authentication.Host.Controllers
 {
@@ -15,37 +12,31 @@ namespace Authentication.Host.Controllers
     [ApiController]
     public class AdminController : ControllerBase
     {
-        private IUserRepository _userRepo;
-        private IPasswordService _passwordService;
-        public AdminController(IUserRepository userRepository)
+        private readonly IUserService _userService;
+        private readonly IUserRepository _userRepo;
+
+        public AdminController(IUserService userService, IUserRepository userRepo)
         {
-            _userRepo = userRepository;
-            _passwordService = PasswordServiceFactory.Create(new PasswordOptions());
+            _userService = userService;
+            _userRepo = userRepo;
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateUser([FromBody] UserCreateModel user)
+        public async Task<IActionResult> CreateUser(UserCreateModel model)
         {
-            if (await _userRepo.GetUserByNameAsync(user.Login, CancellationToken.None) != null)
-            {
-                return Conflict($"Login {user.Login} is already used");
-            }
-            else
-            {
-                var pass = _passwordService.Hash(user.Password);
+            var user = await _userRepo.GetUserByNameAsync(model.Login, CancellationToken.None);
 
-                var newUser = await _userRepo.CreateUserAsync(new UserEntity()
-                {
-                    Login = user.Login,
-                    Password = pass.Hash,
-                    Role = "Admin"
-                }, CancellationToken.None);
-
-                return Ok($"User {user.Login} created");
+            if (user != null)
+            {
+                return Conflict($"Login {model.Login} is already used");
             }
+
+            await _userService.CreateUserAsync(model, CancellationToken.None);
+
+            return Ok($"user {model.Login} created");
         }
 
-        [HttpGet("delete/{id}")]
+        [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             return BadRequest("Delete unavailable");

@@ -1,18 +1,16 @@
-using System;
+using Authentication.Data.Interfaces;
 using Authentication.Data.Models;
+using Authentication.Data.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.IO;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using NSV.Security.JWT;
 using NSV.Security.Password;
-using Swashbuckle.AspNetCore.Swagger;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace Authentication.Host
 {
@@ -32,8 +30,21 @@ namespace Authentication.Host
             services.AddDbContext<AuthContext>(options => options.UseSqlite(@"Data Source=C:\Projects\authentication-service\Authentication.Data\AuthDatabase.db"));
             services.AddScoped<IUserRepository, UserRepository>();
 
-            services.AddJwt();
-            services.AddPassword();
+            services.AddJwt(Configuration);
+
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                options.RequireHttpsMetadata = false;
+                options.TokenValidationParameters = JwtSettings.TokenValidationParameters();
+            });
+
+            services.AddPassword(Configuration);
+
             services.AddControllers();
 
             services.AddSwaggerGen(c =>

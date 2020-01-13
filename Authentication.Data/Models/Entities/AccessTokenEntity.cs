@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Authentication.Data.Models
+namespace Authentication.Data.Models.Entities
 {
     [Table("access_token")]
     public class AccessTokenEntity

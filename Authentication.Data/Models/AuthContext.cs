@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Authentication.Data.Models.Entities;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -19,16 +20,5 @@ namespace Authentication.Data.Models
 
         public DbSet<RefreshTokenEntity> RefreshTokens { get; set; }
 
-        //protected override void OnModelCreating(ModelBuilder modelBuilder)
-        //{
-        //    modelBuilder.Entity<UserEntity>(us => us.HasData(new UserEntity()
-        //    {
-        //        Id = 1,
-        //        Created = DateTime.Today,
-        //        Login = "Login1",
-        //        Password = "Password1",
-        //        IsActive = true
-        //    }));
-        //}
     }
 }

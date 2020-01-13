@@ -4,6 +4,9 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>Authentication.Data</RootNamespace>
     <AssemblyName>Authentication.Data</AssemblyName>
+    <ApplicationIcon />
+    <OutputType>Library</OutputType>
+    <StartupObject />
   </PropertyGroup>
 
   <ItemGroup>

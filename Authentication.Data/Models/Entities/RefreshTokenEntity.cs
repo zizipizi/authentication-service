@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Authentication.Data.Models
+namespace Authentication.Data.Models.Entities
 {
     [Table("refresh_token")]
     public class RefreshTokenEntity

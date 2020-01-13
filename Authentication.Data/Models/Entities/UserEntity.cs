@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.AspNetCore.Identity;
 
-namespace Authentication.Data.Models
+namespace Authentication.Data.Models.Entities
 {
     [Table("users")]
     public class UserEntity
@@ -25,5 +22,6 @@ namespace Authentication.Data.Models
         public string Role { get; set; }
 
         public bool IsActive { get; set; }
+
     }
 }
