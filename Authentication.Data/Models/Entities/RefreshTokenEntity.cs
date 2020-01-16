@@ -6,7 +6,7 @@ namespace Authentication.Data.Models.Entities
     [Table("refresh_token")]
     public class RefreshTokenEntity
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         public string Token { get; set; }
 

@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Authentication.Data.Interfaces;
+using Authentication.Data.Exceptions;
 using Authentication.Data.Models;
-using Authentication.Data.Models.Data;
+using Authentication.Data.Models.Domain;
+using Authentication.Data.Models.Domain.Translators;
 using Authentication.Data.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,14 +21,13 @@ namespace Authentication.Data.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<User>> GetAllUsersAsync(CancellationToken token)
+        public async Task<IEnumerable<UserInfo>> GetAllUsersAsync(CancellationToken token)
         {
-            var users = await _context.Users.Select(i => new User()
+            var users = await _context.Users.Select(i => new UserInfo()
             {
                 Id = i.Id,
                 Login = i.Login,
                 IsActive = i.IsActive,
-                Password = i.Password,
                 Role = i.Role
             }).ToListAsync(token);
 
@@ -36,49 +36,42 @@ namespace Authentication.Data.Repositories
 
         public async Task<User> GetUserByNameAsync(string userName, CancellationToken token)
         {
-            var user = await _context.Users.Select(i => new User()
-            {
-                Login = i.Login
-            }).SingleOrDefaultAsync(obj => obj.Name == userName, token);
+            var user = await _context.Users.SingleOrDefaultAsync(obj => obj.Login == userName, token);
+            if (user == null)
+                throw new EntityNotFoundException("User not found");
 
-            return user;
+            return user.ToDomain();
         }
 
-        public async Task<User> GetUserByIdAsync(int id, CancellationToken token)
+        public async Task<User> GetUserByIdAsync(long id, CancellationToken token)
         {
-            var user = await _context.Users.Select(i => new User()
-            {
-                Id = i.Id
-            }).FirstOrDefaultAsync(obj => obj.Id == id, token);
-            return user;
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(obj => obj.Id == id, token);
+            if (user == null)
+                throw new EntityNotFoundException("User not found");
+
+            return user.ToDomain();
         }
 
-        public async Task CreateUserAsync(UserEntity user, CancellationToken token)
+        public async Task CreateUserAsync(User user, CancellationToken token)
         {
-            var newUser = new UserEntity()
-                {
-                    Created = DateTime.Today,
-                    IsActive = true,
-                    Login = user.Login,
-                    Password = user.Password,
-                    Role = user.Role
-                };
+            var newUser = user.ToEntity(); 
+            await _context.Users.AddAsync(newUser, token);
 
-                _context.Users.Add(newUser);
-                await _context.SaveChangesAsync(token);
+            await _context.SaveChangesAsync(token);
         }
 
-        public async Task DeleteUserAsync(int id, CancellationToken token)
+        public async Task DeleteUserAsync(long id, CancellationToken token)
         {
              await BlockUserAsync(id, token);
         }
 
-        public async Task BlockUserAsync(int id, CancellationToken token)
+        public async Task BlockUserAsync(long id, CancellationToken token)
         {
             var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id, token);
+            if (user == null)
+                throw new EntityNotFoundException("User not found");
 
             user.IsActive = false;
-            _context.Update(user);
             await _context.SaveChangesAsync(token);
         }
 

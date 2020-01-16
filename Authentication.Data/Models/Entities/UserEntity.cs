@@ -7,7 +7,7 @@ namespace Authentication.Data.Models.Entities
     [Table("users")]
     public class UserEntity
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         [Required]
         [MinLength(3)]
@@ -22,6 +22,5 @@ namespace Authentication.Data.Models.Entities
         public string Role { get; set; }
 
         public bool IsActive { get; set; }
-
     }
 }

@@ -3,7 +3,6 @@ using System;
 using Authentication.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Authentication.Data.Migrations
 {
@@ -16,9 +15,9 @@ namespace Authentication.Data.Migrations
             modelBuilder
                 .HasAnnotation("ProductVersion", "3.1.0");
 
-            modelBuilder.Entity("Authentication.Data.Models.AccessTokenEntity", b =>
+            modelBuilder.Entity("Authentication.Data.Models.Entities.AccessTokenEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
@@ -33,9 +32,9 @@ namespace Authentication.Data.Migrations
                     b.ToTable("access_token");
                 });
 
-            modelBuilder.Entity("Authentication.Data.Models.RefreshTokenEntity", b =>
+            modelBuilder.Entity("Authentication.Data.Models.Entities.RefreshTokenEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
@@ -50,9 +49,9 @@ namespace Authentication.Data.Migrations
                     b.ToTable("refresh_token");
                 });
 
-            modelBuilder.Entity("Authentication.Data.Models.UserEntity", b =>
+            modelBuilder.Entity("Authentication.Data.Models.Entities.UserEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
@@ -74,6 +73,9 @@ namespace Authentication.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Login")
+                        .IsUnique();
 
                     b.ToTable("users");
                 });

@@ -1,4 +1,4 @@
-﻿namespace Authentication.Data.Models.Data
+﻿namespace Authentication.Data.Models.Domain
 {
     public class User
     {
@@ -6,12 +6,10 @@
 
         public string Login { get; set; }
 
+        public string Password { get; set; }
+
         public bool IsActive { get; set; }
 
         public string Role { get; set; }
-
-        public string Name { get; set; }
-
-        public string Password { get; set; }
     }
 }

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Authentication.Data.Migrations
 {
-    public partial class InitCreate : Migration
+    public partial class InitialMigrate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -11,7 +11,7 @@ namespace Authentication.Data.Migrations
                 name: "access_token",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
+                    Id = table.Column<long>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     RefreshId = table.Column<int>(nullable: false),
                     Token = table.Column<string>(nullable: true)
@@ -25,7 +25,7 @@ namespace Authentication.Data.Migrations
                 name: "refresh_token",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
+                    Id = table.Column<long>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Token = table.Column<string>(nullable: true),
                     Expiry = table.Column<DateTime>(nullable: false)
@@ -39,7 +39,7 @@ namespace Authentication.Data.Migrations
                 name: "users",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
+                    Id = table.Column<long>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Login = table.Column<string>(nullable: false),
                     Password = table.Column<string>(nullable: false),
@@ -51,6 +51,12 @@ namespace Authentication.Data.Migrations
                 {
                     table.PrimaryKey("PK_users", x => x.Id);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_users_Login",
+                table: "users",
+                column: "Login",
+                unique: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

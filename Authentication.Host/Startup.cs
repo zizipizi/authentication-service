@@ -1,6 +1,6 @@
-using Authentication.Data.Interfaces;
 using Authentication.Data.Models;
 using Authentication.Data.Repositories;
+using Authentication.Host.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -27,10 +27,13 @@ namespace Authentication.Host
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddDbContext<AuthContext>(options => options.UseSqlite(@"Data Source=C:\Projects\authentication-service\Authentication.Data\AuthDatabase.db"));
+            services.AddDbContext<AuthContext>(options => options.UseSqlite(
+                @"Data Source=C:\Projects\authentication-service\Authentication.Data\AuthDatabase.db"
+            ));
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IUserService, UserService>();
 
-            services.AddJwt(Configuration);
+            services.AddJwt();
 
             services.AddAuthentication(options =>
             {
@@ -75,6 +78,7 @@ namespace Authentication.Host
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

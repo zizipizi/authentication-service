@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Authentication.Data.Interfaces;
-using Authentication.Data.Models;
+using Authentication.Data.Repositories;
 using Authentication.Host.Models;
 using Microsoft.AspNetCore.Mvc;
 
