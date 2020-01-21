@@ -11,6 +11,10 @@ namespace Authentication.Data.Models
 
         public DbSet<UserEntity> Users { get; set; }
 
+        public DbSet<RoleEntity> Roles { get; set; }
+
+        public DbSet<UserRolesEntity> UsersRoles { get; set; }
+
         public DbSet<AccessTokenEntity> AccessTokens { get; set; }
 
         public DbSet<RefreshTokenEntity> RefreshTokens { get; set; }
@@ -18,6 +22,12 @@ namespace Authentication.Data.Models
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<UserEntity>().HasIndex(a => a.Login).IsUnique();
+
+            //modelBuilder.Entity<RoleEntity>(b => b.HasMany<UserRolesEntity>().WithOne().HasForeignKey(ur => ur.RoleID).IsRequired());
+
+            //modelBuilder.Entity<UserEntity>(b => b.HasMany<UserRolesEntity>().WithOne().HasForeignKey(ur => ur.UserID).IsRequired());
+
+            modelBuilder.Entity<UserRolesEntity>().HasKey(k => new { k.RoleID, k.UserID });
         }
     }
 }

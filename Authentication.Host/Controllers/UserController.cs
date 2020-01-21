@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Authentication.Data.Repositories;
 using Authentication.Host.Models;
+using Authentication.Host.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Authentication.Host.Controllers
@@ -9,10 +10,10 @@ namespace Authentication.Host.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private IUserRepository _userRepository;
-        public UserController(IUserRepository userRepository)
+        private readonly IUserService _userService;
+        public UserController(IUserService userService)
         {
-            _userRepository = userRepository;
+            _userService = userService;
         }
 
         [HttpGet("signout")]
@@ -22,11 +23,9 @@ namespace Authentication.Host.Controllers
         }
 
         [HttpPost("changepass")]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePassModel passwords)
+        public async Task<IActionResult> ChangePassword(ChangePassModel passwords)
         {
             return BadRequest("ChangePass unavailable");
         }
-
-
     }
 }

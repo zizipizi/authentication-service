@@ -1,4 +1,8 @@
-﻿namespace Authentication.Data.Models.Domain
+﻿using System.Collections;
+using System.Collections.Generic;
+using Authentication.Data.Models.Entities;
+
+namespace Authentication.Data.Models.Domain
 {
     public class User
     {

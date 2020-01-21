@@ -3,6 +3,7 @@ using System;
 using Authentication.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Authentication.Data.Migrations
 {
@@ -49,6 +50,28 @@ namespace Authentication.Data.Migrations
                     b.ToTable("refresh_token");
                 });
 
+            modelBuilder.Entity("Authentication.Data.Models.Entities.RoleEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Role")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("RoleEntityId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleEntityId");
+
+                    b.ToTable("Roles");
+                });
+
             modelBuilder.Entity("Authentication.Data.Models.Entities.UserEntity", b =>
                 {
                     b.Property<long>("Id")
@@ -77,7 +100,47 @@ namespace Authentication.Data.Migrations
                     b.HasIndex("Login")
                         .IsUnique();
 
-                    b.ToTable("users");
+                    b.ToTable("User");
+                });
+
+            modelBuilder.Entity("Authentication.Data.Models.Entities.UserRolesEntity", b =>
+                {
+                    b.Property<long>("RoleID")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("UserID")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("RoleID", "UserID");
+
+                    b.HasIndex("UserID");
+
+                    b.ToTable("UserRoles");
+                });
+
+            modelBuilder.Entity("Authentication.Data.Models.Entities.RoleEntity", b =>
+                {
+                    b.HasOne("Authentication.Data.Models.Entities.RoleEntity", null)
+                        .WithMany("UserRoles")
+                        .HasForeignKey("RoleEntityId");
+                });
+
+            modelBuilder.Entity("Authentication.Data.Models.Entities.UserRolesEntity", b =>
+                {
+                    b.HasOne("Authentication.Data.Models.Entities.RoleEntity", "RoleEn")
+                        .WithMany()
+                        .HasForeignKey("RoleID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Authentication.Data.Models.Entities.UserEntity", "UserEn")
+                        .WithMany("Roles")
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

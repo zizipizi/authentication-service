@@ -31,7 +31,7 @@ namespace Authentication.Host
                 @"Data Source=C:\Projects\authentication-service\Authentication.Data\AuthDatabase.db"
             ));
             services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IAdminService, AdminService>();
 
             services.AddJwt();
 
@@ -73,7 +73,7 @@ namespace Authentication.Host
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Auth API V1");
-                c.RoutePrefix = string.Empty;
+                //c.RoutePrefix = string.Empty;
             });
 
             app.UseRouting();

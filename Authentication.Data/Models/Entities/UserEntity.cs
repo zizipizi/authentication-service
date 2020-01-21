@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Authentication.Data.Models.Entities
 {
-    [Table("users")]
+    [Table("User")]
     public class UserEntity
     {
         public long Id { get; set; }
@@ -22,5 +24,7 @@ namespace Authentication.Data.Models.Entities
         public string Role { get; set; }
 
         public bool IsActive { get; set; }
+
+        public ICollection<UserRolesEntity> Roles { get; set; }
     }
 }

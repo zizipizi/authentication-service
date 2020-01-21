@@ -1,18 +1,16 @@
-﻿using System.Threading;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Authentication.Host.Enums;
 using Authentication.Host.Models;
 
 namespace Authentication.Host.Services
 {
     public interface IUserService
     {
-        Task<UserServiceResult> CreateUserAsync(UserCreateModel model, CancellationToken token);
+        Task<Result<UserResult>> SignOut();
 
-        Task<UserServiceResult> BlockUserAsync(int id, CancellationToken token);
-
-        Task<UserServiceResult> DeleteUserAsync(int id, CancellationToken token);
-
-        Task<UserServiceResult> SignIn(LoginModel model);
-
+        Task<Result<UserResult>> ChangePassword(ChangePassModel model);
     }
 }
