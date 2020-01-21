@@ -2,8 +2,8 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Repositories;
-using Authentication.Host.Enums;
 using Authentication.Host.Models;
+using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +25,19 @@ namespace Authentication.Host.Controllers
         [HttpPost("refresh")]
         public async Task<IActionResult> RefreshToken(TokenModel model, CancellationToken token)
         {
-            throw new Exception();
+            var result = await _authService.RefreshToken(model, CancellationToken.None);
+
+            switch (result.Value)
+            {
+                case AuthResult.Ok:
+                    return Ok(result.Value);
+                case AuthResult.TokenValidationProblem:
+                    return Conflict("Refresh token not validate");
+                case AuthResult.TokenExpired:
+                    return Unauthorized("Token expired");
+            }
+
+            return BadRequest("Error while refresh");
         }
 
         [HttpPost("signin")]
@@ -35,13 +47,15 @@ namespace Authentication.Host.Controllers
 
             switch (result.Value)
             {
-                case AuthResult.UserBlocked:
-                    return Forbid("Bearer");
                 case AuthResult.Ok:
                     return Ok(result);
+                case AuthResult.UserBlocked:
+                    return Forbid("Bearer");
+                case AuthResult.UserNotFound:
+                    return NotFound("User not found");
             }
 
-            return NotFound("User not found");
+            return BadRequest("Error while signin");
         }
     }
 

@@ -1,10 +1,10 @@
 ﻿using Authentication.Data.Repositories;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Authentication.Host.Enums;
 using Authentication.Host.Models;
+using Authentication.Host.Results;
+using Authentication.Host.Results.Enums;
+using NSV.Security.JWT;
 using NSV.Security.Password;
 
 namespace Authentication.Host.Services
@@ -20,12 +20,12 @@ namespace Authentication.Host.Services
             _passwordService = passwordService;
         }
 
-        public async Task<Result<UserResult>> SignOut()
+        public async Task<Result<UserResult>> SignOut(TokenModel token)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<Result<UserResult>> ChangePassword(ChangePassModel model)
+        public async Task<Result<UserResult, TokenModel>> ChangePassword(ChangePassModel model)
         {
             throw new NotImplementedException();
         }

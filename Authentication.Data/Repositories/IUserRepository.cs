@@ -23,7 +23,5 @@ namespace Authentication.Data.Repositories
         AccessTokenEntity GetAccessToken(int id);
 
         RefreshTokenEntity GetRefreshToken(int id);
-
-
     }
 }

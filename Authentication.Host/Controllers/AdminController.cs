@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using Authentication.Host.Enums;
 using Authentication.Host.Models;
+using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,10 +23,10 @@ namespace Authentication.Host.Controllers
         {
             var result = await _adminService.CreateUserAsync(model, CancellationToken.None);
 
-            if (result.Value == AdminResult.UserExist)
-                return Conflict($"User with login {model.Login} exist");
+            if (result.Value == AdminResult.Ok)
+                return Ok(result.Message);
 
-            return Ok("User created");
+            return Conflict(result.Message);
         }
 
         [HttpDelete("delete/{id}")]
@@ -36,9 +36,9 @@ namespace Authentication.Host.Controllers
 
             if (result.Value == AdminResult.Ok)
             {
-                return Ok($"User with id {id} deleted");
+                return Ok(result.Message);
             }
-            return NotFound("User not found");
+            return NotFound(result.Message);
         }
 
         [HttpGet("block/{id}")]
@@ -48,9 +48,9 @@ namespace Authentication.Host.Controllers
 
             if (result.Value == AdminResult.Ok)
             {
-                return Ok($"User with Id {id} is blocked");
+                return Ok(result.Message);
             }
-            return NotFound($"User with id {id} not found");
+            return NotFound(result.Message);
         }
     }
 }

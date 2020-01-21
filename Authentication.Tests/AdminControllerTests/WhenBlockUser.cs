@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using Authentication.Host.Enums;
+using Authentication.Host.Results.Enums;
 using Xunit;
 
 namespace Authentication.Tests.AdminControllerTests
@@ -15,10 +15,9 @@ namespace Authentication.Tests.AdminControllerTests
         [Fact]
         public async Task BlockUser_Sucess()
         {
-            var userService = FakeUserServiceFactory.GetFakeBlockUserService(AdminResult.Ok);
-            var adminController = new AdminController(userService);
-
             int id = 1;
+            var userService = FakeAdminServiceFactory.GetFakeBlockUserService(AdminResult.Ok, $"User with Id {id} is blocked");
+            var adminController = new AdminController(userService);
 
             var result = await adminController.BlockUser(id);
 
@@ -29,9 +28,9 @@ namespace Authentication.Tests.AdminControllerTests
         [Fact]
         public async Task BlockUser_NotFound()
         {
-            var userService = FakeUserServiceFactory.GetFakeBlockUserService(AdminResult.UserNotFound);
+            int id = 1;
+            var userService = FakeAdminServiceFactory.GetFakeBlockUserService(AdminResult.UserNotFound, $"User with id {id} not found");
             var adminController = new AdminController(userService);
-            var id = 1;
 
             var result = await adminController.BlockUser(id);
 

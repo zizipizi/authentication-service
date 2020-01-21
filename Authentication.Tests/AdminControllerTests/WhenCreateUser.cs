@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Authentication.Host.Controllers;
-using Authentication.Host.Enums;
 using Authentication.Host.Models;
+using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
@@ -16,7 +16,7 @@ namespace Authentication.Tests.AdminControllerTests
         [Fact]
         public async Task CreateUser_Success()
         {
-            var userService = FakeUserServiceFactory.CreateFakeUserService(AdminResult.Ok);
+            var userService = FakeAdminServiceFactory.CreateFakeUserService(AdminResult.Ok, "User created");
             var adminController = new AdminController(userService);
             var userModel = new UserCreateModel();
 
@@ -29,9 +29,9 @@ namespace Authentication.Tests.AdminControllerTests
         [Fact]
         public async Task CreateUser_UserExist()
         {
-            var userService = FakeUserServiceFactory.CreateFakeUserService(AdminResult.UserExist);
-            var adminController = new AdminController(userService);
             var userModel = new UserCreateModel();
+            var userService = FakeAdminServiceFactory.CreateFakeUserService(AdminResult.UserExist, $"User with login {userModel.Login} exist");
+            var adminController = new AdminController(userService);
 
             var result = await adminController.CreateUser(userModel);
 

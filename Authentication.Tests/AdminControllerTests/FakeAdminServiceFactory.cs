@@ -1,42 +1,47 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using Authentication.Host.Enums;
 using Authentication.Host.Models;
+using Authentication.Host.Results;
+using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Moq;
 
-namespace Authentication.Tests
+namespace Authentication.Tests.AdminControllerTests
 {
-    public static class FakeUserServiceFactory
+    public static class FakeAdminServiceFactory
     {
-        public static IAdminService CreateFakeUserService(AdminResult result)
+        // Create user
+        public static IAdminService CreateFakeUserService(AdminResult result, string message)
         {
             var userServiceFake = new Mock<IAdminService>();
 
             userServiceFake.Setup(c => c.CreateUserAsync(It.IsAny<UserCreateModel>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(new Result<AdminResult>(result)));
+                .Returns(Task.FromResult(new Result<AdminResult>(result, message)));
 
             return userServiceFake.Object;
         }
 
-        public static IAdminService GetFakeBlockUserService(AdminResult result)
+        // Block user
+        public static IAdminService GetFakeBlockUserService(AdminResult result, string message)
         {
             var userServiceFake = new Mock<IAdminService>();
 
             userServiceFake.Setup(c => c.BlockUserAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(new Result<AdminResult>(result)));
+                .Returns(Task.FromResult(new Result<AdminResult>(result, message)));
 
             return userServiceFake.Object;
         }
 
-        public static IAdminService GetFakeDeleteUserService(AdminResult result)
+        // Delete user
+        public static IAdminService GetFakeDeleteUserService(AdminResult result, string message)
         {
             var userServiceFake = new Mock<IAdminService>();
 
             userServiceFake.Setup(c => c.DeleteUserAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(new Result<AdminResult>(result)));
+                .Returns(Task.FromResult(new Result<AdminResult>(result, message)));
 
             return userServiceFake.Object;
         }
+
     }
 }

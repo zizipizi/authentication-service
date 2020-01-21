@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Authentication.Data;
 using Authentication.Data.Models.Domain;
-using Authentication.Host.Enums;
 using Authentication.Host.Models;
+using Authentication.Host.Results;
+using Authentication.Host.Results.Enums;
 using NSV.Security.JWT;
 
 namespace Authentication.Host.Services

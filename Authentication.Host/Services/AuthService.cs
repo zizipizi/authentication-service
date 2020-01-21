@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Authentication.Data;
 using Authentication.Data.Models.Domain;
 using Authentication.Data.Repositories;
-using Authentication.Host.Enums;
 using Authentication.Host.Models;
+using Authentication.Host.Results;
+using Authentication.Host.Results.Enums;
 using NSV.Security.JWT;
 using NSV.Security.Password;
 
@@ -43,9 +45,15 @@ namespace Authentication.Host.Services
             return new Result<AuthResult, TokenModel>(AuthResult.UserNotFound);
         }
 
-        public Task<Result<AuthResult, TokenModel>> RefreshToken(TokenModel model, CancellationToken token)
+        public async Task<Result<AuthResult, TokenModel>> RefreshToken(TokenModel model, CancellationToken token)
         {
-            throw new NotImplementedException();
+            var validateResult = _jwtService.RefreshAccessToken(model.AccessToken.Value, model.RefreshToken.Value);
+
+            if (validateResult.Result == JwtTokenResult.TokenResult.Ok)
+            {
+                return new Result<AuthResult, TokenModel>(AuthResult.Ok, validateResult.Tokens);
+            }
+            return new Result<AuthResult, TokenModel>(AuthResult.TokenValidationProblem);
         }
     }
 

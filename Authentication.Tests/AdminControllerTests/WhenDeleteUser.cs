@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using Authentication.Host.Enums;
+using Authentication.Host.Results.Enums;
 using Xunit;
 
 namespace Authentication.Tests.AdminControllerTests
@@ -15,10 +15,9 @@ namespace Authentication.Tests.AdminControllerTests
         [Fact]
         public async Task DeleteUser_Sucess()
         {
-            var userService = FakeUserServiceFactory.GetFakeDeleteUserService(AdminResult.Ok);
-            var adminController = new AdminController(userService);
-
             int id = 1;
+            var userService = FakeAdminServiceFactory.GetFakeDeleteUserService(AdminResult.Ok, $"User with id {id} deleted");
+            var adminController = new AdminController(userService);
 
             var result = await adminController.DeleteUser(id);
 
@@ -29,15 +28,14 @@ namespace Authentication.Tests.AdminControllerTests
         [Fact]
         public async Task DeleteUser_NotFound()
         {
-            var userService = FakeUserServiceFactory.GetFakeDeleteUserService(AdminResult.UserNotFound);
-            var adminController = new AdminController(userService);
-
             int id = 1;
+            var userService = FakeAdminServiceFactory.GetFakeDeleteUserService(AdminResult.UserNotFound, $"User with {id} not found");
+            var adminController = new AdminController(userService);
 
             var result = await adminController.DeleteUser(id);
 
             Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal("User not found", ((NotFoundObjectResult)result).Value);
+            Assert.Equal($"User with {id} not found", ((NotFoundObjectResult)result).Value);
         }
     }
 }
