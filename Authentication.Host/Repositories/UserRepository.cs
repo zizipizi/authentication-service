@@ -10,7 +10,7 @@ using Authentication.Data.Models.Domain.Translators;
 using Authentication.Data.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Authentication.Data.Repositories
+namespace Authentication.Host.Repositories
 {
     public class UserRepository : IUserRepository
     {
@@ -27,8 +27,8 @@ namespace Authentication.Data.Repositories
             {
                 Id = i.Id,
                 Login = i.Login,
-                IsActive = i.IsActive,
-                Role = i.Role
+                IsActive = i.IsActive
+                //Role = i.Role
             }).ToListAsync(token);
 
             return users;

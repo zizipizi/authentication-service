@@ -1,17 +1,21 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Authentication.Data.Models.Entities
 {
-    [Table("refresh_token")]
+    [Table("Refresh_token")]
     public class RefreshTokenEntity
     {
+        [Key]
         public long Id { get; set; }
 
         public string Token { get; set; }
 
         public DateTime Expiry { get; set; }
 
-        private bool IsBlocked { get; set;}
+        public string Jti { get; set; }
+
+        public bool IsBlocked { get; set;}
     }
 }

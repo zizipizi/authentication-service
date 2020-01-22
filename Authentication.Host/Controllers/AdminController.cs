@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Models;
+using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,45 +11,46 @@ namespace Authentication.Host.Controllers
     [ApiController]
     public class AdminController : ControllerBase
     {
-        private readonly IUserService _userService;
+        private readonly IAdminService _adminService;
 
-        public AdminController(IUserService userService)
+        public AdminController(IAdminService adminService)
         {
-            _userService = userService;
+            _adminService = adminService;
         }
 
         [HttpPost("create")]
         public async Task<IActionResult> CreateUser(UserCreateModel model)
         {
-            var result = await _userService.CreateUserAsync(model, CancellationToken.None);
+            var result = await _adminService.CreateUserAsync(model, CancellationToken.None);
 
-            if (result.Result == UserServiceResult.UserResult.Exist)
-                return Conflict("User with same login exist");
-            return Ok("User created");
+            if (result.Value == AdminResult.Ok)
+                return Ok(result.Message);
+
+            return Conflict(result.Message);
         }
 
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var result = await _userService.DeleteUserAsync(id, CancellationToken.None);
-            if (result.Result == UserServiceResult.UserResult.Ok)
+            var result = await _adminService.DeleteUserAsync(id, CancellationToken.None);
+
+            if (result.Value == AdminResult.Ok)
             {
-                return Ok($"User with id {id} deleted");
+                return Ok(result.Message);
             }
-            return NotFound("User not found");
+            return NotFound(result.Message);
         }
 
         [HttpGet("block/{id}")]
         public async Task<IActionResult> BlockUser(int id)
         {
-            var result = await _userService.BlockUserAsync(id, CancellationToken.None);
+            var result = await _adminService.BlockUserAsync(id, CancellationToken.None);
 
-            if (result.Result == UserServiceResult.UserResult.Ok)
+            if (result.Value == AdminResult.Ok)
             {
-                return Ok($"User with Id {id} is blocked");
+                return Ok(result.Message);
             }
-
-            return NotFound("User not found");
+            return NotFound(result.Message);
         }
     }
 }

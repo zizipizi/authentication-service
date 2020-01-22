@@ -1,13 +1,12 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
-using Authentication.Data.Repositories;
 using Authentication.Host.Models;
+using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using NSV.Security.JWT;
-using NSV.Security.Password;
 
 namespace Authentication.Host.Controllers
 {
@@ -15,78 +14,48 @@ namespace Authentication.Host.Controllers
     [ApiController]
     public class AuthController : Controller
     {
-        private readonly ILogger<AuthController> _logger;
-        private readonly IUserRepository _userRepo;
-        private readonly IPasswordService _passwordService;
-        private readonly IJwtService _jwtService;
-        private readonly IUserService _userService;
+        private readonly IAuthService _authService;
 
-        public AuthController(ILogger<AuthController> logger, IUserRepository userRepo, IJwtService jwtService, IPasswordService passwordService, IUserService userService)
+        public AuthController(IAuthService authService)
         {
-            _userRepo = userRepo;
-            _logger = logger;
-            _jwtService = jwtService;
-            _passwordService = passwordService;
-            _userService = userService;
-        }
-        [Authorize]
-        [HttpGet("all")]
-        public async Task<IActionResult> GetAll()
-        {
-            var all = await _userRepo.GetAllUsersAsync(CancellationToken.None);
-
-            return Ok(all);
+            _authService = authService;
         }
 
         [HttpPost("refresh")]
-        public async Task<IActionResult> RefreshToken(TokenModel model)
+        public async Task<IActionResult> RefreshToken(TokenModel model, CancellationToken token)
         {
-            var validateResult = _jwtService.RefreshAccessToken(model.AccessToken.Value, model.RefreshToken.Value);
-            if (validateResult.Result != JwtTokenResult.TokenResult.Ok)
+            var result = await _authService.RefreshToken(model, CancellationToken.None);
+
+            switch (result.Value)
             {
-                return Unauthorized();
+                case AuthResult.Ok:
+                    return Ok(result.Value);
+                case AuthResult.TokenValidationProblem:
+                    return Conflict("Refresh token not validate");
+                case AuthResult.TokenExpired:
+                    return Unauthorized("Token expired");
             }
-            return Ok(validateResult.Tokens);
+
+            return BadRequest("Error while refresh");
         }
 
         [HttpPost("signin")]
         public async Task<IActionResult> SignIn(LoginModel model)
         {
-            var result = await _userService.SignIn(model);
+            var result = await _authService.SignIn(model, CancellationToken.None);
 
-            switch (result.Result)
+            switch (result.Value)
             {
-                case UserServiceResult.UserResult.Blocked:
+                case AuthResult.Ok:
+                    return Ok(result);
+                case AuthResult.UserBlocked:
                     return Forbid("Bearer");
-                case UserServiceResult.UserResult.Ok:
-                    return Ok(result.Token);
+                case AuthResult.UserNotFound:
+                    return NotFound("User not found");
             }
 
-            return NotFound("User not found");
+            return BadRequest("Error while signin");
         }
-
-        //[HttpPost("signin")]
-        //public async Task<IActionResult> SignIn([FromBody]LoginModel model)
-        //{
-        //    var user = await _userRepo.GetUserByNameAsync(model.UserName, CancellationToken.None);
-
-        //    if (user != null)
-        //    {
-        //        var validateResult = _passwordService.Validate(model.Password, user.Password);
-        //        if (validateResult.Result == PasswordValidateResult.ValidateResult.Ok)
-        //        {
-        //            if (user.IsActive)
-        //            {
-        //                var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role.Split(','));
-
-        //                return Ok(access.Tokens);
-        //            }
-        //            return Forbid("User is blocked");
-        //        }
-        //    }
-        //    return NotFound("User not found");
-        //}
-
     }
 
 }
