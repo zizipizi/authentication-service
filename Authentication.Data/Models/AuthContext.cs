@@ -23,11 +23,7 @@ namespace Authentication.Data.Models
         {
             modelBuilder.Entity<UserEntity>().HasIndex(a => a.Login).IsUnique();
 
-            //modelBuilder.Entity<RoleEntity>(b => b.HasMany<UserRolesEntity>().WithOne().HasForeignKey(ur => ur.RoleID).IsRequired());
-
-            //modelBuilder.Entity<UserEntity>(b => b.HasMany<UserRolesEntity>().WithOne().HasForeignKey(ur => ur.UserID).IsRequired());
-
-            modelBuilder.Entity<UserRolesEntity>().HasKey(k => new { k.RoleID, k.UserID });
+            modelBuilder.Entity<UserRolesEntity>().HasKey(k => new { k.RoleId, k.UserId });
         }
     }
 }

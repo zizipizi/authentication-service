@@ -1,7 +1,7 @@
-﻿using Authentication.Data.Repositories;
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Authentication.Host.Models;
+using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
 using NSV.Security.JWT;

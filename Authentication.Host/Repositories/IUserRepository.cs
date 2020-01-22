@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Authentication.Data.Models.Domain;
 using Authentication.Data.Models.Entities;
 
-namespace Authentication.Data.Repositories
+namespace Authentication.Host.Repositories
 {
     public interface IUserRepository
     {

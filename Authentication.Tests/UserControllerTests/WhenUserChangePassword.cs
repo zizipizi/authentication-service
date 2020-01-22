@@ -16,15 +16,47 @@ namespace Authentication.Tests.UserControllerTests
         [Fact]
         public async Task UserChangePassword_Ok()
         {
+            var result = await UserChangePassword(UserResult.Ok);
+
+            Assert.IsType<OkObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task UserChangePassword_WrongPassword()
+        {
+            var result = await UserChangePassword(UserResult.WrongPassword);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task UserChangePassword_NeedAuth()
+        {
+            var result = await UserChangePassword(UserResult.PasswordChangedNeedAuth);
+
+            Assert.IsType<NoContentResult>(result);
+        }
+
+        [Fact]
+        public async Task UserChangePassword_NotFound()
+        {
+            var result = await UserChangePassword(UserResult.UserNotFound);
+
+            Assert.IsType<NotFoundObjectResult>(result);
+        }
+
+
+        public async Task<IActionResult> UserChangePassword(UserResult expectationResult, string message = "")
+        {
             var tokenModel = FakeModels.FakeTokenModel();
             var changePassModel = FakeModels.FakePasswords();
 
-            var userService = FakeUserServiceFactory.UserChangePassword(UserResult.Ok, tokenModel, "");
+            var userService = FakeUserServiceFactory.UserChangePassword(expectationResult, tokenModel, "");
 
             var userController = new UserController(userService);
             var result = await userController.ChangePassword(changePassModel);
 
-            Assert.IsType<OkObjectResult>(result);
+            return result;
         }
     }
 }

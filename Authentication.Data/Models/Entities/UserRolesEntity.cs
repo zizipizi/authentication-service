@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 
 namespace Authentication.Data.Models.Entities
 {
-    [Table("UserRoles")]
+    [Table("UserRole")]
     public class UserRolesEntity
     {
         [Key]
         public long Id { get; set; }
-        [ForeignKey(nameof(RoleEn))]
-        public long RoleID { get; set; }
+        [Required, ForeignKey(nameof(RoleEn))]
+        public long RoleId { get; set; }
 
-        [ForeignKey(nameof(UserEn))]
-        public long UserID { get; set; }
+        [Required, ForeignKey(nameof(UserEn))]
+        public long UserId { get; set; }
 
         public virtual RoleEntity RoleEn { get; set; }
 

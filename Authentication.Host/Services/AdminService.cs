@@ -3,8 +3,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data;
 using Authentication.Data.Models.Domain;
-using Authentication.Data.Repositories;
 using Authentication.Host.Models;
+using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
 using NSV.Security.JWT;
@@ -17,7 +17,7 @@ namespace Authentication.Host.Services
         private readonly IUserRepository _userRepository;
         private readonly IPasswordService _passwordService;
 
-        public AdminService(IUserRepository userRepository, IPasswordService passwordService)
+        public AdminService(IUserRepository userRepository, IPasswordService passwordService, IJwtService @object)
         {
             _userRepository = userRepository;
             _passwordService = passwordService;

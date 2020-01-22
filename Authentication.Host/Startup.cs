@@ -1,5 +1,5 @@
 using Authentication.Data.Models;
-using Authentication.Data.Repositories;
+using Authentication.Host.Repositories;
 using Authentication.Host.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -23,10 +23,8 @@ namespace Authentication.Host
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddDbContext<AuthContext>(options => options.UseSqlite(
                 @"Data Source=C:\Projects\authentication-service\Authentication.Data\AuthDatabase.db"
             ));
@@ -54,11 +52,8 @@ namespace Authentication.Host
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Auth API", Version = "v1" });
             });
-
-
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -73,7 +68,6 @@ namespace Authentication.Host
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Auth API V1");
-                //c.RoutePrefix = string.Empty;
             });
 
             app.UseRouting();

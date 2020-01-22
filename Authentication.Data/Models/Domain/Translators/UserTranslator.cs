@@ -18,8 +18,7 @@ namespace Authentication.Data.Models.Domain.Translators
                 Id = entity.Id,
                 Login = entity.Login,
                 Password = entity.Password,
-                IsActive = entity.IsActive,
-                Role = entity.Role
+                IsActive = entity.IsActive
             };
         }
 
@@ -33,7 +32,6 @@ namespace Authentication.Data.Models.Domain.Translators
                 Id = user.Id,
                 Login = user.Login,
                 Password = user.Password,
-                Role = user.Role,
                 Created = DateTime.Today,
                 IsActive = true
             };

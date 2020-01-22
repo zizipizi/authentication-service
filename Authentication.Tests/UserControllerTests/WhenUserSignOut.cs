@@ -16,12 +16,7 @@ namespace Authentication.Tests.UserControllerTests
         [Fact]
         public async Task SignOut_TokenExpired()
         {
-            var userService = FakeUserServiceFactory.UserSignOut(UserResult.RefreshTokenExpired, "Refresh token expired");
-            var userController = new UserController(userService);
-
-            var tokenModel = new TokenModel(("asd", DateTime.Now),("sd", DateTime.Now));
-
-            var result = await userController.SignOut(tokenModel);
+            var result = await SignOut(UserResult.RefreshTokenExpired, "Refresh token expired");
 
             Assert.IsType<UnauthorizedObjectResult>(result);
         }
@@ -29,12 +24,7 @@ namespace Authentication.Tests.UserControllerTests
         [Fact]
         public async Task SignOut_RefreshNotMatchAccess()
         {
-            var userService = FakeUserServiceFactory.UserSignOut(UserResult.RefreshNotMatchAccess, "Refresh token not match access");
-            var tokenModel = new TokenModel(("asd", DateTime.Now), ("sd", DateTime.Now));
-
-            var userController = new UserController(userService);
-
-            var result = await userController.SignOut(tokenModel);
+            var result = await SignOut(UserResult.RefreshNotMatchAccess, "Refresh token not match access");
 
             Assert.IsType<ConflictObjectResult>(result);
         }
@@ -42,14 +32,21 @@ namespace Authentication.Tests.UserControllerTests
         [Fact]
         public async Task SignOut_NoContent()
         {
-            var userService = FakeUserServiceFactory.UserSignOut(UserResult.Error, "DB Error");
-            var tokenModel = new TokenModel(("asd", DateTime.Now), ("sd", DateTime.Now));
+            var result = await SignOut(UserResult.Error, "DB Error");
+
+            Assert.IsType<NoContentResult>(result);
+        }
+
+        public async Task<IActionResult> SignOut(UserResult expectationResult, string message = "")
+        {
+            var userService = FakeUserServiceFactory.UserSignOut(expectationResult, message);
+            var tokenModel = FakeModels.FakeTokenModel();
 
             var userController = new UserController(userService);
 
             var result = await userController.SignOut(tokenModel);
 
-            Assert.IsType<NoContentResult>(result);
+            return result;
         }
     }
 }

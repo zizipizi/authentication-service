@@ -22,7 +22,10 @@ namespace Authentication.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("RefreshId")
+                    b.Property<DateTime>("Expriry")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("RefreshId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Token")
@@ -30,7 +33,9 @@ namespace Authentication.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("access_token");
+                    b.HasIndex("RefreshId");
+
+                    b.ToTable("Access_token");
                 });
 
             modelBuilder.Entity("Authentication.Data.Models.Entities.RefreshTokenEntity", b =>
@@ -42,12 +47,18 @@ namespace Authentication.Data.Migrations
                     b.Property<DateTime>("Expiry")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsBlocked")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Jti")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Token")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.ToTable("refresh_token");
+                    b.ToTable("Refresh_token");
                 });
 
             modelBuilder.Entity("Authentication.Data.Models.Entities.RoleEntity", b =>
@@ -62,14 +73,9 @@ namespace Authentication.Data.Migrations
                     b.Property<string>("Role")
                         .HasColumnType("TEXT");
 
-                    b.Property<long?>("RoleEntityId")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("RoleEntityId");
-
-                    b.ToTable("Roles");
+                    b.ToTable("Role");
                 });
 
             modelBuilder.Entity("Authentication.Data.Models.Entities.UserEntity", b =>
@@ -86,14 +92,13 @@ namespace Authentication.Data.Migrations
 
                     b.Property<string>("Login")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(128);
 
                     b.Property<string>("Password")
                         .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Role")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(1024);
 
                     b.HasKey("Id");
 
@@ -105,40 +110,42 @@ namespace Authentication.Data.Migrations
 
             modelBuilder.Entity("Authentication.Data.Models.Entities.UserRolesEntity", b =>
                 {
-                    b.Property<long>("RoleID")
+                    b.Property<long>("RoleId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<long>("UserID")
+                    b.Property<long>("UserId")
                         .HasColumnType("INTEGER");
 
                     b.Property<long>("Id")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("RoleID", "UserID");
+                    b.HasKey("RoleId", "UserId");
 
-                    b.HasIndex("UserID");
+                    b.HasIndex("UserId");
 
-                    b.ToTable("UserRoles");
+                    b.ToTable("UserRole");
                 });
 
-            modelBuilder.Entity("Authentication.Data.Models.Entities.RoleEntity", b =>
+            modelBuilder.Entity("Authentication.Data.Models.Entities.AccessTokenEntity", b =>
                 {
-                    b.HasOne("Authentication.Data.Models.Entities.RoleEntity", null)
-                        .WithMany("UserRoles")
-                        .HasForeignKey("RoleEntityId");
+                    b.HasOne("Authentication.Data.Models.Entities.RefreshTokenEntity", "RefreshToken")
+                        .WithMany()
+                        .HasForeignKey("RefreshId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Authentication.Data.Models.Entities.UserRolesEntity", b =>
                 {
                     b.HasOne("Authentication.Data.Models.Entities.RoleEntity", "RoleEn")
-                        .WithMany()
-                        .HasForeignKey("RoleID")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Authentication.Data.Models.Entities.UserEntity", "UserEn")
                         .WithMany("Roles")
-                        .HasForeignKey("UserID")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

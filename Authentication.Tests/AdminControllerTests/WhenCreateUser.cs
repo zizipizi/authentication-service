@@ -16,11 +16,7 @@ namespace Authentication.Tests.AdminControllerTests
         [Fact]
         public async Task CreateUser_Success()
         {
-            var userService = FakeAdminServiceFactory.CreateFakeUserService(AdminResult.Ok, "User created");
-            var adminController = new AdminController(userService);
-            var userModel = new UserCreateModel();
-
-            var result = await adminController.CreateUser(userModel);
+            var result = await CreateUser(AdminResult.Ok, "User created");
 
             Assert.IsType<OkObjectResult>(result);
             Assert.Equal("User created", ((OkObjectResult)result).Value);
@@ -29,14 +25,22 @@ namespace Authentication.Tests.AdminControllerTests
         [Fact]
         public async Task CreateUser_UserExist()
         {
-            var userModel = new UserCreateModel();
-            var userService = FakeAdminServiceFactory.CreateFakeUserService(AdminResult.UserExist, $"User with login {userModel.Login} exist");
+
+            var result = await CreateUser(AdminResult.UserExist, $"User with same login exist");
+
+            Assert.IsType<ConflictObjectResult>(result);
+            Assert.Equal($"User with same login exist", ((ConflictObjectResult)result).Value);
+        }
+
+        public async Task<IActionResult> CreateUser(AdminResult expectationResult, string message = "")
+        {
+            var userService = FakeAdminServiceFactory.CreateFakeUserService(expectationResult, message);
             var adminController = new AdminController(userService);
+            var userModel = new UserCreateModel();
 
             var result = await adminController.CreateUser(userModel);
 
-            Assert.IsType<ConflictObjectResult>(result);
-            Assert.Equal($"User with login {userModel.Login} exist", ((ConflictObjectResult)result).Value);
+            return result;
         }
     }
 }
