@@ -14,6 +14,7 @@ namespace Authentication.Host.Results
             Message = message;
         }
     }
+
     public struct Result<TResult, TModel> where TResult : Enum where TModel : class
     {
         public TResult Value { get; }

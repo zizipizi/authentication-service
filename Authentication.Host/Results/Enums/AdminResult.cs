@@ -5,6 +5,7 @@
         Ok,
         UserNotFound,
         UserBlocked,
-        UserExist
+        UserExist,
+        Error
     }
 }

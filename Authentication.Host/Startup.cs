@@ -29,7 +29,9 @@ namespace Authentication.Host
                 @"Data Source=C:\Projects\authentication-service\Authentication.Data\AuthDatabase.db"
             ));
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAdminService, AdminService>();
+            services.AddScoped<IUserService, UserService>();
 
             services.AddJwt();
 
@@ -45,6 +47,7 @@ namespace Authentication.Host
             });
 
             services.AddPassword(Configuration);
+
 
             services.AddControllers();
 

@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data;
+using Authentication.Data.Exceptions;
 using Authentication.Data.Models.Domain;
 using Authentication.Host.Models;
 using Authentication.Host.Repositories;
@@ -28,11 +29,15 @@ namespace Authentication.Host.Services
             try
             {
                 await _userRepository.BlockUserAsync(id, token);
-                return new Result<AdminResult>(AdminResult.Ok);
+                return new Result<AdminResult>(AdminResult.Ok, $"User with id {id} blocked");
+            }
+            catch (EntityNotFoundException)
+            {
+                return new Result<AdminResult>(AdminResult.UserNotFound, $"User with id {id} not found");
             }
             catch (Exception)
             {
-                return new Result<AdminResult>(AdminResult.UserNotFound);
+                return new Result<AdminResult>(AdminResult.Error, "DB error");
             }
         }
 
@@ -49,11 +54,15 @@ namespace Authentication.Host.Services
                     Role = model.Role
                 }, token);
 
-                return new Result<AdminResult>(AdminResult.Ok);
+                return new Result<AdminResult>(AdminResult.Ok, "User created");
+            }
+            catch (EntityNotFoundException)
+            {
+                return new Result<AdminResult>(AdminResult.UserExist, "User with same login exist");
             }
             catch (Exception)
             {
-                return new Result<AdminResult>(AdminResult.UserExist);
+                return new Result<AdminResult>(AdminResult.Error, "DB error");
             }
         }
 
@@ -62,11 +71,15 @@ namespace Authentication.Host.Services
             try
             {
                 await _userRepository.DeleteUserAsync(id, token);
-                return new Result<AdminResult>(AdminResult.Ok);
+                return new Result<AdminResult>(AdminResult.Ok, $"User with id {id} deleted");
+            }
+            catch (EntityNotFoundException)
+            {
+                return new Result<AdminResult>(AdminResult.UserNotFound, $"User with id {id} not found");
             }
             catch (Exception)
             {
-                return new Result<AdminResult>(AdminResult.UserNotFound);
+                return new Result<AdminResult>(AdminResult.Error, "DB error");
             }
         }
     }
