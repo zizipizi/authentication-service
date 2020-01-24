@@ -4,6 +4,7 @@ using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 namespace Authentication.Host.Controllers
 {
@@ -22,6 +23,7 @@ namespace Authentication.Host.Controllers
         public async Task<IActionResult> GetAll()
         {
             var result = _adminService.GetAll();
+            Log.Information("From all");
             return Ok(result);
         }
 
