@@ -44,17 +44,22 @@ namespace Authentication.Host.Controllers
         {
             var result = await _authService.SignIn(model, CancellationToken.None);
 
+            if (result.Value == AuthResult.UserNotFound)
+            {
+                return NotFound(result.Message);
+            }
+
             switch (result.Value)
             {
                 case AuthResult.Ok:
-                    return Ok(result);
+                    return Ok(result.Model);
                 case AuthResult.UserBlocked:
                     return Forbid("Bearer");
                 case AuthResult.UserNotFound:
-                    return NotFound("User not found");
+                    return NotFound(result.Message);
             }
 
-            return BadRequest("Error while signin");
+            return BadRequest(result.Message);
         }
     }
 

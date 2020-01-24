@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Authentication.Host.Results.Enums;
+using Authentication.Tests.AdminControllerTests.Utills;
 using Xunit;
 
 namespace Authentication.Tests.AdminControllerTests

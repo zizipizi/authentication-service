@@ -1,13 +1,17 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data;
 using Authentication.Data.Exceptions;
 using Authentication.Data.Models.Domain;
+using Authentication.Data.Models.Entities;
 using Authentication.Host.Models;
 using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
+using Microsoft.Extensions.Logging;
 using NSV.Security.JWT;
 using NSV.Security.Password;
 
@@ -18,10 +22,16 @@ namespace Authentication.Host.Services
         private readonly IUserRepository _userRepository;
         private readonly IPasswordService _passwordService;
 
-        public AdminService(IUserRepository userRepository, IPasswordService passwordService, IJwtService @object)
+        public AdminService(IUserRepository userRepository, IPasswordService passwordService)
         {
             _userRepository = userRepository;
             _passwordService = passwordService;
+        }
+
+        public async Task<IEnumerable<User>> GetAll()
+        {
+            var result = await _userRepository.GetAllUsersAsync(CancellationToken.None);
+            return result;
         }
 
         public async Task<Result<AdminResult>> BlockUserAsync(int id, CancellationToken token)
@@ -51,7 +61,7 @@ namespace Authentication.Host.Services
                 {
                     Login = model.Login,
                     Password = pass.Hash,
-                    Role = model.Role
+                    Role = model.Role.Split(",")
                 }, token);
 
                 return new Result<AdminResult>(AdminResult.Ok, "User created");

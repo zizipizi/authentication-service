@@ -6,6 +6,7 @@ using Authentication.Host.Controllers;
 using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
+using Authentication.Tests.AdminControllerTests.Utills;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 
@@ -16,7 +17,11 @@ namespace Authentication.Tests.AdminControllerTests
         [Fact]
         public async Task CreateUser_Success()
         {
-            var result = await CreateUser(AdminResult.Ok, "User created");
+            var userService = FakeAdminServiceFactory.CreateFakeUserService(AdminResult.Ok, $"123");
+            var adminController = new AdminController(userService);
+            var userModel = new UserCreateModel();
+
+            var result = await adminController.CreateUser(userModel);
 
             Assert.IsType<OkObjectResult>(result);
             Assert.Equal("User created", ((OkObjectResult)result).Value);
@@ -26,21 +31,25 @@ namespace Authentication.Tests.AdminControllerTests
         public async Task CreateUser_UserExist()
         {
 
-            var result = await CreateUser(AdminResult.UserExist, $"User with same login exist");
-
-            Assert.IsType<ConflictObjectResult>(result);
-            Assert.Equal($"User with same login exist", ((ConflictObjectResult)result).Value);
-        }
-
-        public async Task<IActionResult> CreateUser(AdminResult expectationResult, string message = "")
-        {
-            var userService = FakeAdminServiceFactory.CreateFakeUserService(expectationResult, message);
+            var userService = FakeAdminServiceFactory.CreateFakeUserService(AdminResult.UserExist, $"123");
             var adminController = new AdminController(userService);
             var userModel = new UserCreateModel();
 
             var result = await adminController.CreateUser(userModel);
 
-            return result;
+            Assert.IsType<ConflictObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task CreateUser_GetMessageEqualAdminServiceResult()
+        {
+            var userService = FakeAdminServiceFactory.CreateFakeUserService(AdminResult.Ok, $"Simple text");
+            var adminController = new AdminController(userService);
+            var userModel = new UserCreateModel();
+
+            var result = await adminController.CreateUser(userModel);
+
+            Assert.Equal("Simple text", ((ObjectResult)result).Value);
         }
     }
 }

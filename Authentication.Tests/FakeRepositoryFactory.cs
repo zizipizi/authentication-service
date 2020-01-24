@@ -67,6 +67,4 @@ namespace Authentication.Tests
             return userRepositoryFake.Object;
         }
     }
-
-
 }

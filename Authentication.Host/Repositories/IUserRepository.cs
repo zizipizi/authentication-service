@@ -8,7 +8,7 @@ namespace Authentication.Host.Repositories
 {
     public interface IUserRepository
     {
-        Task<IEnumerable<UserInfo>> GetAllUsersAsync(CancellationToken token);
+        Task<IEnumerable<User>> GetAllUsersAsync(CancellationToken token);
 
         Task CreateUserAsync(User user, CancellationToken token);
 

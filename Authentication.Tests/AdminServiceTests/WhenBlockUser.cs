@@ -16,11 +16,10 @@ namespace Authentication.Tests.AdminServiceTests
         public async Task BlockUser_Sucess()
         {
             var id = 1;
-            var jwtService = new Mock<IJwtService>();
             var passwordService = new Mock<IPasswordService>();
 
             var userRepo = FakeRepositoryFactory.BlockFakeUserRepository();
-            var userService = new AdminService(userRepo, passwordService.Object, jwtService.Object);
+            var userService = new AdminService(userRepo, passwordService.Object);
 
             var result = await userService.BlockUserAsync(id, CancellationToken.None);
 
@@ -32,13 +31,10 @@ namespace Authentication.Tests.AdminServiceTests
         public async Task BlockUser_NotFound()
         {
             var id = 1;
-            var jwtService = new Mock<IJwtService>();
             var passwordService = new Mock<IPasswordService>();
 
-           // var a = passwordService.Object.Hash("21312321");
-
             var userRepo = FakeRepositoryFactory.BlockFakeUserRepository_Exception();
-            var userService = new AdminService(userRepo, passwordService.Object, jwtService.Object);
+            var userService = new AdminService(userRepo, passwordService.Object);
 
             var result = await userService.BlockUserAsync(id, CancellationToken.None);
 

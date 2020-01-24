@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Authentication.Host.Results.Enums;
+using Authentication.Tests.AdminControllerTests.Utills;
 using Xunit;
 
 namespace Authentication.Tests.AdminControllerTests
@@ -37,5 +38,6 @@ namespace Authentication.Tests.AdminControllerTests
             Assert.IsType<NotFoundObjectResult>(result);
             Assert.Equal($"User with {id} not found", ((NotFoundObjectResult)result).Value);
         }
+
     }
 }

@@ -28,6 +28,7 @@ namespace Authentication.Host
             services.AddDbContext<AuthContext>(options => options.UseSqlite(
                 @"Data Source=C:\Projects\authentication-service\Authentication.Data\AuthDatabase.db"
             ));
+
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAdminService, AdminService>();

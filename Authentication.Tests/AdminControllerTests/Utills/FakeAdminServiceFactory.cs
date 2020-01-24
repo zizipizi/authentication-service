@@ -6,7 +6,7 @@ using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Moq;
 
-namespace Authentication.Tests.AdminControllerTests
+namespace Authentication.Tests.AdminControllerTests.Utills
 {
     public static class FakeAdminServiceFactory
     {

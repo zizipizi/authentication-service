@@ -18,10 +18,9 @@ namespace Authentication.Tests.AdminServiceTests
         public async Task CreateUser_Sucess()
         {
             var passService = new Mock<IPasswordService>();
-            var jwtService = new Mock<IJwtService>();
 
             var userRepo = FakeRepositoryFactory.CreateFakeUserRepository();
-            var userService = new AdminService(userRepo, passService.Object, jwtService.Object);
+            var userService = new AdminService(userRepo, passService.Object);
 
             var userCreateModel = new UserCreateModel();
 
@@ -34,14 +33,11 @@ namespace Authentication.Tests.AdminServiceTests
         [Fact]
         public async Task CreateUser_Exist()
         {
-            var ex = new EntityNotFoundException("User not found");
-
             var passService = new Mock<IPasswordService>();
-            var jwtService = new Mock<IJwtService>();
 
             var userRepo = FakeRepositoryFactory.CreateFakeUserRepository_Exception();
 
-            var userService = new AdminService(userRepo, passService.Object, jwtService.Object);
+            var userService = new AdminService(userRepo, passService.Object);
 
             var userCreateModel = new UserCreateModel();
 

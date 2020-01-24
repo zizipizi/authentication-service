@@ -14,6 +14,6 @@ namespace Authentication.Data.Models.Domain
 
         public bool IsActive { get; set; }
 
-        public string Role { get; set; }
+        public IEnumerable<string> Role { get; set; }
     }
 }

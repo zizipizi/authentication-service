@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Authentication.Host.Controllers;
 using Authentication.Host.Results.Enums;
+using Authentication.Tests.UserControllerTests.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NSV.Security.JWT;

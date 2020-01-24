@@ -18,7 +18,8 @@ namespace Authentication.Data.Models.Domain.Translators
                 Id = entity.Id,
                 Login = entity.Login,
                 Password = entity.Password,
-                IsActive = entity.IsActive
+                IsActive = entity.IsActive,
+                Role = entity.Roles.Select(p => p.RoleEn.Role).ToList()
             };
         }
 

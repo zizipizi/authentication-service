@@ -18,6 +18,13 @@ namespace Authentication.Host.Controllers
             _adminService = adminService;
         }
 
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAll()
+        {
+            var result = _adminService.GetAll();
+            return Ok(result);
+        }
+
         [HttpPost("create")]
         public async Task<IActionResult> CreateUser(UserCreateModel model)
         {
