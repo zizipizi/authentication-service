@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NSV.Security.JWT;
 using NSV.Security.Password;
@@ -16,10 +17,11 @@ namespace Authentication.Tests.AdminServiceTests
         public async Task BlockUser_Sucess()
         {
             var id = 1;
-            var passwordService = new Mock<IPasswordService>();
+            var passwordService = new Mock<IPasswordService>().Object;
+            var logger = new Mock<ILogger<AdminService>>().Object;
 
             var userRepo = FakeRepositoryFactory.BlockFakeUserRepository();
-            var userService = new AdminService(userRepo, passwordService.Object);
+            var userService = new AdminService(userRepo, passwordService, logger);
 
             var result = await userService.BlockUserAsync(id, CancellationToken.None);
 
@@ -31,10 +33,12 @@ namespace Authentication.Tests.AdminServiceTests
         public async Task BlockUser_NotFound()
         {
             var id = 1;
-            var passwordService = new Mock<IPasswordService>();
+            var passwordService = new Mock<IPasswordService>().Object;
+            var logger = new Mock<ILogger<AdminService>>().Object;
+
 
             var userRepo = FakeRepositoryFactory.BlockFakeUserRepository_Exception();
-            var userService = new AdminService(userRepo, passwordService.Object);
+            var userService = new AdminService(userRepo, passwordService, logger);
 
             var result = await userService.BlockUserAsync(id, CancellationToken.None);
 

@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Authentication.Host.Results.Enums;
 using Authentication.Tests.AdminControllerTests.Utills;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Xunit;
 
 namespace Authentication.Tests.AdminControllerTests
@@ -17,8 +19,9 @@ namespace Authentication.Tests.AdminControllerTests
         public async Task DeleteUser_Sucess()
         {
             int id = 1;
+            var logger = new Mock<ILogger<AdminController>>().Object;
             var userService = FakeAdminServiceFactory.GetFakeDeleteUserService(AdminResult.Ok, $"User with id {id} deleted");
-            var adminController = new AdminController(userService);
+            var adminController = new AdminController(userService, logger);
 
             var result = await adminController.DeleteUser(id);
 
@@ -30,8 +33,9 @@ namespace Authentication.Tests.AdminControllerTests
         public async Task DeleteUser_NotFound()
         {
             int id = 1;
+            var logger = new Mock<ILogger<AdminController>>().Object;
             var userService = FakeAdminServiceFactory.GetFakeDeleteUserService(AdminResult.UserNotFound, $"User with {id} not found");
-            var adminController = new AdminController(userService);
+            var adminController = new AdminController(userService, logger);
 
             var result = await adminController.DeleteUser(id);
 

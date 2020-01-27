@@ -8,6 +8,8 @@ using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Authentication.Tests.AdminControllerTests.Utills;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Xunit;
 
 namespace Authentication.Tests.AdminControllerTests
@@ -17,22 +19,22 @@ namespace Authentication.Tests.AdminControllerTests
         [Fact]
         public async Task CreateUser_Success()
         {
+            var logger = new Mock<ILogger<AdminController>>().Object;
             var userService = FakeAdminServiceFactory.CreateFakeUserService(AdminResult.Ok, $"123");
-            var adminController = new AdminController(userService);
+            var adminController = new AdminController(userService, logger);
             var userModel = new UserCreateModel();
 
             var result = await adminController.CreateUser(userModel);
 
             Assert.IsType<OkObjectResult>(result);
-            Assert.Equal("User created", ((OkObjectResult)result).Value);
         }
 
         [Fact]
         public async Task CreateUser_UserExist()
         {
-
+            var logger = new Mock<ILogger<AdminController>>().Object;
             var userService = FakeAdminServiceFactory.CreateFakeUserService(AdminResult.UserExist, $"123");
-            var adminController = new AdminController(userService);
+            var adminController = new AdminController(userService, logger);
             var userModel = new UserCreateModel();
 
             var result = await adminController.CreateUser(userModel);
@@ -44,7 +46,9 @@ namespace Authentication.Tests.AdminControllerTests
         public async Task CreateUser_GetMessageEqualAdminServiceResult()
         {
             var userService = FakeAdminServiceFactory.CreateFakeUserService(AdminResult.Ok, $"Simple text");
-            var adminController = new AdminController(userService);
+            var logger = new Mock<ILogger<AdminController>>().Object;
+
+            var adminController = new AdminController(userService, logger);
             var userModel = new UserCreateModel();
 
             var result = await adminController.CreateUser(userModel);

@@ -7,7 +7,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Authentication.Host.Results.Enums;
 using Authentication.Tests.AdminControllerTests.Utills;
+using Moq;
 using Xunit;
+using Microsoft.Extensions.Logging;
 
 namespace Authentication.Tests.AdminControllerTests
 {
@@ -17,8 +19,9 @@ namespace Authentication.Tests.AdminControllerTests
         public async Task BlockUser_Sucess()
         {
             int id = 1;
+            var logger = new Mock<ILogger<AdminController>>().Object;
             var userService = FakeAdminServiceFactory.GetFakeBlockUserService(AdminResult.Ok, $"User with Id {id} is blocked");
-            var adminController = new AdminController(userService);
+            var adminController = new AdminController(userService, logger);
 
             var result = await adminController.BlockUser(id);
 
@@ -30,8 +33,9 @@ namespace Authentication.Tests.AdminControllerTests
         public async Task BlockUser_NotFound()
         {
             int id = 1;
+            var logger = new Mock<ILogger<AdminController>>().Object;
             var userService = FakeAdminServiceFactory.GetFakeBlockUserService(AdminResult.UserNotFound, $"User with id {id} not found");
-            var adminController = new AdminController(userService);
+            var adminController = new AdminController(userService, logger);
 
             var result = await adminController.BlockUser(id);
 

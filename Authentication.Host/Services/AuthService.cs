@@ -9,6 +9,7 @@ using Authentication.Host.Models;
 using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
+using Microsoft.Extensions.Logging;
 using NSV.Security.JWT;
 using NSV.Security.Password;
 
@@ -19,12 +20,16 @@ namespace Authentication.Host.Services
         private readonly IJwtService _jwtService;
         private readonly IPasswordService _passwordService;
         private readonly IUserRepository _userRepository;
-        public AuthService(IJwtService jwtService, IPasswordService passwordService, IUserRepository userRepository)
+        private readonly ILogger _logger;
+
+        public AuthService(IJwtService jwtService, IPasswordService passwordService, IUserRepository userRepository, ILogger<AuthService> logger)
         {
             _jwtService = jwtService;
             _passwordService = passwordService;
             _userRepository = userRepository;
+            _logger = logger;
         }
+
         public async Task<Result<AuthResult, TokenModel>> SignIn(LoginModel model, CancellationToken token)
         {
             try
@@ -45,15 +50,15 @@ namespace Authentication.Host.Services
                     return new Result<AuthResult, TokenModel>(AuthResult.UserBlocked, message: "User is blocked");
                 }
 
-                return new Result<AuthResult, TokenModel>(AuthResult.WrongLoginOrPass,
-                    message: "Wrong login or password");
+                return new Result<AuthResult, TokenModel>(AuthResult.WrongLoginOrPass, message: "Wrong login or password");
             }
             catch (EntityNotFoundException)
             {
                 return new Result<AuthResult, TokenModel>(AuthResult.UserNotFound, message: "User not found");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, ex.Message);
                 return new Result<AuthResult, TokenModel>(AuthResult.Error, message: "DB Error");
             }
         }

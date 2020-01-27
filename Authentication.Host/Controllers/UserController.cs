@@ -3,6 +3,7 @@ using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using NSV.Security.JWT;
 
 namespace Authentication.Host.Controllers
@@ -12,9 +13,11 @@ namespace Authentication.Host.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        public UserController(IUserService userService)
+        private readonly ILogger _logger;
+        public UserController(IUserService userService, ILogger<UserController> logger)
         {
             _userService = userService;
+            _logger = logger;
         }
 
         [HttpGet("signout")]
@@ -30,6 +33,7 @@ namespace Authentication.Host.Controllers
                     return Conflict(result.Message);
             }
 
+            _logger.LogWarning("No content");
             return NoContent();
         }
 
@@ -48,6 +52,7 @@ namespace Authentication.Host.Controllers
                     return Ok(result.Model);
             }
 
+            _logger.LogInformation($"{result.Message}");
             return NotFound(result.Message);
         }
     }

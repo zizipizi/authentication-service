@@ -7,6 +7,8 @@ using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
 using Authentication.Tests.UserControllerTests.Utils;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Moq;
 using NSV.Security.JWT;
 using Xunit;
 
@@ -19,10 +21,12 @@ namespace Authentication.Tests.UserControllerTests
         {
             var tokenModel = FakeModels.FakeTokenModel();
             var changePassModel = FakeModels.FakePasswords();
+            
+            var logger = new Mock<ILogger<UserController>>().Object;
 
             var userService = FakeUserServiceFactory.UserChangePassword(UserResult.Ok, tokenModel, "");
 
-            var userController = new UserController(userService);
+            var userController = new UserController(userService, logger);
             var result = await userController.ChangePassword(changePassModel);
 
             Assert.IsType<OkObjectResult>(result);
@@ -34,9 +38,12 @@ namespace Authentication.Tests.UserControllerTests
             var tokenModel = FakeModels.FakeTokenModel();
             var changePassModel = FakeModels.FakePasswords();
 
+            var logger = new Mock<ILogger<UserController>>().Object;
+
+
             var userService = FakeUserServiceFactory.UserChangePassword(UserResult.WrongPassword, tokenModel, "");
 
-            var userController = new UserController(userService);
+            var userController = new UserController(userService, logger);
             var result = await userController.ChangePassword(changePassModel);
 
             Assert.IsType<BadRequestObjectResult>(result);
@@ -48,9 +55,11 @@ namespace Authentication.Tests.UserControllerTests
             var tokenModel = FakeModels.FakeTokenModel();
             var changePassModel = FakeModels.FakePasswords();
 
+            var logger = new Mock<ILogger<UserController>>().Object;
+
             var userService = FakeUserServiceFactory.UserChangePassword(UserResult.PasswordChangedNeedAuth, tokenModel, "");
 
-            var userController = new UserController(userService);
+            var userController = new UserController(userService, logger);
             var result = await userController.ChangePassword(changePassModel);
 
             Assert.IsType<NoContentResult>(result);
@@ -62,9 +71,11 @@ namespace Authentication.Tests.UserControllerTests
             var tokenModel = FakeModels.FakeTokenModel();
             var changePassModel = FakeModels.FakePasswords();
 
+            var logger = new Mock<ILogger<UserController>>().Object;
+
             var userService = FakeUserServiceFactory.UserChangePassword(UserResult.UserNotFound, tokenModel, "");
 
-            var userController = new UserController(userService);
+            var userController = new UserController(userService, logger);
             var result = await userController.ChangePassword(changePassModel);
 
             Assert.IsType<NotFoundObjectResult>(result);

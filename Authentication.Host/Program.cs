@@ -1,8 +1,10 @@
 using System;
+using System.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using Serilog.Extensions.Logging;
 
 namespace Authentication.Host
 {
@@ -16,9 +18,6 @@ namespace Authentication.Host
 
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
-                //.Enrich.FromLogContext()
-                //.WriteTo.Console()
-                //.WriteTo.File("Log.txt", rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
             try

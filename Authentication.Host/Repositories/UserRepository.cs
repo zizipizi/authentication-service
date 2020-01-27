@@ -10,16 +10,21 @@ using Authentication.Data.Models.Domain;
 using Authentication.Data.Models.Domain.Translators;
 using Authentication.Data.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Serilog;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Authentication.Host.Repositories
 {
     public class UserRepository : IUserRepository
     {
         private readonly AuthContext _context;
+        private readonly ILogger _logger;
 
-        public UserRepository(AuthContext context)
+        public UserRepository(AuthContext context, ILogger<UserRepository> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<User>> GetAllUsersAsync(CancellationToken token)
@@ -31,6 +36,7 @@ namespace Authentication.Host.Repositories
                 .Select(p => p.ToDomain())
                 .ToListAsync(token);
 
+            _logger.LogInformation("TRUE");
             return users;
         }
 
@@ -42,7 +48,10 @@ namespace Authentication.Host.Repositories
                 .ThenInclude(p => p.RoleEn)
                 .SingleOrDefaultAsync(obj => obj.Login == userName, token);
             if (user == null)
+            {
+                _logger.LogError("User not found");
                 throw new EntityNotFoundException("User not found");
+            }
 
             return user.ToDomain();
         }

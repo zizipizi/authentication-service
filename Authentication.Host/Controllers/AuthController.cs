@@ -6,6 +6,7 @@ using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using NSV.Security.JWT;
 
 namespace Authentication.Host.Controllers
@@ -15,10 +16,12 @@ namespace Authentication.Host.Controllers
     public class AuthController : Controller
     {
         private readonly IAuthService _authService;
+        private readonly ILogger _logger;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, ILogger<AuthController> logger)
         {
             _authService = authService;
+            _logger = logger;
         }
 
         [HttpPost("refresh")]
@@ -31,11 +34,13 @@ namespace Authentication.Host.Controllers
                 case AuthResult.Ok:
                     return Ok(result.Value);
                 case AuthResult.TokenValidationProblem:
+                    _logger.LogWarning($"{result.Message}");
                     return Conflict("Refresh token not validate");
                 case AuthResult.TokenExpired:
+                    _logger.LogWarning($"{result.Message}");
                     return Unauthorized("Token expired");
             }
-
+            _logger.LogWarning("Error while refresh");
             return BadRequest("Error while refresh");
         }
 
@@ -46,6 +51,7 @@ namespace Authentication.Host.Controllers
 
             if (result.Value == AuthResult.UserNotFound)
             {
+                _logger.LogWarning($"{result.Message}");
                 return NotFound(result.Message);
             }
 
@@ -59,6 +65,7 @@ namespace Authentication.Host.Controllers
                     return NotFound(result.Message);
             }
 
+            _logger.LogWarning($"{result.Message}");
             return BadRequest(result.Message);
         }
     }

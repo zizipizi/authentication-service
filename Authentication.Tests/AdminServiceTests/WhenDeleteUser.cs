@@ -10,6 +10,7 @@ using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Authentication.Tests.AdminControllerTests.Utills;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NSV.Security.JWT;
 using NSV.Security.Password;
@@ -24,9 +25,10 @@ namespace Authentication.Tests.AdminServiceTests
         {
             var id = 1;
             var passwordService = new Mock<IPasswordService>().Object;
+            var logger = new Mock<ILogger<AdminService>>().Object;
 
             var userRepo = FakeRepositoryFactory.DeleteFakeUserRepository();
-            var userService = new AdminService(userRepo, passwordService);
+            var userService = new AdminService(userRepo, passwordService, logger);
 
             var result = await userService.DeleteUserAsync(id, CancellationToken.None);
 
@@ -38,9 +40,11 @@ namespace Authentication.Tests.AdminServiceTests
         {
             var id = 1;
             var passwordService = new Mock<IPasswordService>().Object;
+            var logger = new Mock<ILogger<AdminService>>().Object;
+
 
             var userRepo = FakeRepositoryFactory.DeleteFakeUserRepository_Exception();
-            var userService = new AdminService(userRepo, passwordService);
+            var userService = new AdminService(userRepo, passwordService, logger);
 
             var result = await userService.DeleteUserAsync(id, CancellationToken.None);
 

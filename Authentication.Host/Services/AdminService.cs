@@ -21,11 +21,13 @@ namespace Authentication.Host.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly IPasswordService _passwordService;
+        private readonly ILogger _logger;
 
-        public AdminService(IUserRepository userRepository, IPasswordService passwordService)
+        public AdminService(IUserRepository userRepository, IPasswordService passwordService, ILogger<AdminService> logger)
         {
             _userRepository = userRepository;
             _passwordService = passwordService;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<User>> GetAll()
@@ -45,8 +47,9 @@ namespace Authentication.Host.Services
             {
                 return new Result<AdminResult>(AdminResult.UserNotFound, $"User with id {id} not found");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, ex.Message);
                 return new Result<AdminResult>(AdminResult.Error, "DB error");
             }
         }
@@ -70,8 +73,9 @@ namespace Authentication.Host.Services
             {
                 return new Result<AdminResult>(AdminResult.UserExist, "User with same login exist");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, ex.Message);
                 return new Result<AdminResult>(AdminResult.Error, "DB error");
             }
         }
@@ -87,8 +91,9 @@ namespace Authentication.Host.Services
             {
                 return new Result<AdminResult>(AdminResult.UserNotFound, $"User with id {id} not found");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, ex.Message);
                 return new Result<AdminResult>(AdminResult.Error, "DB error");
             }
         }
