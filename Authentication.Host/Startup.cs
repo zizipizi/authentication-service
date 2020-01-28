@@ -27,9 +27,9 @@ namespace Authentication.Host
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<AuthContext>(options => options.UseSqlite(
-                @"Data Source=C:\Projects\authentication-service\Authentication.Data\AuthDatabase.db"
-            ));
+            services.AddDbContext<AuthContext>(options =>
+                options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+
 
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAuthService, AuthService>();
@@ -37,6 +37,7 @@ namespace Authentication.Host
             services.AddScoped<IUserService, UserService>();
 
             services.AddJwt();
+
 
             services.AddAuthentication(options =>
             {
