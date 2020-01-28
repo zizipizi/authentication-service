@@ -6,6 +6,7 @@ using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using NSV.Security.JWT;
 
 namespace Authentication.Host.Controllers
@@ -15,10 +16,12 @@ namespace Authentication.Host.Controllers
     public class AuthController : Controller
     {
         private readonly IAuthService _authService;
+        private readonly ILogger _logger;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, ILogger<AuthController> logger)
         {
             _authService = authService;
+            _logger = logger;
         }
 
         [HttpPost("refresh")]
@@ -31,11 +34,13 @@ namespace Authentication.Host.Controllers
                 case AuthResult.Ok:
                     return Ok(result.Value);
                 case AuthResult.TokenValidationProblem:
+                    _logger.LogWarning($"{result.Message}");
                     return Conflict("Refresh token not validate");
                 case AuthResult.TokenExpired:
+                    _logger.LogWarning($"{result.Message}");
                     return Unauthorized("Token expired");
             }
-
+            _logger.LogWarning("Error while refresh");
             return BadRequest("Error while refresh");
         }
 
@@ -44,17 +49,24 @@ namespace Authentication.Host.Controllers
         {
             var result = await _authService.SignIn(model, CancellationToken.None);
 
+            if (result.Value == AuthResult.UserNotFound)
+            {
+                _logger.LogWarning($"{result.Message}");
+                return NotFound(result.Message);
+            }
+
             switch (result.Value)
             {
                 case AuthResult.Ok:
-                    return Ok(result);
+                    return Ok(result.Model);
                 case AuthResult.UserBlocked:
                     return Forbid("Bearer");
                 case AuthResult.UserNotFound:
-                    return NotFound("User not found");
+                    return NotFound(result.Message);
             }
 
-            return BadRequest("Error while signin");
+            _logger.LogWarning($"{result.Message}");
+            return BadRequest(result.Message);
         }
     }
 

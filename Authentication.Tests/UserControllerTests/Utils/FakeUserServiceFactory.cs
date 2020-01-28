@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Authentication.Host.Models;
 using Authentication.Host.Results;
@@ -9,7 +7,7 @@ using Authentication.Host.Services;
 using Moq;
 using NSV.Security.JWT;
 
-namespace Authentication.Tests.UserControllerTests
+namespace Authentication.Tests.UserControllerTests.Utils
 {
     public static class FakeUserServiceFactory
     {

@@ -4,7 +4,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Authentication.Host.Controllers;
 using Authentication.Host.Results.Enums;
+using Authentication.Tests.UserControllerTests.Utils;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NSV.Security.JWT;
 using Xunit;
@@ -42,7 +44,9 @@ namespace Authentication.Tests.UserControllerTests
             var userService = FakeUserServiceFactory.UserSignOut(expectationResult, message);
             var tokenModel = FakeModels.FakeTokenModel();
 
-            var userController = new UserController(userService);
+            var logger = new Mock<ILogger<UserController>>().Object;
+
+            var userController = new UserController(userService, logger);
 
             var result = await userController.SignOut(tokenModel);
 

@@ -5,7 +5,10 @@ using System.Threading.Tasks;
 using Authentication.Host.Controllers;
 using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
+using Authentication.Tests.UserControllerTests.Utils;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Moq;
 using NSV.Security.JWT;
 using Xunit;
 
@@ -16,7 +19,15 @@ namespace Authentication.Tests.UserControllerTests
         [Fact]
         public async Task UserChangePassword_Ok()
         {
-            var result = await UserChangePassword(UserResult.Ok);
+            var tokenModel = FakeModels.FakeTokenModel();
+            var changePassModel = FakeModels.FakePasswords();
+            
+            var logger = new Mock<ILogger<UserController>>().Object;
+
+            var userService = FakeUserServiceFactory.UserChangePassword(UserResult.Ok, tokenModel, "");
+
+            var userController = new UserController(userService, logger);
+            var result = await userController.ChangePassword(changePassModel);
 
             Assert.IsType<OkObjectResult>(result);
         }
@@ -24,7 +35,16 @@ namespace Authentication.Tests.UserControllerTests
         [Fact]
         public async Task UserChangePassword_WrongPassword()
         {
-            var result = await UserChangePassword(UserResult.WrongPassword);
+            var tokenModel = FakeModels.FakeTokenModel();
+            var changePassModel = FakeModels.FakePasswords();
+
+            var logger = new Mock<ILogger<UserController>>().Object;
+
+
+            var userService = FakeUserServiceFactory.UserChangePassword(UserResult.WrongPassword, tokenModel, "");
+
+            var userController = new UserController(userService, logger);
+            var result = await userController.ChangePassword(changePassModel);
 
             Assert.IsType<BadRequestObjectResult>(result);
         }
@@ -32,7 +52,15 @@ namespace Authentication.Tests.UserControllerTests
         [Fact]
         public async Task UserChangePassword_NeedAuth()
         {
-            var result = await UserChangePassword(UserResult.PasswordChangedNeedAuth);
+            var tokenModel = FakeModels.FakeTokenModel();
+            var changePassModel = FakeModels.FakePasswords();
+
+            var logger = new Mock<ILogger<UserController>>().Object;
+
+            var userService = FakeUserServiceFactory.UserChangePassword(UserResult.PasswordChangedNeedAuth, tokenModel, "");
+
+            var userController = new UserController(userService, logger);
+            var result = await userController.ChangePassword(changePassModel);
 
             Assert.IsType<NoContentResult>(result);
         }
@@ -40,23 +68,18 @@ namespace Authentication.Tests.UserControllerTests
         [Fact]
         public async Task UserChangePassword_NotFound()
         {
-            var result = await UserChangePassword(UserResult.UserNotFound);
+            var tokenModel = FakeModels.FakeTokenModel();
+            var changePassModel = FakeModels.FakePasswords();
+
+            var logger = new Mock<ILogger<UserController>>().Object;
+
+            var userService = FakeUserServiceFactory.UserChangePassword(UserResult.UserNotFound, tokenModel, "");
+
+            var userController = new UserController(userService, logger);
+            var result = await userController.ChangePassword(changePassModel);
 
             Assert.IsType<NotFoundObjectResult>(result);
         }
 
-
-        public async Task<IActionResult> UserChangePassword(UserResult expectationResult, string message = "")
-        {
-            var tokenModel = FakeModels.FakeTokenModel();
-            var changePassModel = FakeModels.FakePasswords();
-
-            var userService = FakeUserServiceFactory.UserChangePassword(expectationResult, tokenModel, "");
-
-            var userController = new UserController(userService);
-            var result = await userController.ChangePassword(changePassModel);
-
-            return result;
-        }
     }
 }

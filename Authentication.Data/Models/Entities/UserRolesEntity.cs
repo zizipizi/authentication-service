@@ -21,5 +21,6 @@ namespace Authentication.Data.Models.Entities
         public virtual RoleEntity RoleEn { get; set; }
 
         public virtual UserEntity UserEn { get; set; }
+
     }
 }

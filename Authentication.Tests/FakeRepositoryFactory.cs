@@ -26,7 +26,7 @@ namespace Authentication.Tests
         {
             var userRepositoryFake = new Mock<IUserRepository>();
             userRepositoryFake.Setup(c => c.CreateUserAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-                .Throws(new EntityNotFoundException("User not found"));
+                .Throws(new EntityNotFoundException("User with same login exist"));
 
             return userRepositoryFake.Object;
         }
@@ -67,6 +67,4 @@ namespace Authentication.Tests
             return userRepositoryFake.Object;
         }
     }
-
-
 }

@@ -4,6 +4,7 @@ using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Authentication.Host.Controllers
 {
@@ -12,10 +13,20 @@ namespace Authentication.Host.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IAdminService _adminService;
+        private readonly ILogger _logger;
 
-        public AdminController(IAdminService adminService)
+        public AdminController(IAdminService adminService, ILogger<AdminController> logger)
         {
             _adminService = adminService;
+            _logger = logger;
+        }
+
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAll()
+        {
+            var result = _adminService.GetAll();
+            _logger.LogInformation("Getting all users");
+            return Ok(result);
         }
 
         [HttpPost("create")]
@@ -26,6 +37,7 @@ namespace Authentication.Host.Controllers
             if (result.Value == AdminResult.Ok)
                 return Ok(result.Message);
 
+            _logger.LogWarning($"Conflict {result.Message}");
             return Conflict(result.Message);
         }
 
@@ -35,9 +47,9 @@ namespace Authentication.Host.Controllers
             var result = await _adminService.DeleteUserAsync(id, CancellationToken.None);
 
             if (result.Value == AdminResult.Ok)
-            {
                 return Ok(result.Message);
-            }
+
+            _logger.LogWarning($"{result.Message}");
             return NotFound(result.Message);
         }
 
@@ -47,9 +59,9 @@ namespace Authentication.Host.Controllers
             var result = await _adminService.BlockUserAsync(id, CancellationToken.None);
 
             if (result.Value == AdminResult.Ok)
-            {
                 return Ok(result.Message);
-            }
+
+            _logger.LogWarning($"{result.Message}");
             return NotFound(result.Message);
         }
     }

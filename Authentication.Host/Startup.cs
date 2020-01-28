@@ -11,6 +11,8 @@ using Microsoft.OpenApi.Models;
 using NSV.Security.JWT;
 using NSV.Security.Password;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace Authentication.Host
 {
@@ -28,6 +30,7 @@ namespace Authentication.Host
             services.AddDbContext<AuthContext>(options => options.UseSqlite(
                 @"Data Source=C:\Projects\authentication-service\Authentication.Data\AuthDatabase.db"
             ));
+
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAdminService, AdminService>();
@@ -46,6 +49,7 @@ namespace Authentication.Host
                 options.TokenValidationParameters = JwtSettings.TokenValidationParameters();
             });
 
+
             services.AddPassword(Configuration);
 
 
@@ -57,12 +61,14 @@ namespace Authentication.Host
             });
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseSerilogRequestLogging();
 
             app.UseHttpsRedirection();
 
