@@ -35,7 +35,6 @@ namespace Authentication.Host.Services
             try
             {
                 var user = await _userRepository.GetUserByNameAsync(model.UserName, token);
-
                 var validateResult = _passwordService.Validate(model.Password, user.Password);
 
                 if (validateResult.Result == PasswordValidateResult.ValidateResult.Ok)
@@ -43,13 +42,10 @@ namespace Authentication.Host.Services
                     if (user.IsActive)
                     {
                         var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role);
-
                         return new Result<AuthResult, TokenModel>(AuthResult.Ok, access.Tokens);
                     }
-
                     return new Result<AuthResult, TokenModel>(AuthResult.UserBlocked, message: "User is blocked");
                 }
-
                 return new Result<AuthResult, TokenModel>(AuthResult.WrongLoginOrPass, message: "Wrong login or password");
             }
             catch (EntityNotFoundException)

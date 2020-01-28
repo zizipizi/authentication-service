@@ -9,8 +9,13 @@ namespace Authentication.Data.Models.Entities
     public class RoleEntity
     {
         [Key]
+        [Column("id")]
         public long Id { get; set; }
+
+        [Column("role")]
         public string Role { get; set; }
+       
+        [Column("description")]
         public string Description { get; set; }
 
         public virtual ICollection<UserRolesEntity> UserRoles { get; set; }

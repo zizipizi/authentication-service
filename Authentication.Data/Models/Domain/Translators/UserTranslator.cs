@@ -30,7 +30,6 @@ namespace Authentication.Data.Models.Domain.Translators
 
             return new UserEntity()
             {
-                Id = user.Id,
                 Login = user.Login,
                 Password = user.Password,
                 Created = DateTime.Today,
