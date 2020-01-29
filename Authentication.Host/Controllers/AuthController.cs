@@ -25,22 +25,20 @@ namespace Authentication.Host.Controllers
         }
 
         [HttpPost("refresh")]
-        public async Task<IActionResult> RefreshToken(TokenModel model, CancellationToken token)
+        public async Task<IActionResult> RefreshToken(BodyTokenModel model, CancellationToken token)
         {
             var result = await _authService.RefreshToken(model, CancellationToken.None);
 
             switch (result.Value)
             {
                 case AuthResult.Ok:
-                    return Ok(result.Value);
+                    return Ok(result.Model);
                 case AuthResult.TokenValidationProblem:
-                    _logger.LogWarning($"{result.Message}");
                     return Conflict("Refresh token not validate");
                 case AuthResult.TokenExpired:
-                    _logger.LogWarning($"{result.Message}");
-                    return Unauthorized("Token expired");
+                    return Unauthorized("Token blocked");
             }
-            _logger.LogWarning("Error while refresh");
+            _logger.LogError("Error while refresh");
             return BadRequest("Error while refresh");
         }
 

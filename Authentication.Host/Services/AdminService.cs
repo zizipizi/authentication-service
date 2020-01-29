@@ -65,6 +65,7 @@ namespace Authentication.Host.Services
                 {
                     Login = model.Login,
                     Password = pass.Hash,
+                    UserName = model.UserName,
                     Role = model.Role.Split(",").Select(p => p.Trim())
                 }, token);
 

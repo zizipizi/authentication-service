@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Models.Domain;
 using Authentication.Data.Models.Entities;
+using NSV.Security.JWT;
 
 namespace Authentication.Host.Repositories
 {
@@ -20,8 +21,9 @@ namespace Authentication.Host.Repositories
 
         Task BlockUserAsync(long id, CancellationToken token);
 
-        AccessTokenEntity GetAccessToken(int id);
+        Task CheckToken(JwtTokenResult jwtToken, CancellationToken token);
 
-        RefreshTokenEntity GetRefreshToken(int id);
+        Task AddTokensAsync(JwtTokenResult jwtToken, CancellationToken token);
+
     }
 }

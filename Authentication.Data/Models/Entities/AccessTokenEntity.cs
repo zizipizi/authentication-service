@@ -7,17 +7,13 @@ namespace Authentication.Data.Models.Entities
     [Table("Access_token")]
     public class AccessTokenEntity
     {
-        
         [Key]
-        [Column("id")]
+        [Column("id", Order = 1)]
         public long Id { get; set; }
-        
-        [Column("user_id")]
-        public long UserId { get; set; }
 
-        [Column("refresh_jti")]
-        [ForeignKey(nameof(RefreshToken))]
-        public string RefreshJti { get; set; }
+        [Column("user_id")]
+        [ForeignKey(nameof(User))]
+        public long UserId { get; set; }
 
         [Column("token")]
         public string Token { get; set; }
@@ -31,6 +27,9 @@ namespace Authentication.Data.Models.Entities
         [Column("ip_adress")]
         public string IpAdress { get; set; }
 
-        public virtual RefreshTokenEntity RefreshToken { get; set; }
+        public UserEntity User { get; set; }
+
+        //[Column("refresh_token_jti", Order = 2)]
+        public RefreshTokenEntity RefreshToken { get; set; }
     }
 }

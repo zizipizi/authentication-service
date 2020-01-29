@@ -16,6 +16,7 @@ namespace Authentication.Data.Models.Domain.Translators
             return new User()
             {
                 Id = entity.Id,
+                UserName = entity.UserName,
                 Login = entity.Login,
                 Password = entity.Password,
                 IsActive = entity.IsActive,
@@ -31,6 +32,7 @@ namespace Authentication.Data.Models.Domain.Translators
             return new UserEntity()
             {
                 Login = user.Login,
+                UserName = user.UserName,
                 Password = user.Password,
                 Created = DateTime.Today,
                 IsActive = true

@@ -13,6 +13,10 @@ namespace Authentication.Data.Models.Entities
         [Column("id")]
         public long Id { get; set; }
 
+        [Column("user_name")]
+        [Required, MaxLength(128)]
+        public string UserName { get; set; }
+
         [Column("login")]
         [Required, MaxLength(128)]
         public string Login { get; set; }

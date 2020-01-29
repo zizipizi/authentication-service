@@ -10,9 +10,9 @@ using Authentication.Data.Models.Domain;
 using Authentication.Data.Models.Domain.Translators;
 using Authentication.Data.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Logging;
-using Serilog;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
+using NSV.Security.JWT;
 
 namespace Authentication.Host.Repositories
 {
@@ -59,13 +59,16 @@ namespace Authentication.Host.Repositories
         public async Task<User> GetUserByIdAsync(long id, CancellationToken token)
         {
             var user = await _context.Users
-                .AsNoTracking() //.FirstOrDefaultAsync(obj => obj.Id == id, token);
+                .AsNoTracking()
                 .Include(p => p.Roles)
                 .ThenInclude(p => p.RoleEn)
                 .SingleOrDefaultAsync(obj => obj.Id == id, token);
 
             if (user == null)
+            {
+                _logger.LogError("User not found");
                 throw new EntityNotFoundException("User not found");
+            }
 
             return user.ToDomain();
         }
@@ -94,7 +97,6 @@ namespace Authentication.Host.Repositories
                     }, token);
                 }
             }
-
             await _context.SaveChangesAsync(token);
         }
 
@@ -113,14 +115,60 @@ namespace Authentication.Host.Repositories
             await _context.SaveChangesAsync(token);
         }
 
-        public AccessTokenEntity GetAccessToken(int id)
+        public async Task CheckToken(JwtTokenResult jwtToken, CancellationToken token)
         {
-            throw new NotImplementedException();
+            var refreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == jwtToken.RefreshTokenJti, token);
+
+            if (refreshToken.IsBlocked)
+                throw new EntityNotFoundException("Token is blocked");
         }
 
-        public RefreshTokenEntity GetRefreshToken(int id)
+        public async Task AddTokensAsync(JwtTokenResult jwtToken, CancellationToken token)
         {
-            throw new NotImplementedException();
+            var userFromToken = _context.Users
+                .AsNoTracking()
+                .SingleOrDefault(c => c.Id == long.Parse(jwtToken.UserId));
+
+
+            if (jwtToken.Tokens.RefreshToken == null)
+            {
+                var accessTokenEntityWithoutRefresh = new AccessTokenEntity
+                {
+                    Created = DateTime.Now,
+                    Exprired = jwtToken.Tokens.AccessToken.Expiration,
+                    Token = jwtToken.Tokens.AccessToken.Value,
+                    User = userFromToken,
+                    RefreshToken = _context.RefreshTokens.SingleOrDefault(c => c.Jti == jwtToken.RefreshTokenJti)
+                };
+
+                await _context.AccessTokens.AddAsync(accessTokenEntityWithoutRefresh, token);
+            }
+            else
+            {
+                var refreshTokenEntity = new RefreshTokenEntity
+                {
+                    Token = jwtToken.Tokens.RefreshToken.Value,
+                    Created = DateTime.UtcNow,
+                    Expired = jwtToken.Tokens.RefreshToken.Expiration,
+                    Jti = jwtToken.RefreshTokenJti,
+                    IsBlocked = false,
+                    User = userFromToken
+                };
+
+                var accessTokenEntity = new AccessTokenEntity
+                {
+                    Created = DateTime.UtcNow,
+                    Exprired = jwtToken.Tokens.AccessToken.Expiration,
+                    Token = jwtToken.Tokens.AccessToken.Value,
+                    User = userFromToken,
+                    RefreshToken = refreshTokenEntity
+                };
+
+                await _context.AccessTokens.AddAsync(accessTokenEntity, token);
+                await _context.RefreshTokens.AddAsync(refreshTokenEntity, token);
+            }
+
+            await _context.SaveChangesAsync(token);
         }
     }
 }

@@ -16,6 +16,6 @@ namespace Authentication.Host.Services
     {
         Task<Result<AuthResult, TokenModel>> SignIn(LoginModel model, CancellationToken token);
 
-        Task<Result<AuthResult, TokenModel>> RefreshToken(TokenModel model, CancellationToken token);
+        Task<Result<AuthResult, TokenModel>> RefreshToken(BodyTokenModel model, CancellationToken token);
     }
 }

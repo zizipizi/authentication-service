@@ -10,10 +10,6 @@ namespace Authentication.Data.Models.Entities
     [Table("UserRole")]
     public class UserRolesEntity
     {
-        [Column("id")]
-        [Required, Key]
-        public long Id { get; set; }
-
         [Column("role_id")]
         [Required, ForeignKey(nameof(RoleEn))]
         public long RoleId { get; set; }
@@ -25,6 +21,5 @@ namespace Authentication.Data.Models.Entities
         public virtual RoleEntity RoleEn { get; set; }
 
         public virtual UserEntity UserEn { get; set; }
-
     }
 }
