@@ -8,15 +8,28 @@ namespace Authentication.Data.Models.Entities
     public class AccessTokenEntity
     {
         [Key]
+        [Column("id", Order = 1)]
         public long Id { get; set; }
 
-        [ForeignKey(nameof(RefreshToken))]
-        public long RefreshId { get; set; }
+        [Column("user_id")]
+        [ForeignKey(nameof(User))]
+        public long UserId { get; set; }
 
+        [Column("token")]
         public string Token { get; set; }
+        
+        [Column("expired")]
+        public DateTime Exprired { get; set; }
 
-        public DateTime Expriry { get; set; }
+        [Column("created")]
+        public DateTime Created { get; set; }
 
-        public virtual RefreshTokenEntity RefreshToken { get; set; }
+        [Column("ip_adress")]
+        public string IpAdress { get; set; }
+
+        public UserEntity User { get; set; }
+
+        //[Column("refresh_token_jti", Order = 2)]
+        public RefreshTokenEntity RefreshToken { get; set; }
     }
 }

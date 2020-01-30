@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data;
@@ -64,7 +65,8 @@ namespace Authentication.Host.Services
                 {
                     Login = model.Login,
                     Password = pass.Hash,
-                    Role = model.Role.Split(",")
+                    UserName = model.UserName,
+                    Role = model.Role.Split(",").Select(p => p.Trim())
                 }, token);
 
                 return new Result<AdminResult>(AdminResult.Ok, "User created");

@@ -9,33 +9,50 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Authentication.Data.Migrations
 {
     [DbContext(typeof(AuthContext))]
-    [Migration("20200122064945_initMigrate")]
-    partial class initMigrate
+    [Migration("20200129141314_InitMig")]
+    partial class InitMig
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.0");
+                .HasAnnotation("ProductVersion", "3.1.1");
 
             modelBuilder.Entity("Authentication.Data.Models.Entities.AccessTokenEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnName("id")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("Expriry")
+                    b.Property<DateTime>("Created")
+                        .HasColumnName("created")
                         .HasColumnType("TEXT");
 
-                    b.Property<long>("RefreshId")
-                        .HasColumnType("INTEGER");
+                    b.Property<DateTime>("Exprired")
+                        .HasColumnName("expired")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IpAdress")
+                        .HasColumnName("ip_adress")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RefreshTokenJti")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Token")
+                        .HasColumnName("token")
                         .HasColumnType("TEXT");
+
+                    b.Property<long>("UserId")
+                        .HasColumnName("user_id")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RefreshId");
+                    b.HasIndex("RefreshTokenJti");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Access_token");
                 });
@@ -44,21 +61,37 @@ namespace Authentication.Data.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnName("id")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("Expiry")
+                    b.Property<DateTime>("Created")
+                        .HasColumnName("created")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Expired")
+                        .HasColumnName("expired")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsBlocked")
+                        .HasColumnName("is_blocked")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Jti")
+                        .IsRequired()
+                        .HasColumnName("token_jti")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Token")
+                        .HasColumnName("token")
                         .HasColumnType("TEXT");
 
+                    b.Property<long>("UserId")
+                        .HasColumnName("user_id")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Refresh_token");
                 });
@@ -67,40 +100,74 @@ namespace Authentication.Data.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnName("id")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
+                        .HasColumnName("description")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Role")
+                        .HasColumnName("role")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.ToTable("Role");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            Description = "Admin privilegies",
+                            Role = "Admin"
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            Description = "User privilegies",
+                            Role = "User"
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            Description = "Guest privilegies",
+                            Role = "Guest"
+                        });
                 });
 
             modelBuilder.Entity("Authentication.Data.Models.Entities.UserEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnName("id")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("Created")
+                        .HasColumnName("created")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnName("is_active")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Login")
                         .IsRequired()
+                        .HasColumnName("login")
                         .HasColumnType("TEXT")
                         .HasMaxLength(128);
 
                     b.Property<string>("Password")
                         .IsRequired()
+                        .HasColumnName("password")
                         .HasColumnType("TEXT")
                         .HasMaxLength(1024);
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnName("user_name")
+                        .HasColumnType("TEXT")
+                        .HasMaxLength(128);
 
                     b.HasKey("Id");
 
@@ -113,12 +180,11 @@ namespace Authentication.Data.Migrations
             modelBuilder.Entity("Authentication.Data.Models.Entities.UserRolesEntity", b =>
                 {
                     b.Property<long>("RoleId")
+                        .HasColumnName("role_id")
                         .HasColumnType("INTEGER");
 
                     b.Property<long>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("Id")
+                        .HasColumnName("user_id")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("RoleId", "UserId");
@@ -131,8 +197,23 @@ namespace Authentication.Data.Migrations
             modelBuilder.Entity("Authentication.Data.Models.Entities.AccessTokenEntity", b =>
                 {
                     b.HasOne("Authentication.Data.Models.Entities.RefreshTokenEntity", "RefreshToken")
+                        .WithMany("AccessToken")
+                        .HasForeignKey("RefreshTokenJti")
+                        .HasConstraintName("refresh_token_jti")
+                        .HasPrincipalKey("Jti");
+
+                    b.HasOne("Authentication.Data.Models.Entities.UserEntity", "User")
                         .WithMany()
-                        .HasForeignKey("RefreshId")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Authentication.Data.Models.Entities.RefreshTokenEntity", b =>
+                {
+                    b.HasOne("Authentication.Data.Models.Entities.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

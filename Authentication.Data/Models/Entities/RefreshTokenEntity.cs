@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -8,14 +10,31 @@ namespace Authentication.Data.Models.Entities
     public class RefreshTokenEntity
     {
         [Key]
+        [Column("id", Order = 1)]
         public long Id { get; set; }
+        
+        [Column("user_id")]
+        [ForeignKey(nameof(User))]
+        public long UserId { get; set; }
 
+        [Column("token")]
         public string Token { get; set; }
 
-        public DateTime Expiry { get; set; }
+        [Column("expired")]
+        public DateTime Expired { get; set; }
 
+        [Column("created")]
+        public DateTime Created { get; set; }
+
+        [Column("is_blocked")]
+        public bool IsBlocked { get; set; }
+
+        //[Key]
+        [Column(name:"token_jti", Order = 2)]
         public string Jti { get; set; }
 
-        public bool IsBlocked { get; set;}
+        public UserEntity User { get; set; }
+
+        public virtual ICollection<AccessTokenEntity> AccessToken { get; set; }
     }
 }

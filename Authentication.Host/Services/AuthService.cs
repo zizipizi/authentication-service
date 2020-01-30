@@ -35,21 +35,18 @@ namespace Authentication.Host.Services
             try
             {
                 var user = await _userRepository.GetUserByNameAsync(model.UserName, token);
-
                 var validateResult = _passwordService.Validate(model.Password, user.Password);
 
                 if (validateResult.Result == PasswordValidateResult.ValidateResult.Ok)
                 {
                     if (user.IsActive)
                     {
-                        var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role);
-
+                        var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.UserName, user.Role);
+                        await _userRepository.AddTokensAsync(access, token);
                         return new Result<AuthResult, TokenModel>(AuthResult.Ok, access.Tokens);
                     }
-
                     return new Result<AuthResult, TokenModel>(AuthResult.UserBlocked, message: "User is blocked");
                 }
-
                 return new Result<AuthResult, TokenModel>(AuthResult.WrongLoginOrPass, message: "Wrong login or password");
             }
             catch (EntityNotFoundException)
@@ -63,17 +60,31 @@ namespace Authentication.Host.Services
             }
         }
 
-        public async Task<Result<AuthResult, TokenModel>> RefreshToken(TokenModel model, CancellationToken token)
+        public async Task<Result<AuthResult, TokenModel>> RefreshToken(BodyTokenModel model, CancellationToken token)
         {
-            var validateResult = _jwtService.RefreshAccessToken(model.AccessToken.Value, model.RefreshToken.Value);
-
-            if (validateResult.Result == JwtTokenResult.TokenResult.Ok)
+            try
             {
-                return new Result<AuthResult, TokenModel>(AuthResult.Ok, validateResult.Tokens);
+                var validateResult = _jwtService.RefreshAccessToken(model.AccessToken, model.RefreshToken);
+
+                await _userRepository.CheckToken(validateResult, token);
+
+                if (validateResult.Result == JwtTokenResult.TokenResult.Ok)
+                {
+                    await _userRepository.AddTokensAsync(validateResult, token);
+                    return new Result<AuthResult, TokenModel>(AuthResult.Ok, validateResult.Tokens);
+                }
+
+                return new Result<AuthResult, TokenModel>(AuthResult.TokenValidationProblem);
             }
-            return new Result<AuthResult, TokenModel>(AuthResult.TokenValidationProblem);
+            catch (EntityNotFoundException ex)
+            {
+                return new Result<AuthResult, TokenModel>(AuthResult.Error, message:ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return new Result<AuthResult, TokenModel>(AuthResult.Error, message:"DB Error");
+            }
         }
     }
-
-
 }
