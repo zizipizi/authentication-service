@@ -29,7 +29,7 @@ namespace Authentication.Data.Models.Entities
 
         public UserEntity User { get; set; }
 
-        //[Column("refresh_token_jti", Order = 2)]
+        [Column("refresh_token_jti", Order = 2)]
         public RefreshTokenEntity RefreshToken { get; set; }
     }
 }

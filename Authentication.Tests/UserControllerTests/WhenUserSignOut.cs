@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Authentication.Host.Controllers;
 using Authentication.Host.Results.Enums;
 using Authentication.Tests.UserControllerTests.Utils;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -43,10 +44,11 @@ namespace Authentication.Tests.UserControllerTests
         {
             var userService = FakeUserServiceFactory.UserSignOut(expectationResult, message);
             var tokenModel = FakeModels.FakeTokenModel();
+            var contextAccessor = new Mock<IHttpContextAccessor>().Object;
 
             var logger = new Mock<ILogger<UserController>>().Object;
 
-            var userController = new UserController(userService, logger);
+            var userController = new UserController(userService, logger, contextAccessor);
 
             var result = await userController.SignOut(tokenModel);
 

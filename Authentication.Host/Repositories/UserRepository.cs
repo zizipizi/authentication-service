@@ -108,14 +108,25 @@ namespace Authentication.Host.Repositories
         public async Task BlockUserAsync(long id, CancellationToken token)
         {
             var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id, token);
-            if (user == null)
-                throw new EntityNotFoundException("User not found");
 
-            user.IsActive = false;
-            await _context.SaveChangesAsync(token);
+            if (user != null)
+            {
+                user.IsActive = false;
+
+                var refreshTokens = await _context.RefreshTokens.Where(c => c.UserId == user.Id).ToListAsync(token);
+
+                foreach (var i in refreshTokens)
+                {
+                    i.IsBlocked = true;
+                }
+
+                await _context.SaveChangesAsync(token);
+            }
+
+            throw new EntityNotFoundException("User not found");
         }
 
-        public async Task CheckToken(JwtTokenResult jwtToken, CancellationToken token)
+        public async Task CheckRefreshTokenAsync(JwtTokenResult jwtToken, CancellationToken token)
         {
             var refreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == jwtToken.RefreshTokenJti, token);
 
@@ -123,10 +134,27 @@ namespace Authentication.Host.Repositories
                 throw new EntityNotFoundException("Token is blocked");
         }
 
+        public async Task UpdateUserPassword(long id, string password, CancellationToken token)
+        {
+            var user = await _context.Users.FindAsync(id);
+
+            if (user == null)
+                throw new EntityNotFoundException("User not found");
+
+            user.Password = password;
+            await _context.SaveChangesAsync(token);
+        }
+
+        public async Task BlockAllTokensAsync(long id, CancellationToken token)
+        {
+            _context.RefreshTokens.Where(c => c.UserId == id).ToList().ForEach(c => c.IsBlocked = true);
+
+            await _context.SaveChangesAsync(token);
+        }
+
         public async Task AddTokensAsync(JwtTokenResult jwtToken, CancellationToken token)
         {
             var userFromToken = _context.Users
-                .AsNoTracking()
                 .SingleOrDefault(c => c.Id == long.Parse(jwtToken.UserId));
 
 
@@ -164,8 +192,8 @@ namespace Authentication.Host.Repositories
                     RefreshToken = refreshTokenEntity
                 };
 
-                await _context.AccessTokens.AddAsync(accessTokenEntity, token);
                 await _context.RefreshTokens.AddAsync(refreshTokenEntity, token);
+                await _context.AccessTokens.AddAsync(accessTokenEntity, token);
             }
 
             await _context.SaveChangesAsync(token);

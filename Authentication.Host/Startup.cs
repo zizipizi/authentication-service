@@ -11,8 +11,10 @@ using Microsoft.OpenApi.Models;
 using NSV.Security.JWT;
 using NSV.Security.Password;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using StackExchange.Redis;
 
 namespace Authentication.Host
 {
@@ -30,14 +32,43 @@ namespace Authentication.Host
             services.AddDbContext<AuthContext>(options =>
                 options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
 
-
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IUserService, UserService>();
 
-            services.AddJwt();
+            services.AddControllers();
 
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Auth API", Version = "v1" });
+
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = "JWT Auth",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer"
+                });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] { }
+                    }
+                });
+            });
+
+            services.AddJwt();
 
             services.AddAuthentication(options =>
             {
@@ -50,16 +81,26 @@ namespace Authentication.Host
                 options.TokenValidationParameters = JwtSettings.TokenValidationParameters();
             });
 
-
+            var red = new ConfigurationOptions
+            {
+                EndPoints =
+                {
+                    {
+                        "localhost", 6379
+                    }
+                },
+                DefaultDatabase = 0,
+                AllowAdmin = true,
+                ClientName = "master",
+                ConnectRetry = 2
+            };
             services.AddPassword(Configuration);
 
-
-            services.AddControllers();
-
-            services.AddSwaggerGen(c =>
+            services.AddStackExchangeRedisCache(options =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Auth API", Version = "v1" });
+                options.ConfigurationOptions = red;
             });
+
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)

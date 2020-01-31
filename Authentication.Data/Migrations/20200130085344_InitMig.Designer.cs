@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Authentication.Data.Migrations
 {
     [DbContext(typeof(AuthContext))]
-    [Migration("20200129141314_InitMig")]
+    [Migration("20200130085344_InitMig")]
     partial class InitMig
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -199,7 +199,6 @@ namespace Authentication.Data.Migrations
                     b.HasOne("Authentication.Data.Models.Entities.RefreshTokenEntity", "RefreshToken")
                         .WithMany("AccessToken")
                         .HasForeignKey("RefreshTokenJti")
-                        .HasConstraintName("refresh_token_jti")
                         .HasPrincipalKey("Jti");
 
                     b.HasOne("Authentication.Data.Models.Entities.UserEntity", "User")

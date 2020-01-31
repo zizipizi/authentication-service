@@ -3,11 +3,13 @@ using System.Threading.Tasks;
 using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace Authentication.Host.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [Route("api/superuser")]
     [ApiController]
     public class AdminController : ControllerBase

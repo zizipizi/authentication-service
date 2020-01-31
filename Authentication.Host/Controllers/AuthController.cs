@@ -38,7 +38,7 @@ namespace Authentication.Host.Controllers
                 case AuthResult.TokenExpired:
                     return Unauthorized("Token blocked");
             }
-            _logger.LogError("Error while refresh");
+
             return BadRequest("Error while refresh");
         }
 

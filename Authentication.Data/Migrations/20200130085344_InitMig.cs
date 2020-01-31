@@ -104,7 +104,7 @@ namespace Authentication.Data.Migrations
                 {
                     table.PrimaryKey("PK_Access_token", x => x.id);
                     table.ForeignKey(
-                        name: "refresh_token_jti",
+                        name: "FK_Access_token_Refresh_token_RefreshTokenJti",
                         column: x => x.RefreshTokenJti,
                         principalTable: "Refresh_token",
                         principalColumn: "token_jti",

@@ -1,46 +1,62 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
 using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Server.HttpSys;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.JsonWebTokens;
 using NSV.Security.JWT;
 
 namespace Authentication.Host.Controllers
 {
+    [Authorize]
     [Route("api/user")]
     [ApiController]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
         private readonly ILogger _logger;
-        public UserController(IUserService userService, ILogger<UserController> logger)
+        private readonly IHttpContextAccessor _contextAccessor;
+        public UserController(IUserService userService, ILogger<UserController> logger, IHttpContextAccessor contextAccessor)
         {
             _userService = userService;
             _logger = logger;
+            _contextAccessor = contextAccessor;
         }
 
         [HttpGet("signout")]
-        public async Task<IActionResult> SignOut(TokenModel model)
+        public async Task<IActionResult> SignOut(BodyTokenModel model)
         {
-            var result = await _userService.SignOut(model);
+            var accessToken = await HttpContext.GetTokenAsync("access_token");
 
-            switch (result.Value)
+            var id = HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).ToList()[1].Value;
+
+            var result = await _userService.SignOut(model, id, accessToken, CancellationToken.None);
+
+            if (result.Value == UserResult.Ok)
             {
-                case UserResult.RefreshTokenExpired:
-                    return Unauthorized(result.Message);
-                case UserResult.RefreshNotMatchAccess:
-                    return Conflict(result.Message);
+                return NoContent();
             }
 
-            _logger.LogWarning("No content");
-            return NoContent();
+            return Ok(result.Message);
         }
+
 
         [HttpPost("changepass")]
         public async Task<IActionResult> ChangePassword(ChangePassModel passwords)
         {
-            var result = await _userService.ChangePassword(passwords);
+            var accessToken = await _contextAccessor.HttpContext.GetTokenAsync("access_token");
+            var id = _contextAccessor.HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).ToList()[1].Value;
+
+            var result = await _userService.ChangePasswordAsync(passwords, id, accessToken, CancellationToken.None);
 
             switch (result.Value)
             {
@@ -50,6 +66,8 @@ namespace Authentication.Host.Controllers
                     return NoContent();
                 case UserResult.Ok:
                     return Ok(result.Model);
+                case UserResult.Error:
+                    return StatusCode(StatusCodes.Status503ServiceUnavailable);
             }
 
             _logger.LogInformation($"{result.Message}");

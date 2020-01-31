@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Authentication.Host.Controllers;
 using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
 using Authentication.Tests.UserControllerTests.Utils;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -21,12 +25,33 @@ namespace Authentication.Tests.UserControllerTests
         {
             var tokenModel = FakeModels.FakeTokenModel();
             var changePassModel = FakeModels.FakePasswords();
-            
+
+            var contextAccessor = new Mock<IHttpContextAccessor>().Object;
             var logger = new Mock<ILogger<UserController>>().Object;
 
-            var userService = FakeUserServiceFactory.UserChangePassword(UserResult.Ok, tokenModel, "");
+            var fakeToken = "asjkddasd";
 
-            var userController = new UserController(userService, logger);
+            var userService = FakeUserServiceFactory.UserChangePassword(UserResult.Ok, tokenModel, "");
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "asd"),
+                new Claim(ClaimTypes.NameIdentifier, "1"),
+                new Claim(ClaimTypes.Role, "User"),
+            }));
+
+            var userController = new UserController(userService, logger, contextAccessor);
+
+            userController.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext()
+                {
+                    User = user, 
+                    Request = { Headers = { ["access_token"] = fakeToken}}
+                }
+            };
+
+            var tok = await userController.ControllerContext.HttpContext.GetTokenAsync("access_token");
+
             var result = await userController.ChangePassword(changePassModel);
 
             Assert.IsType<OkObjectResult>(result);
@@ -40,10 +65,11 @@ namespace Authentication.Tests.UserControllerTests
 
             var logger = new Mock<ILogger<UserController>>().Object;
 
+            var contextAccessor = new Mock<IHttpContextAccessor>().Object;
 
             var userService = FakeUserServiceFactory.UserChangePassword(UserResult.WrongPassword, tokenModel, "");
 
-            var userController = new UserController(userService, logger);
+            var userController = new UserController(userService, logger, contextAccessor);
             var result = await userController.ChangePassword(changePassModel);
 
             Assert.IsType<BadRequestObjectResult>(result);
@@ -55,11 +81,12 @@ namespace Authentication.Tests.UserControllerTests
             var tokenModel = FakeModels.FakeTokenModel();
             var changePassModel = FakeModels.FakePasswords();
 
+            var contextAccessor = new Mock<IHttpContextAccessor>().Object;
             var logger = new Mock<ILogger<UserController>>().Object;
 
             var userService = FakeUserServiceFactory.UserChangePassword(UserResult.PasswordChangedNeedAuth, tokenModel, "");
 
-            var userController = new UserController(userService, logger);
+            var userController = new UserController(userService, logger, contextAccessor);
             var result = await userController.ChangePassword(changePassModel);
 
             Assert.IsType<NoContentResult>(result);
@@ -71,11 +98,13 @@ namespace Authentication.Tests.UserControllerTests
             var tokenModel = FakeModels.FakeTokenModel();
             var changePassModel = FakeModels.FakePasswords();
 
+            var contextAccessor = new Mock<IHttpContextAccessor>().Object;
+
             var logger = new Mock<ILogger<UserController>>().Object;
 
             var userService = FakeUserServiceFactory.UserChangePassword(UserResult.UserNotFound, tokenModel, "");
 
-            var userController = new UserController(userService, logger);
+            var userController = new UserController(userService, logger, contextAccessor);
             var result = await userController.ChangePassword(changePassModel);
 
             Assert.IsType<NotFoundObjectResult>(result);

@@ -27,7 +27,7 @@ namespace Authentication.Data.Models
             modelBuilder.Entity<UserRolesEntity>().HasKey(k => new {k.RoleId, k.UserId});
 
             modelBuilder.Entity<AccessTokenEntity>().HasOne(c => c.RefreshToken).WithMany(c => c.AccessToken)
-                .HasPrincipalKey(c => c.Jti).HasConstraintName("refresh_token_jti");
+                .HasPrincipalKey(c => c.Jti);
 
             modelBuilder.Entity<RoleEntity>().HasData(new List<RoleEntity>
             {

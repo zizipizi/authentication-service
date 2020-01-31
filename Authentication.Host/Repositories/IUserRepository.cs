@@ -21,9 +21,13 @@ namespace Authentication.Host.Repositories
 
         Task BlockUserAsync(long id, CancellationToken token);
 
-        Task CheckToken(JwtTokenResult jwtToken, CancellationToken token);
+        Task CheckRefreshTokenAsync(JwtTokenResult jwtToken, CancellationToken token);
 
         Task AddTokensAsync(JwtTokenResult jwtToken, CancellationToken token);
+
+        Task UpdateUserPassword(long id, string password, CancellationToken token);
+
+        Task BlockAllTokensAsync(long id, CancellationToken token);
 
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
+using System.Text.Unicode;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data;
@@ -9,7 +11,9 @@ using Authentication.Host.Models;
 using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using NSV.Security.JWT;
 using NSV.Security.Password;
 
@@ -21,13 +25,15 @@ namespace Authentication.Host.Services
         private readonly IPasswordService _passwordService;
         private readonly IUserRepository _userRepository;
         private readonly ILogger _logger;
+        private readonly IDistributedCache _cache;
 
-        public AuthService(IJwtService jwtService, IPasswordService passwordService, IUserRepository userRepository, ILogger<AuthService> logger)
+        public AuthService(IJwtService jwtService, IPasswordService passwordService, IUserRepository userRepository, ILogger<AuthService> logger, IDistributedCache cache)
         {
             _jwtService = jwtService;
             _passwordService = passwordService;
             _userRepository = userRepository;
             _logger = logger;
+            _cache = cache;
         }
 
         public async Task<Result<AuthResult, TokenModel>> SignIn(LoginModel model, CancellationToken token)
@@ -35,13 +41,14 @@ namespace Authentication.Host.Services
             try
             {
                 var user = await _userRepository.GetUserByNameAsync(model.UserName, token);
+
                 var validateResult = _passwordService.Validate(model.Password, user.Password);
 
                 if (validateResult.Result == PasswordValidateResult.ValidateResult.Ok)
                 {
                     if (user.IsActive)
                     {
-                        var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.UserName, user.Role);
+                        var access = _jwtService.IssueAccessToken(id: user.Id.ToString(), name: user.UserName,roles: user.Role);
                         await _userRepository.AddTokensAsync(access, token);
                         return new Result<AuthResult, TokenModel>(AuthResult.Ok, access.Tokens);
                     }
@@ -62,11 +69,24 @@ namespace Authentication.Host.Services
 
         public async Task<Result<AuthResult, TokenModel>> RefreshToken(BodyTokenModel model, CancellationToken token)
         {
+
+            var tok = new BodyTokenModel
+            {
+                AccessToken = "asdads23123",
+                RefreshToken = "joijojoijwejr823"
+            };
+
+            _cache.SetString("tokModel", JsonConvert.SerializeObject(tok));
+
+            var myModel = JsonConvert.DeserializeObject<BodyTokenModel>(_cache.GetString("tokModel"));
+
+            var s = Encoding.UTF8.GetString(_cache.Get("MyK2ey"));
+
             try
             {
                 var validateResult = _jwtService.RefreshAccessToken(model.AccessToken, model.RefreshToken);
 
-                await _userRepository.CheckToken(validateResult, token);
+                await _userRepository.CheckRefreshTokenAsync(validateResult, token);
 
                 if (validateResult.Result == JwtTokenResult.TokenResult.Ok)
                 {
