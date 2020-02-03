@@ -26,7 +26,7 @@ namespace Authentication.Host.Controllers
         [HttpGet("all")]
         public async Task<IActionResult> GetAll()
         {
-            var result = _adminService.GetAll();
+            var result = await _adminService.GetAllAsync();
             _logger.LogInformation("Getting all users");
             return Ok(result);
         }
@@ -35,7 +35,7 @@ namespace Authentication.Host.Controllers
         public async Task<IActionResult> CreateUser(UserCreateModel model)
         {
             var result = await _adminService.CreateUserAsync(model, CancellationToken.None);
-
+            
             if (result.Value == AdminResult.Ok)
                 return Ok(result.Message);
 

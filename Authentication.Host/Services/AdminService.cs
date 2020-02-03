@@ -31,7 +31,7 @@ namespace Authentication.Host.Services
             _logger = logger;
         }
 
-        public async Task<IEnumerable<User>> GetAll()
+        public async Task<IEnumerable<User>> GetAllAsync()
         {
             var result = await _userRepository.GetAllUsersAsync(CancellationToken.None);
             return result;

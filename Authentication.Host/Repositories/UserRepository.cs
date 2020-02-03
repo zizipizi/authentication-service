@@ -154,8 +154,8 @@ namespace Authentication.Host.Repositories
 
         public async Task AddTokensAsync(JwtTokenResult jwtToken, CancellationToken token)
         {
-            var userFromToken = _context.Users
-                .SingleOrDefault(c => c.Id == long.Parse(jwtToken.UserId));
+            var userFromToken = await _context.Users
+                .SingleOrDefaultAsync(c => c.Id == long.Parse(jwtToken.UserId), token);
 
 
             if (jwtToken.Tokens.RefreshToken == null)
@@ -166,7 +166,7 @@ namespace Authentication.Host.Repositories
                     Exprired = jwtToken.Tokens.AccessToken.Expiration,
                     Token = jwtToken.Tokens.AccessToken.Value,
                     User = userFromToken,
-                    RefreshToken = _context.RefreshTokens.SingleOrDefault(c => c.Jti == jwtToken.RefreshTokenJti)
+                    RefreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == jwtToken.RefreshTokenJti, token)
                 };
 
                 await _context.AccessTokens.AddAsync(accessTokenEntityWithoutRefresh, token);
