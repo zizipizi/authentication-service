@@ -114,5 +114,53 @@ namespace Authentication.Tests
 
             return context;
         }
+
+        public static AuthContext BlockUser_Ok()
+        {
+            var options = new DbContextOptionsBuilder<AuthContext>()
+                .UseInMemoryDatabase(databaseName: "BlockUser_Ok")
+                .Options;
+
+            AuthContext context = new AuthContext(options);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
+            var user = new UserEntity
+            {
+                Login = "Login",
+                Password = "Password",
+                Id = 1,
+                IsActive = true
+            };
+
+            context.Users.Add(user);
+            context.SaveChanges();
+
+            return context;
+        }
+
+        public static AuthContext BlockUser_EntityException()
+        {
+            var options = new DbContextOptionsBuilder<AuthContext>()
+                .UseInMemoryDatabase(databaseName: "BlockUser_Ok")
+                .Options;
+
+            AuthContext context = new AuthContext(options);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
+            var user = new UserEntity
+            {
+                Login = "Login",
+                Password = "Password",
+                Id = 1,
+                IsActive = true
+            };
+
+            context.Users.Add(user);
+            context.SaveChanges();
+
+            return context;
+        }
     }
 }

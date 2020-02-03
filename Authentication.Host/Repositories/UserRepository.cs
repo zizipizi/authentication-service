@@ -118,8 +118,10 @@ namespace Authentication.Host.Repositories
 
                 await _context.SaveChangesAsync(token);
             }
-
-            throw new EntityNotFoundException("User not found");
+            else
+            {
+                throw new EntityNotFoundException("User not found");
+            }
         }
 
         public async Task CheckRefreshTokenAsync(JwtTokenResult jwtToken, CancellationToken token)
