@@ -78,25 +78,16 @@ namespace Authentication.Host.Repositories
             var newUser = user.ToEntity(); 
             await _context.Users.AddAsync(newUser, token);
 
-            if (user.Role.Count() == 1)
-            {
-                await _context.UsersRoles.AddAsync(new UserRolesEntity
+            var roles = await _context.Roles.Where(x => user.Role.Contains(x.Role)).ToArrayAsync(token);
+            var userRoles = roles
+                .Select(role => new UserRolesEntity
                 {
                     UserEn = newUser,
-                    RoleEn = _context.Roles.FirstOrDefault(c => c.Role == user.Role.First())
-                }, token);
-            }
-            else
-            {
-                foreach (var role in user.Role)
-                {
-                    await _context.UsersRoles.AddAsync(new UserRolesEntity
-                    {
-                        UserEn = newUser,
-                        RoleEn = _context.Roles.FirstOrDefault(c => c.Role == role)
-                    }, token);
-                }
-            }
+                    RoleEn = role
+                });
+
+            await _context.UsersRoles.AddRangeAsync(userRoles, token);
+
             await _context.SaveChangesAsync(token);
         }
 
