@@ -21,7 +21,7 @@ namespace Authentication.Tests.AdminServiceTests
             var passService = new Mock<IPasswordService>().Object;
             var logger = new Mock<ILogger<AdminService>>().Object;
 
-            var userRepo = FakeRepositoryFactory.CreateFakeUserRepository();
+            var userRepo = FakeRepositoryFactory.CreateFakeUser();
             var userService = new AdminService(userRepo, passService, logger);
 
             var userCreateModel = new UserCreateModel
@@ -43,7 +43,7 @@ namespace Authentication.Tests.AdminServiceTests
             var passService = new Mock<IPasswordService>().Object;
             var logger = new Mock<ILogger<AdminService>>().Object;
 
-            var userRepo = FakeRepositoryFactory.CreateFakeUserRepository_Exception();
+            var userRepo = FakeRepositoryFactory.CreateFakeUser_Exception();
 
             var userService = new AdminService(userRepo, passService, logger);
 

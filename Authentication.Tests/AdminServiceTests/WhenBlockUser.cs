@@ -20,7 +20,7 @@ namespace Authentication.Tests.AdminServiceTests
             var passwordService = new Mock<IPasswordService>().Object;
             var logger = new Mock<ILogger<AdminService>>().Object;
 
-            var userRepo = FakeRepositoryFactory.BlockFakeUserRepository();
+            var userRepo = FakeRepositoryFactory.BlockFakeUser();
             var userService = new AdminService(userRepo, passwordService, logger);
 
             var result = await userService.BlockUserAsync(id, CancellationToken.None);
@@ -37,7 +37,7 @@ namespace Authentication.Tests.AdminServiceTests
             var logger = new Mock<ILogger<AdminService>>().Object;
 
 
-            var userRepo = FakeRepositoryFactory.BlockFakeUserRepository_Exception();
+            var userRepo = FakeRepositoryFactory.BlockFakeUser_Exception();
             var userService = new AdminService(userRepo, passwordService, logger);
 
             var result = await userService.BlockUserAsync(id, CancellationToken.None);

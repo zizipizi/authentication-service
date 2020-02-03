@@ -59,8 +59,6 @@ namespace Authentication.Host.Controllers
                     return Ok(result.Model);
                 case AuthResult.UserBlocked:
                     return Forbid("Bearer");
-                case AuthResult.UserNotFound:
-                    return NotFound(result.Message);
             }
 
             _logger.LogWarning($"{result.Message}");

@@ -75,7 +75,12 @@ namespace Authentication.Host.Repositories
 
         public async Task CreateUserAsync(User user, CancellationToken token)
         {
-            var newUser = user.ToEntity(); 
+            var newUser = user.ToEntity();
+            var userExist = await _context.Users.AnyAsync(c => c.Login == user.Login, token);
+
+            if (userExist)
+                throw new EntityNotFoundException("User alredy exist");
+
             await _context.Users.AddAsync(newUser, token);
 
             var roles = await _context.Roles.Where(x => user.Role.Contains(x.Role)).ToArrayAsync(token);
