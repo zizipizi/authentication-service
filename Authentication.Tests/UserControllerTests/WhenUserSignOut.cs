@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Authentication.Host.Controllers;
@@ -19,40 +20,72 @@ namespace Authentication.Tests.UserControllerTests
         [Fact]
         public async Task SignOut_TokenExpired()
         {
-            var result = await SignOut(UserResult.RefreshTokenExpired, "Refresh token expired");
+            var tokenModel = FakeModels.FakeTokenModel();
 
-            Assert.IsType<UnauthorizedObjectResult>(result);
-        }
+            var logger = new Mock<ILogger<UserController>>().Object;
 
-        [Fact]
-        public async Task SignOut_RefreshNotMatchAccess()
-        {
-            var result = await SignOut(UserResult.RefreshNotMatchAccess, "Refresh token not match access");
 
-            Assert.IsType<ConflictObjectResult>(result);
-        }
+            var userService = FakeUserServiceFactory.UserSignOut(UserResult.Ok, "");
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name, "asd"),
+                    new Claim(ClaimTypes.NameIdentifier, "1"),
+                    new Claim(ClaimTypes.NameIdentifier, "1"),
+                    new Claim(ClaimTypes.Role, "User"),
+                }
+            ));
 
-        [Fact]
-        public async Task SignOut_NoContent()
-        {
-            var result = await SignOut(UserResult.Error, "DB Error");
+
+            var userController = new UserController(userService, logger);
+
+            userController.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext()
+                {
+                    User = user,
+                    Request = { Headers = { ["Authorization"] = "asdk" } }
+                }
+            };
+
+            var result = await userController.SignOut(tokenModel);
 
             Assert.IsType<NoContentResult>(result);
         }
 
-        public async Task<IActionResult> SignOut(UserResult expectationResult, string message = "")
+        [Fact]
+        public async Task SignOut_BadRequest()
         {
-            var userService = FakeUserServiceFactory.UserSignOut(expectationResult, message);
             var tokenModel = FakeModels.FakeTokenModel();
-            var contextAccessor = new Mock<IHttpContextAccessor>().Object;
 
             var logger = new Mock<ILogger<UserController>>().Object;
 
-            var userController = new UserController(userService, logger, contextAccessor);
+
+            var userService = FakeUserServiceFactory.UserSignOut(UserResult.Error, "");
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name, "asd"),
+                    new Claim(ClaimTypes.NameIdentifier, "1"),
+                    new Claim(ClaimTypes.NameIdentifier, "1"),
+                    new Claim(ClaimTypes.Role, "User"),
+                }
+            ));
+
+
+            var userController = new UserController(userService, logger);
+
+            userController.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext()
+                {
+                    User = user,
+                    Request = { Headers = { ["Authorization"] = "asdk" } }
+                }
+            };
 
             var result = await userController.SignOut(tokenModel);
 
-            return result;
+            Assert.IsType<OkObjectResult>(result);
         }
+
     }
 }

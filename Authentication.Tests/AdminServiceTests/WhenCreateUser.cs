@@ -24,7 +24,13 @@ namespace Authentication.Tests.AdminServiceTests
             var userRepo = FakeRepositoryFactory.CreateFakeUserRepository();
             var userService = new AdminService(userRepo, passService, logger);
 
-            var userCreateModel = new UserCreateModel();
+            var userCreateModel = new UserCreateModel
+            {
+                Login = "SomeLogin",
+                Password = "SomeLongPassword",
+                Role = "Admin",
+                UserName = "UserName"
+            };
 
             var result = await userService.CreateUserAsync(userCreateModel, CancellationToken.None);
 
@@ -41,7 +47,13 @@ namespace Authentication.Tests.AdminServiceTests
 
             var userService = new AdminService(userRepo, passService, logger);
 
-            var userCreateModel = new UserCreateModel();
+            var userCreateModel = new UserCreateModel
+            {
+                Login = "SomeLogin",
+                Password = "SomeLongPassword",
+                Role = "Admin",
+                UserName = "UserName"
+            };
 
             var result = await userService.CreateUserAsync(userCreateModel, CancellationToken.None);
 

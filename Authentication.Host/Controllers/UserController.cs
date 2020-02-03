@@ -24,22 +24,27 @@ namespace Authentication.Host.Controllers
     {
         private readonly IUserService _userService;
         private readonly ILogger _logger;
-        private readonly IHttpContextAccessor _contextAccessor;
-        public UserController(IUserService userService, ILogger<UserController> logger, IHttpContextAccessor contextAccessor)
+        public UserController(IUserService userService, ILogger<UserController> logger)
         {
             _userService = userService;
             _logger = logger;
-            _contextAccessor = contextAccessor;
         }
 
         [HttpGet("signout")]
         public async Task<IActionResult> SignOut(BodyTokenModel model)
         {
-            var accessToken = await HttpContext.GetTokenAsync("access_token");
+            var token = "";
 
             var id = HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).ToList()[1].Value;
 
-            var result = await _userService.SignOut(model, id, accessToken, CancellationToken.None);
+            var authHeader = Request.Headers["Authorization"].ToString();
+
+            if (authHeader != null && authHeader.Contains("Bearer"))
+            {
+                token = authHeader.Replace("Bearer", "");
+            }
+
+            var result = await _userService.SignOut(model, id, token, CancellationToken.None);
 
             if (result.Value == UserResult.Ok)
             {
@@ -53,10 +58,16 @@ namespace Authentication.Host.Controllers
         [HttpPost("changepass")]
         public async Task<IActionResult> ChangePassword(ChangePassModel passwords)
         {
-            var accessToken = await _contextAccessor.HttpContext.GetTokenAsync("access_token");
-            var id = _contextAccessor.HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).ToList()[1].Value;
+            var id = HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).ToList()[1].Value;
+            var token = "";
+            var authHeader = Request.Headers["Authorization"].ToString();
 
-            var result = await _userService.ChangePasswordAsync(passwords, id, accessToken, CancellationToken.None);
+            if (authHeader != null && authHeader.Contains("Bearer"))
+            { 
+                token = authHeader.Replace("Bearer", "");
+            }
+
+            var result = await _userService.ChangePasswordAsync(passwords, id, token, CancellationToken.None);
 
             switch (result.Value)
             {

@@ -19,11 +19,6 @@ namespace Authentication.Tests.UserControllerTests.Utils
             userServiceFake.Setup(c => c.SignOut(It.IsAny<BodyTokenModel>(), It.IsAny<string>(), It.IsAny<string>(), CancellationToken.None))
                 .Returns(Task.FromResult(new Result<UserResult>(result)));
 
-
-
-            userServiceFake.Setup(c => c.SignOut(It.IsAny<BodyTokenModel>(), It.IsAny<string>(), It.IsAny<string>(), CancellationToken.None))
-                .Returns(Task.FromResult(new Result<UserResult>(result)));
-
             return userServiceFake.Object;
         }
 
