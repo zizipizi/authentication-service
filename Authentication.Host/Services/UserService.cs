@@ -54,7 +54,7 @@ namespace Authentication.Host.Services
             {
                 var user = await _userRepository.GetUserByIdAsync(long.Parse(id), token);
 
-                var passwordValidateResult = _passwordService.Validate(user.Password, model.OldPassword);
+                var passwordValidateResult = _passwordService.Validate(model.OldPassword, user.Password);
 
                 if (passwordValidateResult.Result == PasswordValidateResult.ValidateResult.Invalid)
                 {

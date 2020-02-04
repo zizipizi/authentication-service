@@ -30,7 +30,7 @@ namespace Authentication.Host.Controllers
             _logger = logger;
         }
 
-        [HttpGet("signout")]
+        [HttpPost("signout")]
         public async Task<IActionResult> SignOut(BodyTokenModel model)
         {
             var token = "";
