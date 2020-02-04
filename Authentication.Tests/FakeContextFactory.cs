@@ -12,6 +12,8 @@ namespace Authentication.Tests
 {
     public static class FakeContextFactory
     {
+        #region GetUserById
+
         public static AuthContext GetUserById_Ok()
         {
             var options = new DbContextOptionsBuilder<AuthContext>()
@@ -58,6 +60,10 @@ namespace Authentication.Tests
             return context;
         }
 
+        #endregion
+
+
+        #region GetUserByName
         public static AuthContext GetUserByName_Ok()
         {
             var options = new DbContextOptionsBuilder<AuthContext>()
@@ -89,6 +95,12 @@ namespace Authentication.Tests
             return context;
         }
 
+
+        #endregion
+
+
+        #region CreateUser
+
         public static AuthContext CreateUser_Ok()
         {
             var options = new DbContextOptionsBuilder<AuthContext>()
@@ -114,7 +126,10 @@ namespace Authentication.Tests
 
             return context;
         }
+        #endregion
 
+
+        #region BlockUser
         public static AuthContext BlockUser_Ok()
         {
             var options = new DbContextOptionsBuilder<AuthContext>()
@@ -162,5 +177,116 @@ namespace Authentication.Tests
 
             return context;
         }
+        #endregion
+
+
+        #region UpdateUserPassword
+
+        public static AuthContext UpdateUserPassword_Ok()
+        {
+            var options = new DbContextOptionsBuilder<AuthContext>()
+                .UseInMemoryDatabase(databaseName: "UpdateUserPassword_Ok")
+                .Options;
+
+            AuthContext context = new AuthContext(options);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
+            var user = new UserEntity
+            {
+                Login = "Login",
+                Password = "Password",
+                Id = 1,
+                IsActive = true
+            };
+
+            context.Users.Add(user);
+            context.SaveChanges();
+
+            return context;
+        }
+
+        public static AuthContext UpdateUserPassword_EntityException()
+        {
+            var options = new DbContextOptionsBuilder<AuthContext>()
+                .UseInMemoryDatabase(databaseName: "UpdateUserPassword_EntityException")
+                .Options;
+
+            AuthContext context = new AuthContext(options);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
+            var user = new UserEntity
+            {
+                Login = "Login",
+                Password = "Password",
+                Id = 1,
+                IsActive = true
+            };
+
+            context.Users.Add(user);
+            context.SaveChanges();
+
+            return context;
+        }
+
+        #endregion
+
+        #region CheckRefreshTokenForBlock
+
+        public static AuthContext CheckRefreshToken_Ok()
+        {
+            var options = new DbContextOptionsBuilder<AuthContext>()
+                .UseInMemoryDatabase(databaseName: "CheckRefreshToken_Ok")
+                .Options;
+
+            AuthContext context = new AuthContext(options);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
+            var refreshToken = new RefreshTokenEntity
+            {
+                Created = DateTime.Now,
+                Expired = DateTime.Now.AddMinutes(15),
+                Id = 1,
+                IsBlocked = false,
+                Jti = "1234567890-0987654321-1234567890",
+                Token = "laksddfkjsdfjsdkfljsdkfjwioef",
+            };
+
+            context.RefreshTokens.Add(refreshToken);
+            context.SaveChanges();
+
+            return context;
+        }
+
+        public static AuthContext CheckRefreshToken_Blocked()
+        {
+            var options = new DbContextOptionsBuilder<AuthContext>()
+                .UseInMemoryDatabase(databaseName: "CheckRefreshToken_Blocked")
+                .Options;
+
+            AuthContext context = new AuthContext(options);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
+            var refreshToken = new RefreshTokenEntity
+            {
+                Created = DateTime.Now,
+                Expired = DateTime.Now.AddMinutes(15),
+                Id = 1,
+                IsBlocked = true,
+                Jti = "1234567890-0987654321-1234567890",
+                Token = "laksddfkjsdfjsdkfljsdkfjwioef",
+            };
+
+            context.RefreshTokens.Add(refreshToken);
+            context.SaveChanges();
+
+            return context;
+        }
+
+        #endregion
+
     }
 }

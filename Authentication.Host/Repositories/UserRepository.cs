@@ -128,8 +128,8 @@ namespace Authentication.Host.Repositories
         {
             var refreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == jwtToken.RefreshTokenJti, token);
 
-            if (refreshToken.IsBlocked)
-                throw new EntityNotFoundException("Token is blocked");
+            if (refreshToken == null || refreshToken.IsBlocked)
+                throw new EntityNotFoundException("Token is blocked or not found");
         }
 
         public async Task UpdateUserPassword(long id, string password, CancellationToken token)
