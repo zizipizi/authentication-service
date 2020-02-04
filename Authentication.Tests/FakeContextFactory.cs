@@ -288,5 +288,109 @@ namespace Authentication.Tests
 
         #endregion
 
+
+        #region BlockAllTokens
+
+        public static AuthContext BlockAllTokens_Ok()
+        {
+            var options = new DbContextOptionsBuilder<AuthContext>()
+                .UseInMemoryDatabase(databaseName: "BlockAllTokens_Ok")
+                .Options;
+
+            AuthContext context = new AuthContext(options);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
+            var user = new UserEntity
+            {
+                Login = "Login",
+                Password = "Password",
+                Id = 1,
+                IsActive = true
+            };
+
+            var refreshToken = new RefreshTokenEntity
+            {
+                Created = DateTime.Now,
+                Expired = DateTime.Now.AddMinutes(15),
+                Id = 1,
+                IsBlocked = false,
+                Jti = "1234567890-0987654321-1234567890",
+                Token = "laksddfkjsdfjsdkfljsdkfjwioef",
+                User = user
+            };
+
+            var refreshToken2 = new RefreshTokenEntity
+            {
+                Created = DateTime.Now,
+                Expired = DateTime.Now.AddMinutes(15),
+                Id = 2,
+                IsBlocked = false,
+                Jti = "1234123567890-098765432321-123456734890",
+                Token = "laksddfkjsdfjsdkflasdasdqwjsdkfjwioef",
+                User = user
+            };
+
+            context.Users.Add(user);
+            context.RefreshTokens.Add(refreshToken);
+            context.RefreshTokens.Add(refreshToken2);
+            context.SaveChanges();
+
+            return context;
+        }
+
+        #endregion
+
+        #region AddTokens
+
+        public static AuthContext AddTokensWithRefresh()
+        {
+            var options = new DbContextOptionsBuilder<AuthContext>()
+                .UseInMemoryDatabase(databaseName: "AddTokensWithRefresh")
+                .Options;
+
+            AuthContext context = new AuthContext(options);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
+            var user = new UserEntity
+            {
+                Login = "Login",
+                Password = "Password",
+                Id = 1,
+                IsActive = true
+            };
+
+            context.Users.Add(user);
+            context.SaveChanges();
+            return context;
+        }
+
+        public static AuthContext AddTokenWithoutRefresh()
+        {
+            var options = new DbContextOptionsBuilder<AuthContext>()
+                .UseInMemoryDatabase(databaseName: "AddTokensWithoutRefresh")
+                .Options;
+
+            AuthContext context = new AuthContext(options);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
+            var user = new UserEntity
+            {
+                Login = "Login",
+                Password = "Password",
+                Id = 1,
+                IsActive = true
+            };
+
+            context.Users.Add(user);
+            context.SaveChanges();
+            return context;
+        }
+
+        
+
+        #endregion
     }
 }

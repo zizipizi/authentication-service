@@ -145,7 +145,9 @@ namespace Authentication.Host.Repositories
 
         public async Task BlockAllTokensAsync(long id, CancellationToken token)
         {
-            _context.RefreshTokens.Where(c => c.UserId == id).ToList().ForEach(c => c.IsBlocked = true);
+            _context.RefreshTokens.Where(c => c.UserId == id)
+                .ToList()
+                .ForEach(c => c.IsBlocked = true);
 
             await _context.SaveChangesAsync(token);
         }
