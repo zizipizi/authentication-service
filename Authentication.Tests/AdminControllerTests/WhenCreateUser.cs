@@ -41,19 +41,5 @@ namespace Authentication.Tests.AdminControllerTests
 
             Assert.IsType<ConflictObjectResult>(result);
         }
-
-        [Fact]
-        public async Task CreateUser_GetMessageEqualAdminServiceResult()
-        {
-            var userService = FakeAdminServiceFactory.CreateFakeUserService(AdminResult.Ok, $"Simple text");
-            var logger = new Mock<ILogger<AdminController>>().Object;
-
-            var adminController = new AdminController(userService, logger);
-            var userModel = new UserCreateModel();
-
-            var result = await adminController.CreateUser(userModel);
-
-            Assert.Equal("Simple text", ((ObjectResult)result).Value);
-        }
     }
 }

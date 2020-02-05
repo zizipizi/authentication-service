@@ -37,7 +37,7 @@ namespace Authentication.Host.Controllers
             var result = await _adminService.CreateUserAsync(model, CancellationToken.None);
             
             if (result.Value == AdminResult.Ok)
-                return Ok(result.Message);
+                return Ok(result.Model);
 
             _logger.LogWarning($"Conflict {result.Message}");
             return Conflict(result.Message);

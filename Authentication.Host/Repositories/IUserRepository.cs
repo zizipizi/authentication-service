@@ -11,7 +11,7 @@ namespace Authentication.Host.Repositories
     {
         Task<IEnumerable<User>> GetAllUsersAsync(CancellationToken token);
 
-        Task CreateUserAsync(User user, CancellationToken token);
+        Task<long> CreateUserAsync(User user, CancellationToken token);
 
         Task<User> GetUserByNameAsync(string userName, CancellationToken token);
 

@@ -24,6 +24,7 @@ namespace Authentication.Host.Controllers
     {
         private readonly IUserService _userService;
         private readonly ILogger _logger;
+
         public UserController(IUserService userService, ILogger<UserController> logger)
         {
             _userService = userService;
@@ -33,16 +34,7 @@ namespace Authentication.Host.Controllers
         [HttpPost("signout")]
         public async Task<IActionResult> SignOut(BodyTokenModel model)
         {
-            var token = "";
-
-            var id = HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).ToList()[1].Value;
-
-            var authHeader = Request.Headers["Authorization"].ToString();
-
-            if (authHeader != null && authHeader.Contains("Bearer"))
-            {
-                token = authHeader.Replace("Bearer", "");
-            }
+            var (id, token) = GetUserInfo();
 
             var result = await _userService.SignOut(model, id, token, CancellationToken.None);
 
@@ -54,18 +46,10 @@ namespace Authentication.Host.Controllers
             return Ok(result.Message);
         }
 
-
         [HttpPost("changepass")]
         public async Task<IActionResult> ChangePassword(ChangePassModel passwords)
         {
-            var id = HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).ToList()[1].Value;
-            var token = "";
-            var authHeader = Request.Headers["Authorization"].ToString();
-
-            if (authHeader != null && authHeader.Contains("Bearer"))
-            { 
-                token = authHeader.Replace("Bearer", "");
-            }
+            var (id, token) = GetUserInfo();
 
             var result = await _userService.ChangePasswordAsync(passwords, id, token, CancellationToken.None);
 
@@ -83,6 +67,20 @@ namespace Authentication.Host.Controllers
 
             _logger.LogInformation($"{result.Message}");
             return NotFound(result.Message);
+        }
+
+        private (string id, string token) GetUserInfo()
+        {
+            var userId = HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).ToList()[1].Value;
+            var userToken = "";
+            var authHeader = Request.Headers["Authorization"].ToString();
+
+            if (authHeader != null && authHeader.Contains("Bearer"))
+            {
+                userToken = authHeader.Replace("Bearer", "");
+            }
+
+            return (userId, userToken);
         }
     }
 }

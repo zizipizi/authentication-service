@@ -73,7 +73,7 @@ namespace Authentication.Host.Repositories
             return user.ToDomain();
         }
 
-        public async Task CreateUserAsync(User user, CancellationToken token)
+        public async Task<long> CreateUserAsync(User user, CancellationToken token)
         {
             var newUser = user.ToEntity();
             var userExist = await _context.Users.AnyAsync(c => c.Login == user.Login, token);
@@ -94,6 +94,8 @@ namespace Authentication.Host.Repositories
             await _context.UsersRoles.AddRangeAsync(userRoles, token);
 
             await _context.SaveChangesAsync(token);
+
+            return newUser.Id;
         }
 
         public async Task DeleteUserAsync(long id, CancellationToken token)

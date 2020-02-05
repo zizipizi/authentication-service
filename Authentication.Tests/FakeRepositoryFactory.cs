@@ -18,7 +18,7 @@ namespace Authentication.Tests
         {
             var userRepositoryFake = new Mock<IUserRepository>();
             userRepositoryFake.Setup(c => c.CreateUserAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.Delay(2));
+                .Returns(Task.FromResult(It.IsAny<long>()));
 
             return userRepositoryFake.Object;
         }

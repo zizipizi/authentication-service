@@ -12,7 +12,7 @@ namespace Authentication.Host.Services
     {
         Task<IEnumerable<User>> GetAllAsync();
 
-        Task<Result<AdminResult>> CreateUserAsync(UserCreateModel model, CancellationToken token);
+        Task<Result<AdminResult, UserInfo>> CreateUserAsync(UserCreateModel model, CancellationToken token);
 
         Task<Result<AdminResult>> BlockUserAsync(int id, CancellationToken token);
 
