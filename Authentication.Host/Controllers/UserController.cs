@@ -34,7 +34,7 @@ namespace Authentication.Host.Controllers
             {
                 return BadRequest("Wrong identifier");
             }
-                
+
             var authHeader = Request.Headers["Authorization"].ToString();
 
             if (authHeader != null && authHeader.Contains("Bearer"))
@@ -102,13 +102,7 @@ namespace Authentication.Host.Controllers
 
         private string GetIdentifier()
         {
-            var list = HttpContext.User.Claims
-                .Where(c => c.Type == ClaimTypes.NameIdentifier)
-                .ToList();
-            var idStr = list
-                .ElementAtOrDefault(1)?.Value;
-
-            return idStr;
+            return HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
     }
 }

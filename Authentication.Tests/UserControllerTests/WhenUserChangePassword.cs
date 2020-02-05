@@ -74,7 +74,6 @@ namespace Authentication.Tests.UserControllerTests
                     {
                         new Claim(ClaimTypes.Name, "asd"),
                         new Claim(ClaimTypes.NameIdentifier, "1"),
-                        new Claim(ClaimTypes.NameIdentifier, "1"),
                         new Claim(ClaimTypes.Role, "User"),
                     }
                 ));
