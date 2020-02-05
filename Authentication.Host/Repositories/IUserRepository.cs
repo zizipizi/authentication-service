@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Models.Domain;
-using Authentication.Data.Models.Entities;
 using NSV.Security.JWT;
 
 namespace Authentication.Host.Repositories

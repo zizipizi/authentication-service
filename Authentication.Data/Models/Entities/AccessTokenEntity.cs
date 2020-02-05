@@ -8,7 +8,7 @@ namespace Authentication.Data.Models.Entities
     public class AccessTokenEntity
     {
         [Key]
-        [Column("id", Order = 1)]
+        [Column("id")]
         public long Id { get; set; }
 
         [Column("user_id")]
@@ -29,7 +29,7 @@ namespace Authentication.Data.Models.Entities
 
         public UserEntity User { get; set; }
 
-        [Column("refresh_token_jti", Order = 2)]
-        public RefreshTokenEntity RefreshToken { get; set; }
+        [Column("refresh_token_jti")]
+        public virtual RefreshTokenEntity RefreshToken { get; set; }
     }
 }

@@ -10,7 +10,7 @@ namespace Authentication.Data.Models.Entities
     public class RefreshTokenEntity
     {
         [Key]
-        [Column("id", Order = 1)]
+        [Column("id")]
         public long Id { get; set; }
         
         [Column("user_id")]
@@ -30,11 +30,13 @@ namespace Authentication.Data.Models.Entities
         public bool IsBlocked { get; set; }
 
         //[Key]
-        [Column(name:"token_jti", Order = 2)]
+        [Column(name:"token_jti")]
         public string Jti { get; set; }
 
-        public UserEntity User { get; set; }
+        [InverseProperty(nameof(UserEntity.RefreshTokens))]
+        public virtual UserEntity User { get; set; }
 
+        [InverseProperty(nameof(AccessTokenEntity.RefreshToken))]
         public virtual ICollection<AccessTokenEntity> AccessToken { get; set; }
     }
 }

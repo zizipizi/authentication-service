@@ -60,7 +60,8 @@ namespace Authentication.Host.Services
             try
             {
                 var pass = _passwordService.Hash(model.Password);
-
+                // todo: check if pass.Result is error, pass.Hash may be null and we'll get db error
+                
                 var id = await _userRepository.CreateUserAsync(new User()
                 {
                     Login = model.Login,

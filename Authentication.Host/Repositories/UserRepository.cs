@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Exceptions;
@@ -10,7 +9,6 @@ using Authentication.Data.Models.Domain;
 using Authentication.Data.Models.Domain.Translators;
 using Authentication.Data.Models.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Logging;
 using NSV.Security.JWT;
 
@@ -79,16 +77,20 @@ namespace Authentication.Host.Repositories
             var userExist = await _context.Users.AnyAsync(c => c.Login == user.Login, token);
 
             if (userExist)
-                throw new EntityNotFoundException("User alredy exist");
+                throw new EntityNotFoundException("User already exist");
 
             await _context.Users.AddAsync(newUser, token);
 
-            var roles = await _context.Roles.Where(x => user.Role.Contains(x.Role)).ToArrayAsync(token);
+            var roles = await _context.Roles
+                .Where(x => user.Role.Contains(x.Role))
+                .Select(x => x.Id)
+                .ToArrayAsync(token);
+
             var userRoles = roles
-                .Select(role => new UserRolesEntity
+                .Select(roleId => new UserRolesEntity
                 {
                     UserEn = newUser,
-                    RoleEn = role
+                    RoleId = roleId
                 });
 
             await _context.UsersRoles.AddRangeAsync(userRoles, token);
@@ -106,7 +108,7 @@ namespace Authentication.Host.Repositories
         public async Task BlockUserAsync(long id, CancellationToken token)
         {
             var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id, token);
-
+            
             if (user != null)
             {
                 user.IsActive = false;
@@ -156,10 +158,8 @@ namespace Authentication.Host.Repositories
 
         public async Task AddTokensAsync(JwtTokenResult jwtToken, CancellationToken token)
         {
-            var userFromToken = await _context.Users
-                .SingleOrDefaultAsync(c => c.Id == long.Parse(jwtToken.UserId), token);
-
-
+            var id = long.Parse(jwtToken.UserId);
+            
             if (jwtToken.Tokens.RefreshToken == null)
             {
                 var accessTokenEntityWithoutRefresh = new AccessTokenEntity
@@ -167,7 +167,7 @@ namespace Authentication.Host.Repositories
                     Created = DateTime.Now,
                     Exprired = jwtToken.Tokens.AccessToken.Expiration,
                     Token = jwtToken.Tokens.AccessToken.Value,
-                    User = userFromToken,
+                    UserId = id,
                     RefreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == jwtToken.RefreshTokenJti, token)
                 };
 
@@ -182,18 +182,19 @@ namespace Authentication.Host.Repositories
                     Expired = jwtToken.Tokens.RefreshToken.Expiration,
                     Jti = jwtToken.RefreshTokenJti,
                     IsBlocked = false,
-                    User = userFromToken
+                    UserId = id,
                 };
 
+                
                 var accessTokenEntity = new AccessTokenEntity
                 {
                     Created = DateTime.UtcNow,
                     Exprired = jwtToken.Tokens.AccessToken.Expiration,
                     Token = jwtToken.Tokens.AccessToken.Value,
-                    User = userFromToken,
+                    UserId = id,
                     RefreshToken = refreshTokenEntity
                 };
-
+                
                 await _context.RefreshTokens.AddAsync(refreshTokenEntity, token);
                 await _context.AccessTokens.AddAsync(accessTokenEntity, token);
             }

@@ -48,7 +48,7 @@ namespace Authentication.Host.Services
                 {
                     if (user.IsActive)
                     {
-                        var access = _jwtService.IssueAccessToken(id: user.Id.ToString(), name: user.UserName,roles: user.Role);
+                        var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role);
                         await _userRepository.AddTokensAsync(access, token);
                         return new Result<AuthResult, TokenModel>(AuthResult.Ok, access.Tokens);
                     }
