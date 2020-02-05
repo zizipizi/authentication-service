@@ -35,13 +35,6 @@ namespace Authentication.Host.Controllers
                 return BadRequest("Wrong identifier");
             }
 
-            var authHeader = Request.Headers["Authorization"].ToString();
-
-            if (authHeader != null && authHeader.Contains("Bearer"))
-            {
-                token = authHeader.Replace("Bearer", "");
-            }
-
             var result = await _userService.SignOutAsync(id, token, CancellationToken.None);
 
             if (result.Value == UserResult.Ok)
@@ -59,13 +52,6 @@ namespace Authentication.Host.Controllers
             if (!long.TryParse(idStr, out var id))
             {
                 return BadRequest("Wrong identifier");
-            }
-
-            var authHeader = Request.Headers["Authorization"].ToString();
-
-            if (authHeader != null && authHeader.Contains("Bearer"))
-            { 
-                token = authHeader.Replace("Bearer", "");
             }
 
             var result = await _userService.ChangePasswordAsync(passwords, id, token, CancellationToken.None);
