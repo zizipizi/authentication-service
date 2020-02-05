@@ -31,7 +31,7 @@ namespace Authentication.Host.Services
             _logger = logger;
         }
 
-        public async Task<IEnumerable<User>> GetAll()
+        public async Task<IEnumerable<User>> GetAllAsync()
         {
             var result = await _userRepository.GetAllUsersAsync(CancellationToken.None);
             return result;
@@ -55,13 +55,13 @@ namespace Authentication.Host.Services
             }
         }
 
-        public async Task<Result<AdminResult>> CreateUserAsync(UserCreateModel model, CancellationToken token)
+        public async Task<Result<AdminResult, UserInfo>> CreateUserAsync(UserCreateModel model, CancellationToken token)
         {
             try
             {
                 var pass = _passwordService.Hash(model.Password);
 
-                await _userRepository.CreateUserAsync(new User()
+                var id = await _userRepository.CreateUserAsync(new User()
                 {
                     Login = model.Login,
                     Password = pass.Hash,
@@ -69,16 +69,22 @@ namespace Authentication.Host.Services
                     Role = model.Role.Split(",").Select(p => p.Trim())
                 }, token);
 
-                return new Result<AdminResult>(AdminResult.Ok, "User created");
+                var newUser = new UserInfo
+                {
+                    Id = id,
+                    Login = model.Login
+                };
+
+                return new Result<AdminResult, UserInfo>(AdminResult.Ok, model: newUser,"User created");
             }
             catch (EntityNotFoundException)
             {
-                return new Result<AdminResult>(AdminResult.UserExist, "User with same login exist");
+                return new Result<AdminResult, UserInfo>(AdminResult.UserExist, message:"User with same login exist");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
-                return new Result<AdminResult>(AdminResult.Error, "DB error");
+                return new Result<AdminResult, UserInfo>(AdminResult.Error, message:"DB error");
             }
         }
 

@@ -38,7 +38,7 @@ namespace Authentication.Host.Controllers
                 case AuthResult.TokenExpired:
                     return Unauthorized("Token blocked");
             }
-            _logger.LogError("Error while refresh");
+
             return BadRequest("Error while refresh");
         }
 
@@ -59,8 +59,6 @@ namespace Authentication.Host.Controllers
                     return Ok(result.Model);
                 case AuthResult.UserBlocked:
                     return Forbid("Bearer");
-                case AuthResult.UserNotFound:
-                    return NotFound(result.Message);
             }
 
             _logger.LogWarning($"{result.Message}");

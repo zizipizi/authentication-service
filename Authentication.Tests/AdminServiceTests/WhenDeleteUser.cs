@@ -27,7 +27,7 @@ namespace Authentication.Tests.AdminServiceTests
             var passwordService = new Mock<IPasswordService>().Object;
             var logger = new Mock<ILogger<AdminService>>().Object;
 
-            var userRepo = FakeRepositoryFactory.DeleteFakeUserRepository();
+            var userRepo = FakeRepositoryFactory.DeleteFakeUser();
             var userService = new AdminService(userRepo, passwordService, logger);
 
             var result = await userService.DeleteUserAsync(id, CancellationToken.None);
@@ -43,7 +43,7 @@ namespace Authentication.Tests.AdminServiceTests
             var logger = new Mock<ILogger<AdminService>>().Object;
 
 
-            var userRepo = FakeRepositoryFactory.DeleteFakeUserRepository_Exception();
+            var userRepo = FakeRepositoryFactory.DeleteFakeUser_Exception();
             var userService = new AdminService(userRepo, passwordService, logger);
 
             var result = await userService.DeleteUserAsync(id, CancellationToken.None);

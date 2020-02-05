@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Models;
 using Authentication.Host.Results;
@@ -15,17 +16,17 @@ namespace Authentication.Tests.UserControllerTests.Utils
         {
             var userServiceFake = new Mock<IUserService>();
 
-            userServiceFake.Setup(c => c.SignOut(It.IsAny<TokenModel>()))
+            userServiceFake.Setup(c => c.SignOut(It.IsAny<BodyTokenModel>(), It.IsAny<string>(), It.IsAny<string>(), CancellationToken.None))
                 .Returns(Task.FromResult(new Result<UserResult>(result)));
 
             return userServiceFake.Object;
         }
 
-        public static IUserService UserChangePassword(UserResult result, TokenModel model, string message)
+        public static IUserService UserChangePassword(UserResult result, BodyTokenModel model, string message)
         {
             var userServiceFake = new Mock<IUserService>();
 
-            userServiceFake.Setup(c => c.ChangePassword(It.IsAny<ChangePassModel>()))
+            userServiceFake.Setup(c => c.ChangePasswordAsync(It.IsAny<ChangePassModel>(), It.IsAny<string>(), It.IsAny<string>(), CancellationToken.None))
                 .Returns(Task.FromResult(new Result<UserResult, TokenModel>(result)));
 
             return userServiceFake.Object;
@@ -34,12 +35,13 @@ namespace Authentication.Tests.UserControllerTests.Utils
 
     public static class FakeModels
     {
-        public static TokenModel FakeTokenModel()
+        public static BodyTokenModel FakeTokenModel()
         {
-            return new TokenModel(
-                ("asd", DateTime.Now), 
-                ("sd", DateTime.Now)
-                );
+            return new BodyTokenModel
+            {
+                AccessToken = "asdad",
+                RefreshToken = "asdasd"
+            };
         }
 
         public static ChangePassModel FakePasswords()

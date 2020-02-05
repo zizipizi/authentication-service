@@ -197,7 +197,6 @@ namespace Authentication.Data.Migrations
                     b.HasOne("Authentication.Data.Models.Entities.RefreshTokenEntity", "RefreshToken")
                         .WithMany("AccessToken")
                         .HasForeignKey("RefreshTokenJti")
-                        .HasConstraintName("refresh_token_jti")
                         .HasPrincipalKey("Jti");
 
                     b.HasOne("Authentication.Data.Models.Entities.UserEntity", "User")

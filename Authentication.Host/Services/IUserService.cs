@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data;
 using Authentication.Host.Models;
@@ -12,8 +13,8 @@ namespace Authentication.Host.Services
 {
     public interface IUserService
     {
-        Task<Result<UserResult>> SignOut(TokenModel token);
+        Task<Result<UserResult>> SignOut(BodyTokenModel tokenModel, string id, string accessToken, CancellationToken token);
 
-        Task<Result<UserResult, TokenModel>> ChangePassword(ChangePassModel model);
+        Task<Result<UserResult, TokenModel>> ChangePasswordAsync(ChangePassModel model, string id, string accessToken, CancellationToken token);
     }
 }
