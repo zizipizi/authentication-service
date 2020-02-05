@@ -33,7 +33,7 @@ namespace Authentication.Tests.UserServiceTests
                 NewPassword = "qweqwe"
             };
 
-            var result = await userService.ChangePasswordAsync(changePassModel, "1", "asdasd", CancellationToken.None);
+            var result = await userService.ChangePasswordAsync(changePassModel, 1, "asdasd", CancellationToken.None);
 
             Assert.Equal(UserResult.Ok, result.Value);
         }
@@ -55,7 +55,7 @@ namespace Authentication.Tests.UserServiceTests
                 NewPassword = "qweqwe"
             };
 
-            var result = await userService.ChangePasswordAsync(changePassModel, "1", "asdasd", CancellationToken.None);
+            var result = await userService.ChangePasswordAsync(changePassModel, 1, "asdasd", CancellationToken.None);
 
             Assert.Equal(UserResult.Error, result.Value);
         }
@@ -77,7 +77,7 @@ namespace Authentication.Tests.UserServiceTests
                 NewPassword = "qweqwe"
             };
 
-            var result = await userService.ChangePasswordAsync(changePassModel, "1", "asdasd", CancellationToken.None);
+            var result = await userService.ChangePasswordAsync(changePassModel, 1, "asdasd", CancellationToken.None);
 
             Assert.Equal(UserResult.Error, result.Value);
         }

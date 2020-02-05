@@ -73,7 +73,7 @@ namespace Authentication.Tests.RepositoryTests
             await userRepository.CreateUserAsync(user, CancellationToken.None);
 
             var ex = await Assert.ThrowsAsync<EntityNotFoundException>(async () => await userRepository.CreateUserAsync(newUser, CancellationToken.None));
-            Assert.Equal("User alredy exist", ex.Message);
+            Assert.Equal("User already exist", ex.Message);
         }
 
     }

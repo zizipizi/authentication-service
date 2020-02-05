@@ -33,7 +33,7 @@ namespace Authentication.Tests.UserServiceTests
                 RefreshToken = "dwqedasd"
             };
 
-            var result = await userService.SignOut(bodyTokenModel, "1", "asdasd", CancellationToken.None);
+            var result = await userService.SignOutAsync(1, "asdasd", CancellationToken.None);
 
             Assert.Equal(UserResult.Ok, result.Value);
         }
@@ -55,7 +55,7 @@ namespace Authentication.Tests.UserServiceTests
                 RefreshToken = "dwqedasd"
             };
 
-            var result = await userService.SignOut(bodyTokenModel, "1", "asdasd", CancellationToken.None);
+            var result = await userService.SignOutAsync(1, "asdasd", CancellationToken.None);
 
             Assert.Equal(UserResult.Error, result.Value);
         }
@@ -77,7 +77,7 @@ namespace Authentication.Tests.UserServiceTests
                 RefreshToken = "dwqedasd"
             };
 
-            var result = await userService.SignOut(bodyTokenModel, "1", "asdasd", CancellationToken.None);
+            var result = await userService.SignOutAsync(1, "asdasd", CancellationToken.None);
 
             Assert.Equal(UserResult.Error, result.Value);
         }
