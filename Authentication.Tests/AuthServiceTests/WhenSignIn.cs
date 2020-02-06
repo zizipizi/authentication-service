@@ -27,6 +27,7 @@ namespace Authentication.Tests.AuthServiceTests
 
 
             var userRepository = FakeRepositoryFactory.SignIn();
+            var tokenRepository = FakeRepositoryFactory.AddTokens_Ok();
 
             var loginModel = new LoginModel
             {
@@ -34,7 +35,7 @@ namespace Authentication.Tests.AuthServiceTests
                 Password = "Password2020"
             };
 
-            var authService = new AuthService(jwtService, passwordService, userRepository, logger, cache);
+            var authService = new AuthService(jwtService, passwordService, userRepository, tokenRepository, logger, cache);
 
             var result = await authService.SignIn(loginModel, CancellationToken.None);
 
@@ -51,6 +52,7 @@ namespace Authentication.Tests.AuthServiceTests
 
 
             var userRepository = FakeRepositoryFactory.SignIn_EntityException();
+            var tokenRepository = FakeRepositoryFactory.FakeToken();
 
             var loginModel = new LoginModel
             {
@@ -58,7 +60,7 @@ namespace Authentication.Tests.AuthServiceTests
                 Password = "Password2020"
             };
 
-            var authService = new AuthService(jwtService, passwordService, userRepository, logger, cache);
+            var authService = new AuthService(jwtService, passwordService, userRepository, tokenRepository, logger, cache);
 
             var result = await authService.SignIn(loginModel, CancellationToken.None);
 
@@ -75,6 +77,7 @@ namespace Authentication.Tests.AuthServiceTests
 
 
             var userRepository = FakeRepositoryFactory.SignIn_Exception();
+            var tokenRepository = FakeRepositoryFactory.FakeToken();
 
             var loginModel = new LoginModel
             {
@@ -82,7 +85,7 @@ namespace Authentication.Tests.AuthServiceTests
                 Password = "Password2020"
             };
 
-            var authService = new AuthService(jwtService, passwordService, userRepository, logger, cache);
+            var authService = new AuthService(jwtService, passwordService, userRepository, tokenRepository, logger, cache);
 
             var result = await authService.SignIn(loginModel, CancellationToken.None);
 

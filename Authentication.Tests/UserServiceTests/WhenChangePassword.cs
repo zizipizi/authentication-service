@@ -24,8 +24,9 @@ namespace Authentication.Tests.UserServiceTests
             var jwtService = new Mock<IJwtService>().Object;
 
             var fakeUserRepository = FakeRepositoryFactory.ChangePassword_Ok();
+            var fakeTokenRepository = FakeRepositoryFactory.BlockAllTokens_Ok();
 
-            var userService = new UserService(fakeUserRepository, passwordService, jwtService, logger);
+            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
 
             var changePassModel = new ChangePassModel
             {
@@ -46,8 +47,9 @@ namespace Authentication.Tests.UserServiceTests
             var jwtService = new Mock<IJwtService>().Object;
 
             var fakeUserRepository = FakeRepositoryFactory.ChangePassword_EntityException();
+            var fakeTokenRepository = FakeRepositoryFactory.FakeToken();
 
-            var userService = new UserService(fakeUserRepository, passwordService, jwtService, logger);
+            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
 
             var changePassModel = new ChangePassModel
             {
@@ -68,8 +70,9 @@ namespace Authentication.Tests.UserServiceTests
             var jwtService = new Mock<IJwtService>().Object;
 
             var fakeUserRepository = FakeRepositoryFactory.ChangePassword_Exception();
+            var fakeTokenRepository = FakeRepositoryFactory.FakeToken();
 
-            var userService = new UserService(fakeUserRepository, passwordService, jwtService, logger);
+            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
 
             var changePassModel = new ChangePassModel
             {

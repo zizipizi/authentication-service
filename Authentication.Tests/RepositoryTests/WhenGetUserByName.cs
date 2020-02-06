@@ -19,7 +19,8 @@ namespace Authentication.Tests.RepositoryTests
             var authContext = FakeContextFactory.GetUserByName_Ok();
             var logger = new Mock<ILogger<UserRepository>>().Object;
 
-            var userRepository = new UserRepository(authContext, logger);
+            var tokenRepository = new TokenRepository(authContext, new Mock<ILogger<TokenRepository>>().Object);
+            var userRepository = new UserRepository(tokenRepository, authContext, logger);
 
             var result = await userRepository.GetUserByNameAsync("Login", CancellationToken.None);
             var result2 = await userRepository.GetUserByNameAsync("Login2", CancellationToken.None);
@@ -35,7 +36,8 @@ namespace Authentication.Tests.RepositoryTests
             var authContext = FakeContextFactory.GetUserByName_Ok();
             var logger = new Mock<ILogger<UserRepository>>().Object;
 
-            var userRepository = new UserRepository(authContext, logger);
+            var tokenRepository = new TokenRepository(authContext, new Mock<ILogger<TokenRepository>>().Object);
+            var userRepository = new UserRepository(tokenRepository, authContext, logger);
 
             var result = userRepository.GetUserByNameAsync("Login4", CancellationToken.None);
             var result2= userRepository.GetUserByNameAsync("Login5", CancellationToken.None);

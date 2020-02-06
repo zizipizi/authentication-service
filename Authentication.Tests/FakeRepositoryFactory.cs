@@ -9,11 +9,19 @@ using System.Threading.Tasks;
 using Authentication.Host.Repositories;
 using Authentication.Host.Services;
 using NSV.Security.JWT;
+using ITokenRepository = Authentication.Host.Repositories.ITokenRepository;
 
 namespace Authentication.Tests
 {
     public static class FakeRepositoryFactory
     {
+        public static IUserRepository FakeUser()
+        {
+            var userRepositoryFake = new Mock<IUserRepository>();
+            
+            return userRepositoryFake.Object;
+        }
+
         public static IUserRepository CreateFakeUser()
         {
             var userRepositoryFake = new Mock<IUserRepository>();
@@ -95,59 +103,50 @@ namespace Authentication.Tests
             return userRepositoryFake.Object;
         }
 
-        public static IUserRepository RefreshToken_Ok()
+        public static ITokenRepository RefreshToken_Ok()
         {
-            var userRepositoryFake = new Mock<IUserRepository>();
-            userRepositoryFake.Setup(c => c.CheckRefreshTokenAsync(It.IsAny<JwtTokenResult>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
+            var tokenRepositoryFake = new Mock<ITokenRepository>();
+            tokenRepositoryFake.Setup(c => c.CheckRefreshTokenAsync(It.IsAny<JwtTokenResult>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(true));
 
-            return userRepositoryFake.Object;
+            return tokenRepositoryFake.Object;
         }
 
-        public static IUserRepository RefreshToken_EntityException()
+        public static ITokenRepository CheckRefreshToken_Error()
         {
-            var userRepositoryFake = new Mock<IUserRepository>();
-            userRepositoryFake.Setup(c =>
+            var tokenRepositoryFake = new Mock<ITokenRepository>();
+            tokenRepositoryFake.Setup(c =>
                     c.CheckRefreshTokenAsync(It.IsAny<JwtTokenResult>(), It.IsAny<CancellationToken>()))
-                .Throws(new EntityNotFoundException("Token is blocked"));
+                .Returns(Task.FromResult(false));
 
-            return userRepositoryFake.Object;
+            return tokenRepositoryFake.Object;
         }
 
-        public static IUserRepository RefreshToken_Exception()
+        public static ITokenRepository BlockAllTokens_Ok()
         {
-            var userRepositoryFake = new Mock<IUserRepository>();
-            userRepositoryFake.Setup(c => c.CheckRefreshTokenAsync(It.IsAny<JwtTokenResult>(), It.IsAny<CancellationToken>()))
-                .Throws(new Exception("DB Error"));
-
-            return userRepositoryFake.Object;
-        }
-
-        public static IUserRepository SignOut_Ok()
-        {
-            var userRepositoryFake = new Mock<IUserRepository>();
-            userRepositoryFake.Setup(c => c.BlockAllTokensAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            var tokenRepositoryFake = new Mock<ITokenRepository>();
+            tokenRepositoryFake.Setup(c => c.BlockAllTokensAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            return userRepositoryFake.Object;
+            return tokenRepositoryFake.Object;
         }
 
-        public static IUserRepository SignOut_EntityException()
+        public static ITokenRepository BlockAllTokens_EntityException()
         {
-            var userRepositoryFake = new Mock<IUserRepository>();
-            userRepositoryFake.Setup(c => c.BlockAllTokensAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            var tokenRepositoryFake = new Mock<ITokenRepository>();
+            tokenRepositoryFake.Setup(c => c.BlockAllTokensAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
                 .Throws(new EntityNotFoundException("Error"));
 
-            return userRepositoryFake.Object;
+            return tokenRepositoryFake.Object;
         }
 
-        public static IUserRepository SignOut_Exception()
+        public static ITokenRepository BlockAllTokens_Exception()
         {
-            var userRepositoryFake = new Mock<IUserRepository>();
-            userRepositoryFake.Setup(c => c.BlockAllTokensAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            var tokenRepositoryFake = new Mock<ITokenRepository>();
+            tokenRepositoryFake.Setup(c => c.BlockAllTokensAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
                 .Throws(new Exception("Error"));
 
-            return userRepositoryFake.Object;
+            return tokenRepositoryFake.Object;
         }
 
         public static IUserRepository ChangePassword_Ok()
@@ -175,6 +174,22 @@ namespace Authentication.Tests
                 .Throws(new Exception("Error"));
 
             return userRepositoryFake.Object;
+        }
+
+        public static ITokenRepository FakeToken()
+        {
+            var tokenRepositoryFake = new Mock<ITokenRepository>();
+            
+            return tokenRepositoryFake.Object;
+        }
+
+        public static ITokenRepository AddTokens_Ok()
+        {
+            var tokenRepositoryFake = new Mock<ITokenRepository>();
+            tokenRepositoryFake.Setup(c => c.AddTokensAsync(It.IsAny<JwtTokenResult>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            return tokenRepositoryFake.Object;
         }
     }
 }

@@ -33,7 +33,6 @@ namespace Authentication.Data.Models.Entities
         [Column(name:"token_jti")]
         public string Jti { get; set; }
 
-        [InverseProperty(nameof(UserEntity.RefreshTokens))]
         public virtual UserEntity User { get; set; }
 
         [InverseProperty(nameof(AccessTokenEntity.RefreshToken))]

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
@@ -25,10 +22,10 @@ namespace Authentication.Tests.AuthServiceTests
             var jwtService = new Mock<IJwtService>().Object;
             var cache = new Mock<IDistributedCache>().Object;
 
-            var fakeUserrepository = FakeRepositoryFactory.RefreshToken_Ok();
+            var fakeTokenRepository = FakeRepositoryFactory.RefreshToken_Ok();
+            var fakeUserRepository = FakeRepositoryFactory.FakeUser();
 
-
-            var authService = new AuthService(jwtService, passwordService, fakeUserrepository, logger,cache);
+            var authService = new AuthService(jwtService, passwordService, fakeUserRepository, fakeTokenRepository, logger,cache);
 
             var bodyTokenModel = new BodyTokenModel
             {
@@ -42,17 +39,17 @@ namespace Authentication.Tests.AuthServiceTests
         }
 
         [Fact]
-        public async Task RefrehToken_ThrowsEntityException()
+        public async Task RefrehToken_Error()
         {
             var logger = new Mock<ILogger<AuthService>>().Object;
             var passwordService = new Mock<IPasswordService>().Object;
             var jwtService = new Mock<IJwtService>().Object;
             var cache = new Mock<IDistributedCache>().Object;
 
-            var fakeUserrepository = FakeRepositoryFactory.RefreshToken_EntityException();
+            var fakeTokenRepository = FakeRepositoryFactory.CheckRefreshToken_Error();
+            var fakeUserRepository = FakeRepositoryFactory.FakeUser();
 
-
-            var authService = new AuthService(jwtService, passwordService, fakeUserrepository, logger, cache);
+            var authService = new AuthService(jwtService, passwordService, fakeUserRepository, fakeTokenRepository, logger, cache);
 
             var bodyTokenModel = new BodyTokenModel
             {
@@ -62,31 +59,7 @@ namespace Authentication.Tests.AuthServiceTests
 
             var result = await authService.RefreshToken(bodyTokenModel, CancellationToken.None);
 
-            Assert.Equal(AuthResult.Error, result.Value);
-        }
-
-        [Fact]
-        public async Task RefrehToken_ThrowsException()
-        {
-            var logger = new Mock<ILogger<AuthService>>().Object;
-            var passwordService = new Mock<IPasswordService>().Object;
-            var jwtService = new Mock<IJwtService>().Object;
-            var cache = new Mock<IDistributedCache>().Object;
-
-            var fakeUserrepository = FakeRepositoryFactory.RefreshToken_Exception();
-
-
-            var authService = new AuthService(jwtService, passwordService, fakeUserrepository, logger, cache);
-
-            var bodyTokenModel = new BodyTokenModel
-            {
-                AccessToken = "adasdasd",
-                RefreshToken = "asdasdfsdf"
-            };
-
-            var result = await authService.RefreshToken(bodyTokenModel, CancellationToken.None);
-
-            Assert.Equal(AuthResult.Error, result.Value);
+            Assert.Equal(AuthResult.TokenValidationProblem, result.Value);
         }
     }
 }

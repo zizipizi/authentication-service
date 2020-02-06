@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Models.Domain;
-using NSV.Security.JWT;
 
 namespace Authentication.Host.Repositories
 {
@@ -18,15 +17,8 @@ namespace Authentication.Host.Repositories
 
         Task DeleteUserAsync(long id, CancellationToken token);
 
-        Task BlockUserAsync(long id, CancellationToken token);
-
-        Task CheckRefreshTokenAsync(JwtTokenResult jwtToken, CancellationToken token);
-
-        Task AddTokensAsync(JwtTokenResult jwtToken, CancellationToken token);
-
         Task UpdateUserPassword(long id, string password, CancellationToken token);
 
-        Task BlockAllTokensAsync(long id, CancellationToken token);
-
+        Task BlockUserAsync(long id, CancellationToken token);
     }
 }
