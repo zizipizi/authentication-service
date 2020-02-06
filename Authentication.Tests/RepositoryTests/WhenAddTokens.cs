@@ -25,11 +25,11 @@ namespace Authentication.Tests.RepositoryTests
 
             var refreshJti = "123123podaps123123";
             var tokenModel = new TokenModel(
-                ("asdakasdjaksjdkad", DateTime.Now.AddMinutes(15)),
-                ("sdfk;sldkfsdl;fksdf0", DateTime.Now.AddMinutes(30))
+                ("asdakasdjaksjdkad", DateTime.Now.AddMinutes(15), "1231123123"),
+                ("sdfk;sldkfsdl;fksdf0", DateTime.Now.AddMinutes(30), refreshJti)
                 );
 
-            var jwtToken= new JwtTokenResult(model: tokenModel, refreshTokenJti: refreshJti, userId: "1");
+            var jwtToken= new JwtTokenResult(model: tokenModel, userId: "1");
 
             await userRepository.AddTokensAsync(jwtToken, CancellationToken.None);
 
@@ -46,21 +46,21 @@ namespace Authentication.Tests.RepositoryTests
         {
             var authContext = FakeContextFactory.AddTokenWithoutRefresh();
             var logger = new Mock<ILogger<UserRepository>>().Object;
-
-            var tokenModel = new TokenModel(
-                ("asdakasdjaksjdkad", DateTime.Now.AddMinutes(15))
-            );
-
             var refreshJti = "123123podaps123123";
 
-            var jwtToken = new JwtTokenResult(model: tokenModel, refreshTokenJti: refreshJti, userId: "1");
+            var tokenModel = new TokenModel(
+                ("asdakasdjaksjdkad", DateTime.Now.AddMinutes(15), "1231123123"),
+                ("sdfk;sldkfsdl;fksdf0", DateTime.Now.AddMinutes(30), refreshJti)
+            );
+
+            var jwtToken = new JwtTokenResult(model: tokenModel, userId: "1");
 
             var refreshToken = new RefreshTokenEntity
             {
                 Token = "asdasdqwjqwioeqowieu",
                 Created = DateTime.UtcNow,
                 Expired = DateTime.Now.AddMinutes(30),
-                Jti = jwtToken.RefreshTokenJti,
+                Jti = jwtToken.Tokens.RefreshToken.Jti,
                 IsBlocked = false,
                 UserId = long.Parse(jwtToken.UserId)
             };

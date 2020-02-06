@@ -50,7 +50,6 @@ namespace Authentication.Host.Controllers
         public async Task<IActionResult> ChangePassword(ChangePassModel passwords)
         {
             var (id, token) = GetUserInfo();
-
             var result = await _userService.ChangePasswordAsync(passwords, id, token, CancellationToken.None);
 
             switch (result.Value)
@@ -72,6 +71,7 @@ namespace Authentication.Host.Controllers
         private (string id, string token) GetUserInfo()
         {
             var userId = HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).ToList()[1].Value;
+            var jti = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "jti")?.Value;
             var userToken = "";
             var authHeader = Request.Headers["Authorization"].ToString();
 

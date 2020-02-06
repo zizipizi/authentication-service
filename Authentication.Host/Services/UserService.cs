@@ -7,6 +7,7 @@ using Authentication.Host.Models;
 using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using NSV.Security.JWT;
 using NSV.Security.Password;
@@ -19,19 +20,23 @@ namespace Authentication.Host.Services
         private readonly IPasswordService _passwordService;
         private readonly IJwtService _jwtService;
         private readonly ILogger _logger;
+        private readonly IDistributedCache _cache;
 
-        public UserService(IUserRepository userRepository, IPasswordService passwordService, IJwtService jwtService, ILogger<UserService> logger)
+        public UserService(IUserRepository userRepository, IPasswordService passwordService, IJwtService jwtService, ILogger<UserService> logger, IDistributedCache cache)
         {
             _userRepository = userRepository;
             _passwordService = passwordService;
             _jwtService = jwtService;
             _logger = logger;
+            _cache = cache;
         }
 
         public async Task<Result<UserResult>> SignOut(BodyTokenModel tokenModel, string id, string accessToken, CancellationToken token)
         {
             try
             {
+                //var cacheRefreshToken = await _cache.GetAsync($"blacklist:{}")
+
                 await _userRepository.BlockAllTokensAsync(long.Parse(id), token);
 
                 return new Result<UserResult>(UserResult.Ok);

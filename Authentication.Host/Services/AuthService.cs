@@ -11,11 +11,14 @@ using Authentication.Host.Models;
 using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
+using Microsoft.AspNetCore.DataProtection.XmlEncryption;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using NSV.Security.JWT;
 using NSV.Security.Password;
+using StackExchange.Redis;
+using StackExchange.Redis.Extensions.Core.Abstractions;
 
 namespace Authentication.Host.Services
 {
@@ -50,6 +53,7 @@ namespace Authentication.Host.Services
                     {
                         var access = _jwtService.IssueAccessToken(id: user.Id.ToString(), name: user.UserName,roles: user.Role);
                         await _userRepository.AddTokensAsync(access, token);
+
                         return new Result<AuthResult, TokenModel>(AuthResult.Ok, access.Tokens);
                     }
                     return new Result<AuthResult, TokenModel>(AuthResult.UserBlocked, message: "User is blocked");
@@ -69,24 +73,16 @@ namespace Authentication.Host.Services
 
         public async Task<Result<AuthResult, TokenModel>> RefreshToken(BodyTokenModel model, CancellationToken token)
         {
-
-            var tok = new BodyTokenModel
-            {
-                AccessToken = "asdads23123",
-                RefreshToken = "joijojoijwejr823"
-            };
-
-            _cache.SetString("tokModel", JsonConvert.SerializeObject(tok));
-
-            var myModel = JsonConvert.DeserializeObject<BodyTokenModel>(_cache.GetString("tokModel"));
-
-            var s = Encoding.UTF8.GetString(_cache.Get("MyK2ey"));
-
             try
             {
                 var validateResult = _jwtService.RefreshAccessToken(model.AccessToken, model.RefreshToken);
 
-                await _userRepository.CheckRefreshTokenAsync(validateResult, token);
+                var refreshTokenCache = await _cache.GetAsync($"blacklist:{validateResult.Tokens.RefreshToken.Jti}", token);
+
+                if (refreshTokenCache != null)
+                {
+                    return new Result<AuthResult, TokenModel>(AuthResult.TokenExpired, message:"Token is blocked");
+                }
 
                 if (validateResult.Result == JwtTokenResult.TokenResult.Ok)
                 {

@@ -30,8 +30,6 @@ namespace Authentication.Tests.UserControllerTests
             var contextAccessor = new Mock<IHttpContextAccessor>().Object;
             var logger = new Mock<ILogger<UserController>>().Object;
 
-            var fakeToken = "asd";
-
             var userService = FakeUserServiceFactory.UserChangePassword(UserResult.Ok, tokenModel, "");
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -66,8 +64,6 @@ namespace Authentication.Tests.UserControllerTests
 
                 var contextAccessor = new Mock<IHttpContextAccessor>().Object;
                 var logger = new Mock<ILogger<UserController>>().Object;
-
-                var fakeToken = "asd";
 
                 var userService = FakeUserServiceFactory.UserChangePassword(UserResult.WrongPassword, tokenModel, "");
                 var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]

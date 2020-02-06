@@ -128,7 +128,7 @@ namespace Authentication.Host.Repositories
 
         public async Task CheckRefreshTokenAsync(JwtTokenResult jwtToken, CancellationToken token)
         {
-            var refreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == jwtToken.RefreshTokenJti, token);
+            var refreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == jwtToken.Tokens.RefreshToken.Jti, token);
 
             if (refreshToken == null || refreshToken.IsBlocked)
                 throw new EntityNotFoundException("Token is blocked or not found");
@@ -168,7 +168,7 @@ namespace Authentication.Host.Repositories
                     Exprired = jwtToken.Tokens.AccessToken.Expiration,
                     Token = jwtToken.Tokens.AccessToken.Value,
                     User = userFromToken,
-                    RefreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == jwtToken.RefreshTokenJti, token)
+                    RefreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == jwtToken.Tokens.RefreshToken.Jti, token)
                 };
 
                 await _context.AccessTokens.AddAsync(accessTokenEntityWithoutRefresh, token);
@@ -180,7 +180,7 @@ namespace Authentication.Host.Repositories
                     Token = jwtToken.Tokens.RefreshToken.Value,
                     Created = DateTime.UtcNow,
                     Expired = jwtToken.Tokens.RefreshToken.Expiration,
-                    Jti = jwtToken.RefreshTokenJti,
+                    Jti = jwtToken.Tokens.RefreshToken.Jti,
                     IsBlocked = false,
                     User = userFromToken
                 };
