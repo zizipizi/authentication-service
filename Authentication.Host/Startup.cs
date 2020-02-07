@@ -1,3 +1,4 @@
+using System;
 using Authentication.Data.Models;
 using Authentication.Host.Repositories;
 using Authentication.Host.Services;
@@ -14,6 +15,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using StackExchange.Redis;
+using StackExchange.Redis.Extensions.Core.Abstractions;
 
 namespace Authentication.Host
 {
@@ -36,7 +38,6 @@ namespace Authentication.Host
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IUserService, UserService>();
-
             services.AddControllers();
 
             services.AddSwaggerGen(c =>
@@ -99,7 +100,7 @@ namespace Authentication.Host
             {
                 options.ConfigurationOptions = red;
             });
-
+            
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)

@@ -18,9 +18,9 @@ namespace Authentication.Host.Repositories
         {
         }
 
-        public async Task<bool> CheckRefreshTokenAsync(JwtTokenResult jwtToken, CancellationToken token)
+        public async Task<bool> CheckRefreshTokenAsync(TokenModel tokenModel, CancellationToken token)
         {
-            var refreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == jwtToken.RefreshTokenJti, token);
+            var refreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == tokenModel.RefreshToken.Jti, token);
 
             return refreshToken != null && !refreshToken.IsBlocked;
         }
@@ -34,19 +34,17 @@ namespace Authentication.Host.Repositories
             await _context.SaveChangesAsync(token);
         }
 
-        public async Task AddTokensAsync(JwtTokenResult jwtToken, CancellationToken token)
+        public async Task AddTokensAsync(long userId, TokenModel tokenModel, CancellationToken token)
         {
-            var id = long.Parse(jwtToken.UserId);
-
-            if (jwtToken.Tokens.RefreshToken == null)
+            if (tokenModel.RefreshToken == null)
             {
                 var accessTokenEntityWithoutRefresh = new AccessTokenEntity
                 {
                     Created = DateTime.Now,
-                    Exprired = jwtToken.Tokens.AccessToken.Expiration,
-                    Token = jwtToken.Tokens.AccessToken.Value,
-                    UserId = id,
-                    RefreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == jwtToken.RefreshTokenJti, token)
+                    Exprired = tokenModel.AccessToken.Expiration,
+                    Token = tokenModel.AccessToken.Value,
+                    UserId = userId,
+                    RefreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == tokenModel.RefreshToken.Jti, token)
                 };
 
                 await _context.AccessTokens.AddAsync(accessTokenEntityWithoutRefresh, token);
@@ -55,21 +53,21 @@ namespace Authentication.Host.Repositories
             {
                 var refreshTokenEntity = new RefreshTokenEntity
                 {
-                    Token = jwtToken.Tokens.RefreshToken.Value,
+                    Token = tokenModel.RefreshToken.Value,
                     Created = DateTime.UtcNow,
-                    Expired = jwtToken.Tokens.RefreshToken.Expiration,
-                    Jti = jwtToken.RefreshTokenJti,
+                    Expired = tokenModel.RefreshToken.Expiration,
+                    Jti = tokenModel.RefreshToken.Jti,
                     IsBlocked = false,
-                    UserId = id,
+                    UserId = userId,
                 };
 
 
                 var accessTokenEntity = new AccessTokenEntity
                 {
                     Created = DateTime.UtcNow,
-                    Exprired = jwtToken.Tokens.AccessToken.Expiration,
-                    Token = jwtToken.Tokens.AccessToken.Value,
-                    UserId = id,
+                    Exprired = tokenModel.AccessToken.Expiration,
+                    Token = tokenModel.AccessToken.Value,
+                    UserId = userId,
                     RefreshToken = refreshTokenEntity
                 };
 

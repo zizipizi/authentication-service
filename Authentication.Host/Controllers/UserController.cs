@@ -53,7 +53,6 @@ namespace Authentication.Host.Controllers
             {
                 return BadRequest("Wrong identifier");
             }
-
             var result = await _userService.ChangePasswordAsync(passwords, id, token, CancellationToken.None);
 
             switch (result.Value)
@@ -75,6 +74,7 @@ namespace Authentication.Host.Controllers
         private (string id, string token) GetUserInfo()
         {
             var userId = GetIdentifier();
+            var jti = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "jti")?.Value;
             var userToken = "";
             var authHeader = Request.Headers["Authorization"].ToString();
 
