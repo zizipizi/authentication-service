@@ -23,13 +23,11 @@ namespace Authentication.Tests.RepositoryTests
             
             var refreshJti = "123123podaps123123";
             var tokenModel = new TokenModel(
-                ("asdakasdjaksjdkad", DateTime.Now.AddMinutes(15)),
-                ("sdfk;sldkfsdl;fksdf0", DateTime.Now.AddMinutes(30))
+                ("asdakasdjaksjdkad", DateTime.Now.AddMinutes(15), "1231123123"),
+                ("sdfk;sldkfsdl;fksdf0", DateTime.Now.AddMinutes(30), refreshJti)
                 );
 
-            var jwtToken= new JwtTokenResult(model: tokenModel, refreshTokenJti: refreshJti, userId: "1");
-
-            await tokenRepository.AddTokensAsync(jwtToken, CancellationToken.None);
+            await tokenRepository.AddTokensAsync(1, tokenModel, CancellationToken.None);
 
             var refreshToken = authContext.RefreshTokens.FirstOrDefault(c => c.Jti == refreshJti);
             var accessToken = authContext.AccessTokens.FirstOrDefault(c => c.RefreshToken == refreshToken);
@@ -44,23 +42,21 @@ namespace Authentication.Tests.RepositoryTests
         {
             var authContext = FakeContextFactory.AddTokenWithoutRefresh();
             var logger = new Mock<ILogger<TokenRepository>>().Object;
-
-            var tokenModel = new TokenModel(
-                ("asdakasdjaksjdkad", DateTime.Now.AddMinutes(15))
-            );
-
             var refreshJti = "123123podaps123123";
 
-            var jwtToken = new JwtTokenResult(model: tokenModel, refreshTokenJti: refreshJti, userId: "1");
+            var tokenModel = new TokenModel(
+                ("asdakasdjaksjdkad", DateTime.Now.AddMinutes(15), "1231123123"),
+                ("sdfk;sldkfsdl;fksdf0", DateTime.Now.AddMinutes(30), refreshJti)
+            );
 
             var refreshToken = new RefreshTokenEntity
             {
                 Token = "asdasdqwjqwioeqowieu",
                 Created = DateTime.UtcNow,
                 Expired = DateTime.Now.AddMinutes(30),
-                Jti = jwtToken.RefreshTokenJti,
+                Jti = tokenModel.RefreshToken.Jti,
                 IsBlocked = false,
-                UserId = long.Parse(jwtToken.UserId)
+                UserId = 1
             };
 
             authContext.RefreshTokens.Add(refreshToken);
@@ -68,7 +64,7 @@ namespace Authentication.Tests.RepositoryTests
 
             var tokenRepository = new TokenRepository(authContext, logger);
 
-            await tokenRepository.AddTokensAsync(jwtToken, CancellationToken.None);
+            await tokenRepository.AddTokensAsync(1, tokenModel, CancellationToken.None);
 
             var accessToken = authContext.AccessTokens.FirstOrDefault(c => c.RefreshToken == refreshToken);
 

@@ -106,7 +106,7 @@ namespace Authentication.Tests
         public static ITokenRepository RefreshToken_Ok()
         {
             var tokenRepositoryFake = new Mock<ITokenRepository>();
-            tokenRepositoryFake.Setup(c => c.CheckRefreshTokenAsync(It.IsAny<JwtTokenResult>(), It.IsAny<CancellationToken>()))
+            tokenRepositoryFake.Setup(c => c.CheckRefreshTokenAsync(It.IsAny<TokenModel>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(true));
 
             return tokenRepositoryFake.Object;
@@ -116,7 +116,7 @@ namespace Authentication.Tests
         {
             var tokenRepositoryFake = new Mock<ITokenRepository>();
             tokenRepositoryFake.Setup(c =>
-                    c.CheckRefreshTokenAsync(It.IsAny<JwtTokenResult>(), It.IsAny<CancellationToken>()))
+                    c.CheckRefreshTokenAsync(It.IsAny<TokenModel>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(false));
 
             return tokenRepositoryFake.Object;
@@ -186,7 +186,7 @@ namespace Authentication.Tests
         public static ITokenRepository AddTokens_Ok()
         {
             var tokenRepositoryFake = new Mock<ITokenRepository>();
-            tokenRepositoryFake.Setup(c => c.AddTokensAsync(It.IsAny<JwtTokenResult>(), It.IsAny<CancellationToken>()))
+            tokenRepositoryFake.Setup(c => c.AddTokensAsync(It.IsAny<long>(), It.IsAny<TokenModel>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
             return tokenRepositoryFake.Object;

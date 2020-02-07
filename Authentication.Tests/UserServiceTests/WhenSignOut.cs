@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NSV.Security.JWT;
@@ -22,11 +23,12 @@ namespace Authentication.Tests.UserServiceTests
             var logger = new Mock<ILogger<UserService>>().Object;
             var passwordService = new Mock<IPasswordService>().Object;
             var jwtService = new Mock<IJwtService>().Object;
+            var cache = new Mock<IDistributedCache>().Object;
 
             var fakeUserRepository = FakeRepositoryFactory.FakeUser();
             var fakeTokenRepository = FakeRepositoryFactory.BlockAllTokens_Ok();
 
-            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
+            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger, cache);
 
             var result = await userService.SignOutAsync(1, "asdasd", CancellationToken.None);
 
@@ -39,12 +41,12 @@ namespace Authentication.Tests.UserServiceTests
             var logger = new Mock<ILogger<UserService>>().Object;
             var passwordService = new Mock<IPasswordService>().Object;
             var jwtService = new Mock<IJwtService>().Object;
+            var cache = new Mock<IDistributedCache>().Object;
 
             var fakeUserRepository = FakeRepositoryFactory.FakeUser();
             var fakeTokenRepository = FakeRepositoryFactory.BlockAllTokens_Exception();
 
-            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
-
+            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger, cache);
 
             var result = await userService.SignOutAsync(1, "asdasd", CancellationToken.None);
 

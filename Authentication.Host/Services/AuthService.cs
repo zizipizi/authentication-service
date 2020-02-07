@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
-using System.Text.Unicode;
 using System.Threading;
 using System.Threading.Tasks;
-using Authentication.Data;
 using Authentication.Data.Exceptions;
-using Authentication.Data.Models.Domain;
 using Authentication.Host.Models;
 using Authentication.Host.Repositories;
 using Authentication.Host.Results;
@@ -56,7 +52,8 @@ namespace Authentication.Host.Services
                     if (user.IsActive)
                     {
                         var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role);
-                        await _tokenRepository.AddTokensAsync(access, token);
+                        await _tokenRepository.AddTokensAsync(user.Id, access.Tokens, token);
+
                         return new Result<AuthResult, TokenModel>(AuthResult.Ok, access.Tokens);
                     }
                     return new Result<AuthResult, TokenModel>(AuthResult.UserBlocked, message: "User is blocked");
@@ -86,18 +83,35 @@ namespace Authentication.Host.Services
             _cache.SetString("tokModel", JsonConvert.SerializeObject(tok));
 
             var myModel = JsonConvert.DeserializeObject<BodyTokenModel>(_cache.GetString("tokModel"));
-
+            
             var s = Encoding.UTF8.GetString(_cache.Get("MyK2ey"));
 
             try
-            {
+            { 
                 var validateResult = _jwtService.RefreshAccessToken(model.AccessToken, model.RefreshToken);
 
-                if (await _tokenRepository.CheckRefreshTokenAsync(validateResult, token)
-                    && validateResult.Result == JwtTokenResult.TokenResult.Ok)
+                if (await _tokenRepository.CheckRefreshTokenAsync(validateResult.Tokens, token))
                 {
-                    await _tokenRepository.AddTokensAsync(validateResult, token);
-                    return new Result<AuthResult, TokenModel>(AuthResult.Ok, validateResult.Tokens);
+                    if (!long.TryParse(validateResult.UserId, out var userId))
+                    {
+                        _logger.LogError($"Wrong user identifier {validateResult.UserId}");
+                        return new Result<AuthResult, TokenModel>(AuthResult.Error, message: "Wrong identifier");
+                    }
+
+                    var refreshTokenCache =
+                        await _cache.GetAsync($"blacklist:{validateResult.Tokens.RefreshToken.Jti}", token);
+
+                    if (refreshTokenCache != null)
+                    {
+                        // todo: why AuthResult.TokenExpired and not AuthResult.UserBlocked
+                        return new Result<AuthResult, TokenModel>(AuthResult.TokenExpired, message: "Token is blocked");
+                    }
+
+                    if (validateResult.Result == JwtTokenResult.TokenResult.Ok)
+                    {
+                        await _tokenRepository.AddTokensAsync(userId, validateResult.Tokens, token);
+                        return new Result<AuthResult, TokenModel>(AuthResult.Ok, validateResult.Tokens);
+                    }
                 }
 
                 return new Result<AuthResult, TokenModel>(AuthResult.TokenValidationProblem);
