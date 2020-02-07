@@ -36,7 +36,9 @@ namespace Authentication.Host.Repositories
 
         public async Task AddTokensAsync(long userId, TokenModel tokenModel, CancellationToken token)
         {
-            if (tokenModel.RefreshToken == null)
+            var refreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == tokenModel.RefreshToken.Jti, token);
+
+            if (refreshToken != null)
             {
                 var accessTokenEntityWithoutRefresh = new AccessTokenEntity
                 {
@@ -44,7 +46,7 @@ namespace Authentication.Host.Repositories
                     Exprired = tokenModel.AccessToken.Expiration,
                     Token = tokenModel.AccessToken.Value,
                     UserId = userId,
-                    RefreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == tokenModel.RefreshToken.Jti, token)
+                    RefreshToken = refreshToken
                 };
 
                 await _context.AccessTokens.AddAsync(accessTokenEntityWithoutRefresh, token);
