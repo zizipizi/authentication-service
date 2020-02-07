@@ -23,41 +23,14 @@ namespace Authentication.Tests.UserServiceTests
             var passwordService = new Mock<IPasswordService>().Object;
             var jwtService = new Mock<IJwtService>().Object;
 
-            var fakeUserRepository = FakeRepositoryFactory.SignOut_Ok();
+            var fakeUserRepository = FakeRepositoryFactory.FakeUser();
+            var fakeTokenRepository = FakeRepositoryFactory.BlockAllTokens_Ok();
 
-            var userService = new UserService(fakeUserRepository, passwordService, jwtService, logger);
+            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
 
-            var bodyTokenModel = new BodyTokenModel
-            {
-                AccessToken = "asdasdqw",
-                RefreshToken = "dwqedasd"
-            };
-
-            var result = await userService.SignOut(bodyTokenModel, "1", "asdasd", CancellationToken.None);
+            var result = await userService.SignOutAsync(1, "asdasd", CancellationToken.None);
 
             Assert.Equal(UserResult.Ok, result.Value);
-        }
-
-        [Fact]
-        public async Task SignOut_ThrowsEntityException()
-        {
-            var logger = new Mock<ILogger<UserService>>().Object;
-            var passwordService = new Mock<IPasswordService>().Object;
-            var jwtService = new Mock<IJwtService>().Object;
-
-            var fakeUserRepository = FakeRepositoryFactory.SignOut_EntityException();
-
-            var userService = new UserService(fakeUserRepository, passwordService, jwtService, logger);
-
-            var bodyTokenModel = new BodyTokenModel
-            {
-                AccessToken = "asdasdqw",
-                RefreshToken = "dwqedasd"
-            };
-
-            var result = await userService.SignOut(bodyTokenModel, "1", "asdasd", CancellationToken.None);
-
-            Assert.Equal(UserResult.Error, result.Value);
         }
 
         [Fact]
@@ -67,17 +40,13 @@ namespace Authentication.Tests.UserServiceTests
             var passwordService = new Mock<IPasswordService>().Object;
             var jwtService = new Mock<IJwtService>().Object;
 
-            var fakeUserRepository = FakeRepositoryFactory.SignOut_Exception();
+            var fakeUserRepository = FakeRepositoryFactory.FakeUser();
+            var fakeTokenRepository = FakeRepositoryFactory.BlockAllTokens_Exception();
 
-            var userService = new UserService(fakeUserRepository, passwordService, jwtService, logger);
+            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
 
-            var bodyTokenModel = new BodyTokenModel
-            {
-                AccessToken = "asdasdqw",
-                RefreshToken = "dwqedasd"
-            };
 
-            var result = await userService.SignOut(bodyTokenModel, "1", "asdasd", CancellationToken.None);
+            var result = await userService.SignOutAsync(1, "asdasd", CancellationToken.None);
 
             Assert.Equal(UserResult.Error, result.Value);
         }

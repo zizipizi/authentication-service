@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Exceptions;
@@ -10,21 +8,18 @@ using Authentication.Data.Models.Domain;
 using Authentication.Data.Models.Domain.Translators;
 using Authentication.Data.Models.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Logging;
-using NSV.Security.JWT;
 
 namespace Authentication.Host.Repositories
 {
-    public class UserRepository : IUserRepository
+    public class UserRepository : RepositoryBase, IUserRepository
     {
-        private readonly AuthContext _context;
-        private readonly ILogger _logger;
+        private readonly ITokenRepository _tokenRepository;
 
-        public UserRepository(AuthContext context, ILogger<UserRepository> logger)
+        public UserRepository(ITokenRepository tokenRepository, AuthContext context, ILogger<UserRepository> logger)
+            : base(context, logger)
         {
-            _context = context;
-            _logger = logger;
+            _tokenRepository = tokenRepository;
         }
 
         public async Task<IEnumerable<User>> GetAllUsersAsync(CancellationToken token)
@@ -79,16 +74,20 @@ namespace Authentication.Host.Repositories
             var userExist = await _context.Users.AnyAsync(c => c.Login == user.Login, token);
 
             if (userExist)
-                throw new EntityNotFoundException("User alredy exist");
+                throw new EntityNotFoundException("User already exist");
 
             await _context.Users.AddAsync(newUser, token);
 
-            var roles = await _context.Roles.Where(x => user.Role.Contains(x.Role)).ToArrayAsync(token);
+            var roles = await _context.Roles
+                .Where(x => user.Role.Contains(x.Role))
+                .Select(x => x.Id)
+                .ToArrayAsync(token);
+
             var userRoles = roles
-                .Select(role => new UserRolesEntity
+                .Select(roleId => new UserRolesEntity
                 {
                     UserEn = newUser,
-                    RoleEn = role
+                    RoleId = roleId
                 });
 
             await _context.UsersRoles.AddRangeAsync(userRoles, token);
@@ -106,17 +105,12 @@ namespace Authentication.Host.Repositories
         public async Task BlockUserAsync(long id, CancellationToken token)
         {
             var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id, token);
-
+            
             if (user != null)
             {
                 user.IsActive = false;
 
-                var refreshTokens = await _context.RefreshTokens.Where(c => c.UserId == user.Id).ToListAsync(token);
-
-                foreach (var i in refreshTokens)
-                {
-                    i.IsBlocked = true;
-                }
+                await _tokenRepository.BlockAllTokensAsync(user.Id, token);
 
                 await _context.SaveChangesAsync(token);
             }
@@ -124,14 +118,6 @@ namespace Authentication.Host.Repositories
             {
                 throw new EntityNotFoundException("User not found");
             }
-        }
-
-        public async Task CheckRefreshTokenAsync(JwtTokenResult jwtToken, CancellationToken token)
-        {
-            var refreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == jwtToken.RefreshTokenJti, token);
-
-            if (refreshToken == null || refreshToken.IsBlocked)
-                throw new EntityNotFoundException("Token is blocked or not found");
         }
 
         public async Task UpdateUserPassword(long id, string password, CancellationToken token)
@@ -142,62 +128,6 @@ namespace Authentication.Host.Repositories
                 throw new EntityNotFoundException("User not found");
 
             user.Password = password;
-            await _context.SaveChangesAsync(token);
-        }
-
-        public async Task BlockAllTokensAsync(long id, CancellationToken token)
-        {
-            _context.RefreshTokens.Where(c => c.UserId == id)
-                .ToList()
-                .ForEach(c => c.IsBlocked = true);
-
-            await _context.SaveChangesAsync(token);
-        }
-
-        public async Task AddTokensAsync(JwtTokenResult jwtToken, CancellationToken token)
-        {
-            var userFromToken = await _context.Users
-                .SingleOrDefaultAsync(c => c.Id == long.Parse(jwtToken.UserId), token);
-
-
-            if (jwtToken.Tokens.RefreshToken == null)
-            {
-                var accessTokenEntityWithoutRefresh = new AccessTokenEntity
-                {
-                    Created = DateTime.Now,
-                    Exprired = jwtToken.Tokens.AccessToken.Expiration,
-                    Token = jwtToken.Tokens.AccessToken.Value,
-                    User = userFromToken,
-                    RefreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == jwtToken.RefreshTokenJti, token)
-                };
-
-                await _context.AccessTokens.AddAsync(accessTokenEntityWithoutRefresh, token);
-            }
-            else
-            {
-                var refreshTokenEntity = new RefreshTokenEntity
-                {
-                    Token = jwtToken.Tokens.RefreshToken.Value,
-                    Created = DateTime.UtcNow,
-                    Expired = jwtToken.Tokens.RefreshToken.Expiration,
-                    Jti = jwtToken.RefreshTokenJti,
-                    IsBlocked = false,
-                    User = userFromToken
-                };
-
-                var accessTokenEntity = new AccessTokenEntity
-                {
-                    Created = DateTime.UtcNow,
-                    Exprired = jwtToken.Tokens.AccessToken.Expiration,
-                    Token = jwtToken.Tokens.AccessToken.Value,
-                    User = userFromToken,
-                    RefreshToken = refreshTokenEntity
-                };
-
-                await _context.RefreshTokens.AddAsync(refreshTokenEntity, token);
-                await _context.AccessTokens.AddAsync(accessTokenEntity, token);
-            }
-
             await _context.SaveChangesAsync(token);
         }
     }

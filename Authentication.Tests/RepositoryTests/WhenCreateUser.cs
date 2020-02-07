@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Exceptions;
 using Authentication.Data.Models.Domain;
-using Authentication.Data.Models.Entities;
 using Authentication.Host.Repositories;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -32,7 +29,8 @@ namespace Authentication.Tests.RepositoryTests
             var authContext = FakeContextFactory.CreateUser_Ok();
             var logger = new Mock<ILogger<UserRepository>>().Object;
 
-            var userRepository = new UserRepository(authContext, logger);
+            var tokenRepository = new TokenRepository(authContext, new Mock<ILogger<TokenRepository>>().Object);
+            var userRepository = new UserRepository(tokenRepository, authContext, logger);
 
             await userRepository.CreateUserAsync(user, CancellationToken.None);
 
@@ -68,12 +66,13 @@ namespace Authentication.Tests.RepositoryTests
             var authContext = FakeContextFactory.CreateUser_EntityException();
             var logger = new Mock<ILogger<UserRepository>>().Object;
 
-            var userRepository = new UserRepository(authContext, logger);
+            var tokenRepository = new TokenRepository(authContext, new Mock<ILogger<TokenRepository>>().Object);
+            var userRepository = new UserRepository(tokenRepository, authContext, logger);
 
             await userRepository.CreateUserAsync(user, CancellationToken.None);
 
             var ex = await Assert.ThrowsAsync<EntityNotFoundException>(async () => await userRepository.CreateUserAsync(newUser, CancellationToken.None));
-            Assert.Equal("User alredy exist", ex.Message);
+            Assert.Equal("User already exist", ex.Message);
         }
 
     }

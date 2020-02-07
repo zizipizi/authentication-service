@@ -24,8 +24,9 @@ namespace Authentication.Tests.UserServiceTests
             var jwtService = new Mock<IJwtService>().Object;
 
             var fakeUserRepository = FakeRepositoryFactory.ChangePassword_Ok();
+            var fakeTokenRepository = FakeRepositoryFactory.BlockAllTokens_Ok();
 
-            var userService = new UserService(fakeUserRepository, passwordService, jwtService, logger);
+            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
 
             var changePassModel = new ChangePassModel
             {
@@ -33,7 +34,7 @@ namespace Authentication.Tests.UserServiceTests
                 NewPassword = "qweqwe"
             };
 
-            var result = await userService.ChangePasswordAsync(changePassModel, "1", "asdasd", CancellationToken.None);
+            var result = await userService.ChangePasswordAsync(changePassModel, 1, "asdasd", CancellationToken.None);
 
             Assert.Equal(UserResult.Ok, result.Value);
         }
@@ -46,8 +47,9 @@ namespace Authentication.Tests.UserServiceTests
             var jwtService = new Mock<IJwtService>().Object;
 
             var fakeUserRepository = FakeRepositoryFactory.ChangePassword_EntityException();
+            var fakeTokenRepository = FakeRepositoryFactory.FakeToken();
 
-            var userService = new UserService(fakeUserRepository, passwordService, jwtService, logger);
+            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
 
             var changePassModel = new ChangePassModel
             {
@@ -55,7 +57,7 @@ namespace Authentication.Tests.UserServiceTests
                 NewPassword = "qweqwe"
             };
 
-            var result = await userService.ChangePasswordAsync(changePassModel, "1", "asdasd", CancellationToken.None);
+            var result = await userService.ChangePasswordAsync(changePassModel, 1, "asdasd", CancellationToken.None);
 
             Assert.Equal(UserResult.Error, result.Value);
         }
@@ -68,8 +70,9 @@ namespace Authentication.Tests.UserServiceTests
             var jwtService = new Mock<IJwtService>().Object;
 
             var fakeUserRepository = FakeRepositoryFactory.ChangePassword_Exception();
+            var fakeTokenRepository = FakeRepositoryFactory.FakeToken();
 
-            var userService = new UserService(fakeUserRepository, passwordService, jwtService, logger);
+            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
 
             var changePassModel = new ChangePassModel
             {
@@ -77,7 +80,7 @@ namespace Authentication.Tests.UserServiceTests
                 NewPassword = "qweqwe"
             };
 
-            var result = await userService.ChangePasswordAsync(changePassModel, "1", "asdasd", CancellationToken.None);
+            var result = await userService.ChangePasswordAsync(changePassModel, 1, "asdasd", CancellationToken.None);
 
             Assert.Equal(UserResult.Error, result.Value);
         }

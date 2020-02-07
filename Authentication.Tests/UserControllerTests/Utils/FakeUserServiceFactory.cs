@@ -16,7 +16,7 @@ namespace Authentication.Tests.UserControllerTests.Utils
         {
             var userServiceFake = new Mock<IUserService>();
 
-            userServiceFake.Setup(c => c.SignOut(It.IsAny<BodyTokenModel>(), It.IsAny<string>(), It.IsAny<string>(), CancellationToken.None))
+            userServiceFake.Setup(c => c.SignOutAsync(It.IsAny<long>(), It.IsAny<string>(), CancellationToken.None))
                 .Returns(Task.FromResult(new Result<UserResult>(result)));
 
             return userServiceFake.Object;
@@ -26,7 +26,7 @@ namespace Authentication.Tests.UserControllerTests.Utils
         {
             var userServiceFake = new Mock<IUserService>();
 
-            userServiceFake.Setup(c => c.ChangePasswordAsync(It.IsAny<ChangePassModel>(), It.IsAny<string>(), It.IsAny<string>(), CancellationToken.None))
+            userServiceFake.Setup(c => c.ChangePasswordAsync(It.IsAny<ChangePassModel>(), It.IsAny<long>(), It.IsAny<string>(), CancellationToken.None))
                 .Returns(Task.FromResult(new Result<UserResult, TokenModel>(result)));
 
             return userServiceFake.Object;

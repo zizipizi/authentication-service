@@ -24,14 +24,21 @@ namespace Authentication.Host.Services
         private readonly IJwtService _jwtService;
         private readonly IPasswordService _passwordService;
         private readonly IUserRepository _userRepository;
+        private readonly ITokenRepository _tokenRepository;
         private readonly ILogger _logger;
         private readonly IDistributedCache _cache;
 
-        public AuthService(IJwtService jwtService, IPasswordService passwordService, IUserRepository userRepository, ILogger<AuthService> logger, IDistributedCache cache)
+        public AuthService(IJwtService jwtService, 
+            IPasswordService passwordService, 
+            IUserRepository userRepository, 
+            ITokenRepository tokenRepository,
+            ILogger<AuthService> logger, 
+            IDistributedCache cache)
         {
             _jwtService = jwtService;
             _passwordService = passwordService;
             _userRepository = userRepository;
+            _tokenRepository = tokenRepository;
             _logger = logger;
             _cache = cache;
         }
@@ -48,8 +55,8 @@ namespace Authentication.Host.Services
                 {
                     if (user.IsActive)
                     {
-                        var access = _jwtService.IssueAccessToken(id: user.Id.ToString(), name: user.UserName,roles: user.Role);
-                        await _userRepository.AddTokensAsync(access, token);
+                        var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role);
+                        await _tokenRepository.AddTokensAsync(access, token);
                         return new Result<AuthResult, TokenModel>(AuthResult.Ok, access.Tokens);
                     }
                     return new Result<AuthResult, TokenModel>(AuthResult.UserBlocked, message: "User is blocked");
@@ -86,11 +93,10 @@ namespace Authentication.Host.Services
             {
                 var validateResult = _jwtService.RefreshAccessToken(model.AccessToken, model.RefreshToken);
 
-                await _userRepository.CheckRefreshTokenAsync(validateResult, token);
-
-                if (validateResult.Result == JwtTokenResult.TokenResult.Ok)
+                if (await _tokenRepository.CheckRefreshTokenAsync(validateResult, token)
+                    && validateResult.Result == JwtTokenResult.TokenResult.Ok)
                 {
-                    await _userRepository.AddTokensAsync(validateResult, token);
+                    await _tokenRepository.AddTokensAsync(validateResult, token);
                     return new Result<AuthResult, TokenModel>(AuthResult.Ok, validateResult.Tokens);
                 }
 

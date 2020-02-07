@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Exceptions;
@@ -16,30 +15,31 @@ namespace Authentication.Host.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly ITokenRepository _tokenRepository;
         private readonly IPasswordService _passwordService;
         private readonly IJwtService _jwtService;
         private readonly ILogger _logger;
 
-        public UserService(IUserRepository userRepository, IPasswordService passwordService, IJwtService jwtService, ILogger<UserService> logger)
+        public UserService(IUserRepository userRepository, 
+            ITokenRepository tokenRepository, 
+            IPasswordService passwordService, 
+            IJwtService jwtService, 
+            ILogger<UserService> logger)
         {
             _userRepository = userRepository;
+            _tokenRepository = tokenRepository;
             _passwordService = passwordService;
             _jwtService = jwtService;
             _logger = logger;
         }
 
-        public async Task<Result<UserResult>> SignOut(BodyTokenModel tokenModel, string id, string accessToken, CancellationToken token)
+        public async Task<Result<UserResult>> SignOutAsync(long id, string accessToken, CancellationToken token)
         {
             try
             {
-                await _userRepository.BlockAllTokensAsync(long.Parse(id), token);
+                await _tokenRepository.BlockAllTokensAsync(id, token);
 
                 return new Result<UserResult>(UserResult.Ok);
-            }
-            catch (EntityNotFoundException ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return new Result<UserResult>(UserResult.Error);
             }
             catch (Exception ex)
             {
@@ -48,25 +48,26 @@ namespace Authentication.Host.Services
             }
         }
 
-        public async Task<Result<UserResult, TokenModel>> ChangePasswordAsync(ChangePassModel model, string id, string accessToken, CancellationToken token)
+        public async Task<Result<UserResult, TokenModel>> ChangePasswordAsync(ChangePassModel model, long id,
+            string accessToken, CancellationToken token)
         {
             try
             {
-                var user = await _userRepository.GetUserByIdAsync(long.Parse(id), token);
+                var user = await _userRepository.GetUserByIdAsync(id, token);
 
                 var passwordValidateResult = _passwordService.Validate(model.OldPassword, user.Password);
 
                 if (passwordValidateResult.Result == PasswordValidateResult.ValidateResult.Invalid)
                 {
-                    return new Result<UserResult, TokenModel>(UserResult.WrongPassword, message:"Wrong password");
+                    return new Result<UserResult, TokenModel>(UserResult.WrongPassword, message: "Wrong password");
                 }
 
                 var newPasswordHash = _passwordService.Hash(model.NewPassword);
 
                 await _userRepository.UpdateUserPassword(user.Id, newPasswordHash.Hash, token);
-                await _userRepository.BlockAllTokensAsync(user.Id, token);
+                await _tokenRepository.BlockAllTokensAsync(user.Id, token);
 
-                var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.UserName, user.Role);
+                var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role);
                 return new Result<UserResult, TokenModel>(UserResult.Ok, model: access.Tokens);
             }
             catch (EntityNotFoundException ex)

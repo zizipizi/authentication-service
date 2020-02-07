@@ -1,13 +1,10 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using NSV.Security.JWT;
 
 namespace Authentication.Host.Controllers
 {
@@ -47,21 +44,18 @@ namespace Authentication.Host.Controllers
         {
             var result = await _authService.SignIn(model, CancellationToken.None);
 
-            if (result.Value == AuthResult.UserNotFound)
-            {
-                _logger.LogWarning($"{result.Message}");
-                return NotFound(result.Message);
-            }
-
             switch (result.Value)
             {
+                case AuthResult.UserNotFound:
+                    _logger.LogWarning($"{result.Message}");
+                    return NotFound(result.Message);
                 case AuthResult.Ok:
                     return Ok(result.Model);
                 case AuthResult.UserBlocked:
                     return Forbid("Bearer");
             }
 
-            _logger.LogWarning($"{result.Message}");
+            _logger.LogWarning(result.Message);
             return BadRequest(result.Message);
         }
     }

@@ -187,11 +187,10 @@ namespace NSV.Security.JWT
             var identityOptions = new IdentityOptions();
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, name),
+                new Claim(JwtRegisteredClaimNames.Sub, id),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString(),
                     ClaimValueTypes.Integer64),
-                new Claim(identityOptions.ClaimsIdentity.UserIdClaimType, id),
                 new Claim(identityOptions.ClaimsIdentity.UserNameClaimType, name)
             };
 

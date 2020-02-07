@@ -5,15 +5,10 @@ using System.Threading.Tasks;
 using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Server.HttpSys;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.JsonWebTokens;
-using NSV.Security.JWT;
 
 namespace Authentication.Host.Controllers
 {
@@ -34,9 +29,13 @@ namespace Authentication.Host.Controllers
         [HttpPost("signout")]
         public async Task<IActionResult> SignOut(BodyTokenModel model)
         {
-            var (id, token) = GetUserInfo();
+            var (idStr, token) = GetUserInfo();
+            if (!long.TryParse(idStr, out var id))
+            {
+                return BadRequest("Wrong identifier");
+            }
 
-            var result = await _userService.SignOut(model, id, token, CancellationToken.None);
+            var result = await _userService.SignOutAsync(id, token, CancellationToken.None);
 
             if (result.Value == UserResult.Ok)
             {
@@ -49,7 +48,11 @@ namespace Authentication.Host.Controllers
         [HttpPost("changepass")]
         public async Task<IActionResult> ChangePassword(ChangePassModel passwords)
         {
-            var (id, token) = GetUserInfo();
+            var (idStr, token) = GetUserInfo();
+            if (!long.TryParse(idStr, out var id))
+            {
+                return BadRequest("Wrong identifier");
+            }
 
             var result = await _userService.ChangePasswordAsync(passwords, id, token, CancellationToken.None);
 
@@ -71,7 +74,7 @@ namespace Authentication.Host.Controllers
 
         private (string id, string token) GetUserInfo()
         {
-            var userId = HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).ToList()[1].Value;
+            var userId = GetIdentifier();
             var userToken = "";
             var authHeader = Request.Headers["Authorization"].ToString();
 
@@ -81,6 +84,11 @@ namespace Authentication.Host.Controllers
             }
 
             return (userId, userToken);
+        }
+
+        private string GetIdentifier()
+        {
+            return HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
     }
 }

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Models.Entities;
@@ -19,10 +17,10 @@ namespace Authentication.Tests.RepositoryTests
         public async Task AddTokensWithRefresh()
         {
             var authContext = FakeContextFactory.AddTokensWithRefresh();
-            var logger = new Mock<ILogger<UserRepository>>().Object;
+            var logger = new Mock<ILogger<TokenRepository>>().Object;
 
-            var userRepository = new UserRepository(authContext, logger);
-
+            var tokenRepository = new TokenRepository(authContext, logger);
+            
             var refreshJti = "123123podaps123123";
             var tokenModel = new TokenModel(
                 ("asdakasdjaksjdkad", DateTime.Now.AddMinutes(15)),
@@ -31,7 +29,7 @@ namespace Authentication.Tests.RepositoryTests
 
             var jwtToken= new JwtTokenResult(model: tokenModel, refreshTokenJti: refreshJti, userId: "1");
 
-            await userRepository.AddTokensAsync(jwtToken, CancellationToken.None);
+            await tokenRepository.AddTokensAsync(jwtToken, CancellationToken.None);
 
             var refreshToken = authContext.RefreshTokens.FirstOrDefault(c => c.Jti == refreshJti);
             var accessToken = authContext.AccessTokens.FirstOrDefault(c => c.RefreshToken == refreshToken);
@@ -45,7 +43,7 @@ namespace Authentication.Tests.RepositoryTests
         public async Task AddTokenWithoutRefresh()
         {
             var authContext = FakeContextFactory.AddTokenWithoutRefresh();
-            var logger = new Mock<ILogger<UserRepository>>().Object;
+            var logger = new Mock<ILogger<TokenRepository>>().Object;
 
             var tokenModel = new TokenModel(
                 ("asdakasdjaksjdkad", DateTime.Now.AddMinutes(15))
@@ -68,9 +66,9 @@ namespace Authentication.Tests.RepositoryTests
             authContext.RefreshTokens.Add(refreshToken);
             authContext.SaveChanges();
 
-            var userRepository = new UserRepository(authContext, logger);
+            var tokenRepository = new TokenRepository(authContext, logger);
 
-            await userRepository.AddTokensAsync(jwtToken, CancellationToken.None);
+            await tokenRepository.AddTokensAsync(jwtToken, CancellationToken.None);
 
             var accessToken = authContext.AccessTokens.FirstOrDefault(c => c.RefreshToken == refreshToken);
 
