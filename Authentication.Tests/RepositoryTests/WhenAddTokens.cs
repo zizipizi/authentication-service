@@ -51,10 +51,10 @@ namespace Authentication.Tests.RepositoryTests
 
             var refreshToken = new RefreshTokenEntity
             {
-                Token = "asdasdqwjqwioeqowieu",
+                Token = "sdfk;sldkfsdl;fksdf0",
                 Created = DateTime.UtcNow,
                 Expired = DateTime.Now.AddMinutes(30),
-                Jti = tokenModel.RefreshToken.Jti,
+                Jti = refreshJti,
                 IsBlocked = false,
                 UserId = 1
             };
