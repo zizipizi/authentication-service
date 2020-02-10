@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Exceptions;
 using Authentication.Host.Repositories;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -18,8 +19,9 @@ namespace Authentication.Tests.RepositoryTests
         {
             var authContext = FakeContextFactory.GetUserByName_Ok();
             var logger = new Mock<ILogger<UserRepository>>().Object;
+            var cache = new Mock<IDistributedCache>().Object;
 
-            var tokenRepository = new TokenRepository(authContext, new Mock<ILogger<TokenRepository>>().Object);
+            var tokenRepository = new TokenRepository(authContext, new Mock<ILogger<TokenRepository>>().Object, cache);
             var userRepository = new UserRepository(tokenRepository, authContext, logger);
 
             var result = await userRepository.GetUserByNameAsync("Login", CancellationToken.None);
@@ -35,8 +37,9 @@ namespace Authentication.Tests.RepositoryTests
         {
             var authContext = FakeContextFactory.GetUserByName_Ok();
             var logger = new Mock<ILogger<UserRepository>>().Object;
+            var cache = new Mock<IDistributedCache>().Object;
 
-            var tokenRepository = new TokenRepository(authContext, new Mock<ILogger<TokenRepository>>().Object);
+            var tokenRepository = new TokenRepository(authContext, new Mock<ILogger<TokenRepository>>().Object, cache);
             var userRepository = new UserRepository(tokenRepository, authContext, logger);
 
             var result = userRepository.GetUserByNameAsync("Login4", CancellationToken.None);

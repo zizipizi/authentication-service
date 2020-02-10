@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using NSV.Security.JWT;
 
@@ -6,10 +7,12 @@ namespace Authentication.Host.Repositories
 {
     public interface ITokenRepository
     {
-        Task<bool> CheckRefreshTokenAsync(TokenModel tokenModel, CancellationToken token);
+        Task<bool> IsRefreshTokenBlockedAsync(string refreshJti, CancellationToken cancellationToken);
 
-        Task AddTokensAsync(long userId, TokenModel tokenModel, CancellationToken token);
+        Task AddTokensAsync(long userId, TokenModel tokenModel, CancellationToken cancellationToken);
 
-        Task BlockAllTokensAsync(long id, CancellationToken token);
+        Task BlockAllTokensAsync(long id, CancellationToken cancellationToken);
+
+        Task BlockRefreshTokenAsync(string refreshJti, CancellationToken cancellationToken);
     }
 }

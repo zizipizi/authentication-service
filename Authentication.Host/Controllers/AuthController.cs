@@ -31,9 +31,9 @@ namespace Authentication.Host.Controllers
                 case AuthResult.Ok:
                     return Ok(result.Model);
                 case AuthResult.TokenValidationProblem:
-                    return Conflict("Refresh token not validate");
-                case AuthResult.TokenExpired:
-                    return Unauthorized("Token blocked");
+                    return Conflict(result.Message);
+                case AuthResult.TokenIsBlocked:
+                    return Unauthorized(result.Message);
             }
 
             return BadRequest("Error while refresh");
@@ -52,7 +52,7 @@ namespace Authentication.Host.Controllers
                 case AuthResult.Ok:
                     return Ok(result.Model);
                 case AuthResult.UserBlocked:
-                    return Forbid("Bearer");
+                    return StatusCode(403, result.Message);
             }
 
             _logger.LogWarning(result.Message);

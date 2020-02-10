@@ -60,7 +60,7 @@ namespace Authentication.Tests.AuthControllerTests
         [Fact]
         public async Task RefreshToken_TokenExpired()
         {
-            var authService = FakeAuthServiceFactory.FakeRefreshToken(AuthResult.TokenExpired);
+            var authService = FakeAuthServiceFactory.FakeRefreshToken(AuthResult.TokenIsBlocked);
             var logger = new Mock<ILogger<AuthController>>().Object;
 
 

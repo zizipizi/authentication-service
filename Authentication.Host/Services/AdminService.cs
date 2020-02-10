@@ -12,6 +12,7 @@ using Authentication.Host.Models;
 using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using NSV.Security.JWT;
 using NSV.Security.Password;
@@ -60,23 +61,27 @@ namespace Authentication.Host.Services
             try
             {
                 var pass = _passwordService.Hash(model.Password);
-                // todo: check if pass.Result is error, pass.Hash may be null and we'll get db error
-                
-                var id = await _userRepository.CreateUserAsync(new User()
-                {
-                    Login = model.Login,
-                    Password = pass.Hash,
-                    UserName = model.UserName,
-                    Role = model.Role.Split(",").Select(p => p.Trim())
-                }, token);
 
-                var newUser = new UserInfo
+                if (pass.Result == PasswordHashResult.HashResult.Ok)
                 {
-                    Id = id,
-                    Login = model.Login
-                };
+                    var id = await _userRepository.CreateUserAsync(new User()
+                    {
+                        Login = model.Login,
+                        Password = pass.Hash,
+                        UserName = model.UserName,
+                        Role = model.Role.Split(",").Select(p => p.Trim())
+                    }, token);
 
-                return new Result<AdminResult, UserInfo>(AdminResult.Ok, model: newUser,"User created");
+                    var newUser = new UserInfo
+                    {
+                        Id = id,
+                        Login = model.Login
+                    };
+
+                    return new Result<AdminResult, UserInfo>(AdminResult.Ok, model: newUser, "User created");
+                }
+
+                return new Result<AdminResult, UserInfo>(AdminResult.Error, message:"Please try again");
             }
             catch (EntityNotFoundException)
             {

@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Repositories;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -15,8 +16,9 @@ namespace Authentication.Tests.RepositoryTests
         {
             var authContext = FakeContextFactory.BlockAllTokens_Ok();
             var logger = new Mock<ILogger<UserRepository>>().Object;
+            var cache = new Mock<IDistributedCache>().Object;
 
-            var tokenRepository = new TokenRepository(authContext, new Mock<ILogger<TokenRepository>>().Object);
+            var tokenRepository = new TokenRepository(authContext, new Mock<ILogger<TokenRepository>>().Object, cache);
 
             await tokenRepository.BlockAllTokensAsync(1, CancellationToken.None);
 

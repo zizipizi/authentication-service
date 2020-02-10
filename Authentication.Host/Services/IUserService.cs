@@ -9,7 +9,7 @@ namespace Authentication.Host.Services
 {
     public interface IUserService
     {
-        Task<Result<UserResult>> SignOutAsync(long id, string accessToken, CancellationToken token);
+        Task<Result<UserResult>> SignOutAsync(long id, string refreshJti, CancellationToken token);
 
         Task<Result<UserResult, TokenModel>> ChangePasswordAsync(ChangePassModel model, long id, string accessToken, CancellationToken token);
     }

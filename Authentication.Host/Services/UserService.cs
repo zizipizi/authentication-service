@@ -37,11 +37,11 @@ namespace Authentication.Host.Services
             _cache = cache;
         }
 
-        public async Task<Result<UserResult>> SignOutAsync(long id, string accessToken, CancellationToken token)
+        public async Task<Result<UserResult>> SignOutAsync(long id, string refreshJti, CancellationToken cancellationToken)
         {
             try
             {
-                await _tokenRepository.BlockAllTokensAsync(id, token);
+                await _tokenRepository.BlockRefreshTokenAsync(refreshJti, cancellationToken);
 
                 return new Result<UserResult>(UserResult.Ok);
             }
@@ -52,12 +52,11 @@ namespace Authentication.Host.Services
             }
         }
 
-        public async Task<Result<UserResult, TokenModel>> ChangePasswordAsync(ChangePassModel model, long id,
-            string accessToken, CancellationToken token)
+        public async Task<Result<UserResult, TokenModel>> ChangePasswordAsync(ChangePassModel model, long id, string accessToken, CancellationToken cancellationToken)
         {
             try
             {
-                var user = await _userRepository.GetUserByIdAsync(id, token);
+                var user = await _userRepository.GetUserByIdAsync(id, cancellationToken);
 
                 var passwordValidateResult = _passwordService.Validate(model.OldPassword, user.Password);
 
@@ -68,8 +67,8 @@ namespace Authentication.Host.Services
 
                 var newPasswordHash = _passwordService.Hash(model.NewPassword);
 
-                await _userRepository.UpdateUserPassword(user.Id, newPasswordHash.Hash, token);
-                await _tokenRepository.BlockAllTokensAsync(user.Id, token);
+                await _userRepository.UpdateUserPassword(user.Id, newPasswordHash.Hash, cancellationToken);
+                await _tokenRepository.BlockAllTokensAsync(user.Id, cancellationToken);
 
                 var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role);
                 return new Result<UserResult, TokenModel>(UserResult.Ok, model: access.Tokens);

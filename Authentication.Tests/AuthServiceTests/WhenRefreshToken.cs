@@ -31,7 +31,7 @@ namespace Authentication.Tests.AuthServiceTests
             cache.Setup(x => x.GetAsync(It.IsAny<string>(), CancellationToken.None))
                 .Returns(Task.FromResult((byte[]) null));
 
-            var fakeTokenRepository = FakeRepositoryFactory.RefreshToken_Ok();
+            var fakeTokenRepository = FakeRepositoryFactory.IsRefreshTokenBlocked_Ok();
             var fakeUserRepository = FakeRepositoryFactory.FakeUser();
 
             var authService = new AuthService(jwtService.Object, passwordService, fakeUserRepository, fakeTokenRepository, logger, cache.Object);
@@ -48,17 +48,26 @@ namespace Authentication.Tests.AuthServiceTests
         }
 
         [Fact]
-        public async Task RefrehToken_Error()
+        public async Task RefrehToken_Blocked()
         {
             var logger = new Mock<ILogger<AuthService>>().Object;
             var passwordService = new Mock<IPasswordService>().Object;
-            var jwtService = new Mock<IJwtService>().Object;
-            var cache = new Mock<IDistributedCache>().Object;
+            var jwtService = new Mock<IJwtService>();
+            var cache = new Mock<IDistributedCache>();
 
-            var fakeTokenRepository = FakeRepositoryFactory.CheckRefreshToken_Error();
+            cache.Setup(x => x.GetAsync(It.IsAny<string>(), CancellationToken.None))
+                .Returns(Task.FromResult((new byte['2'])));
+
+            jwtService
+                .Setup(x => x.RefreshAccessToken(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns((string a, string r) => new JwtTokenResult(JwtTokenResult.TokenResult.Ok,
+                    new TokenModel((a, DateTime.MaxValue, Guid.NewGuid().ToString()),
+                        (r, DateTime.MaxValue, Guid.NewGuid().ToString())), "1"));
+
+            var fakeTokenRepository = FakeRepositoryFactory.IsRefreshTokenBlocked_TokenBlocked();
             var fakeUserRepository = FakeRepositoryFactory.FakeUser();
 
-            var authService = new AuthService(jwtService, passwordService, fakeUserRepository, fakeTokenRepository, logger, cache);
+            var authService = new AuthService(jwtService.Object, passwordService, fakeUserRepository, fakeTokenRepository, logger, cache.Object);
 
             var bodyTokenModel = new BodyTokenModel
             {
@@ -68,7 +77,7 @@ namespace Authentication.Tests.AuthServiceTests
 
             var result = await authService.RefreshToken(bodyTokenModel, CancellationToken.None);
 
-            Assert.Equal(AuthResult.TokenValidationProblem, result.Value);
+            Assert.Equal(AuthResult.TokenIsBlocked, result.Value);
         }
     }
 }

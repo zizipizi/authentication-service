@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,15 +28,18 @@ namespace Authentication.Host.Controllers
         }
 
         [HttpPost("signout")]
-        public async Task<IActionResult> SignOut(BodyTokenModel model)
+        public async Task<IActionResult> SignOut(BodyTokenModel model, CancellationToken cancellationToken)
         {
             var (idStr, token) = GetUserInfo();
+
             if (!long.TryParse(idStr, out var id))
             {
                 return BadRequest("Wrong identifier");
             }
 
-            var result = await _userService.SignOutAsync(id, token, CancellationToken.None);
+            var refreshJti = GetJti(model.RefreshToken);
+
+            var result = await _userService.SignOutAsync(id, refreshJti, cancellationToken);
 
             if (result.Value == UserResult.Ok)
             {
@@ -46,14 +50,14 @@ namespace Authentication.Host.Controllers
         }
 
         [HttpPost("changepass")]
-        public async Task<IActionResult> ChangePassword(ChangePassModel passwords)
+        public async Task<IActionResult> ChangePassword(ChangePassModel passwords, CancellationToken cancellationToken)
         {
             var (idStr, token) = GetUserInfo();
             if (!long.TryParse(idStr, out var id))
             {
                 return BadRequest("Wrong identifier");
             }
-            var result = await _userService.ChangePasswordAsync(passwords, id, token, CancellationToken.None);
+            var result = await _userService.ChangePasswordAsync(passwords, id, token, cancellationToken);
 
             switch (result.Value)
             {
@@ -74,7 +78,6 @@ namespace Authentication.Host.Controllers
         private (string id, string token) GetUserInfo()
         {
             var userId = GetIdentifier();
-            var jti = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "jti")?.Value;
             var userToken = "";
             var authHeader = Request.Headers["Authorization"].ToString();
 
@@ -89,6 +92,14 @@ namespace Authentication.Host.Controllers
         private string GetIdentifier()
         {
             return HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        }
+
+        private string GetJti(string jwtToken)
+        {
+            //var handler = new JwtSecurityTokenHandler();
+            //var tok = handler.ReadJwtToken(jwtToken);
+            //var jti = tok.Claims.FirstOrDefault(c => c.Type == "jti")?.Value;
+            return new JwtSecurityToken(jwtToken).Claims.FirstOrDefault(c => c.Type == "jti")?.Value;
         }
     }
 }

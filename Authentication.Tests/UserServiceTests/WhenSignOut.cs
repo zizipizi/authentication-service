@@ -26,7 +26,7 @@ namespace Authentication.Tests.UserServiceTests
             var cache = new Mock<IDistributedCache>().Object;
 
             var fakeUserRepository = FakeRepositoryFactory.FakeUser();
-            var fakeTokenRepository = FakeRepositoryFactory.BlockAllTokens_Ok();
+            var fakeTokenRepository = FakeRepositoryFactory.BlockRefreshToken_Ok();
 
             var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger, cache);
 
@@ -44,7 +44,7 @@ namespace Authentication.Tests.UserServiceTests
             var cache = new Mock<IDistributedCache>().Object;
 
             var fakeUserRepository = FakeRepositoryFactory.FakeUser();
-            var fakeTokenRepository = FakeRepositoryFactory.BlockAllTokens_Exception();
+            var fakeTokenRepository = FakeRepositoryFactory.BlockRefreshToken_Exception();
 
             var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger, cache);
 

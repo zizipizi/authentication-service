@@ -39,6 +39,7 @@ namespace Authentication.Host
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IUserService, UserService>();
             services.AddControllers();
+            services.AddHealthChecks();
 
             services.AddSwaggerGen(c =>
             {
@@ -119,13 +120,13 @@ namespace Authentication.Host
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Auth API V1");
+                c.RoutePrefix = "";
             });
 
             app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
