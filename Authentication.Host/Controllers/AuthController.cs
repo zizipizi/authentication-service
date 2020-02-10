@@ -47,15 +47,14 @@ namespace Authentication.Host.Controllers
             switch (result.Value)
             {
                 case AuthResult.UserNotFound:
-                    _logger.LogWarning($"{result.Message}");
                     return NotFound(result.Message);
                 case AuthResult.Ok:
                     return Ok(result.Model);
                 case AuthResult.UserBlocked:
-                    return StatusCode(403, result.Message);
+                    return Unauthorized(result.Message);
             }
 
-            _logger.LogWarning(result.Message);
+            _logger.LogError(result.Message);
             return BadRequest(result.Message);
         }
     }
