@@ -96,9 +96,6 @@ namespace Authentication.Host.Controllers
 
         private string GetJti(string jwtToken)
         {
-            //var handler = new JwtSecurityTokenHandler();
-            //var tok = handler.ReadJwtToken(jwtToken);
-            //var jti = tok.Claims.FirstOrDefault(c => c.Type == "jti")?.Value;
             return new JwtSecurityToken(jwtToken).Claims.FirstOrDefault(c => c.Type == "jti")?.Value;
         }
     }

@@ -22,9 +22,9 @@ namespace Authentication.Host.Controllers
         }
 
         [HttpPost("refresh")]
-        public async Task<IActionResult> RefreshToken(BodyTokenModel model, CancellationToken token)
+        public async Task<IActionResult> RefreshToken(BodyTokenModel model, CancellationToken cancellationToken)
         {
-            var result = await _authService.RefreshToken(model, CancellationToken.None);
+            var result = await _authService.RefreshToken(model, cancellationToken);
 
             switch (result.Value)
             {
@@ -40,9 +40,9 @@ namespace Authentication.Host.Controllers
         }
 
         [HttpPost("signin")]
-        public async Task<IActionResult> SignIn(LoginModel model)
+        public async Task<IActionResult> SignIn(LoginModel model, CancellationToken cancellationToken)
         {
-            var result = await _authService.SignIn(model, CancellationToken.None);
+            var result = await _authService.SignIn(model, cancellationToken);
 
             switch (result.Value)
             {

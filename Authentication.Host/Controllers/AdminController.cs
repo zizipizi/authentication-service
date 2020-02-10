@@ -32,9 +32,9 @@ namespace Authentication.Host.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateUser(UserCreateModel model)
+        public async Task<IActionResult> CreateUser(UserCreateModel model, CancellationToken cancellationToken)
         {
-            var result = await _adminService.CreateUserAsync(model, CancellationToken.None);
+            var result = await _adminService.CreateUserAsync(model, cancellationToken);
             
             if (result.Value == AdminResult.Ok)
                 return Ok(result.Model);
@@ -44,9 +44,9 @@ namespace Authentication.Host.Controllers
         }
 
         [HttpDelete("delete/{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser(int id, CancellationToken cancellationToken)
         {
-            var result = await _adminService.DeleteUserAsync(id, CancellationToken.None);
+            var result = await _adminService.DeleteUserAsync(id, cancellationToken);
 
             if (result.Value == AdminResult.Ok)
                 return Ok(result.Message);
@@ -56,9 +56,9 @@ namespace Authentication.Host.Controllers
         }
 
         [HttpGet("block/{id}")]
-        public async Task<IActionResult> BlockUser(int id)
+        public async Task<IActionResult> BlockUser(int id, CancellationToken cancellationToken)
         {
-            var result = await _adminService.BlockUserAsync(id, CancellationToken.None);
+            var result = await _adminService.BlockUserAsync(id, cancellationToken);
 
             if (result.Value == AdminResult.Ok)
                 return Ok(result.Message);
