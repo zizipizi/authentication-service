@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Controllers;
 using Authentication.Host.Models;
@@ -24,7 +25,7 @@ namespace Authentication.Tests.AdminControllerTests
             var adminController = new AdminController(userService, logger);
             var userModel = new UserCreateModel();
 
-            var result = await adminController.CreateUser(userModel);
+            var result = await adminController.CreateUser(userModel, CancellationToken.None);
 
             Assert.IsType<OkObjectResult>(result);
         }
@@ -37,7 +38,7 @@ namespace Authentication.Tests.AdminControllerTests
             var adminController = new AdminController(userService, logger);
             var userModel = new UserCreateModel();
 
-            var result = await adminController.CreateUser(userModel);
+            var result = await adminController.CreateUser(userModel, CancellationToken.None);
 
             Assert.IsType<ConflictObjectResult>(result);
         }

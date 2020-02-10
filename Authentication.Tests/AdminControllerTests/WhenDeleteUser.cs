@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Results.Enums;
 using Authentication.Tests.AdminControllerTests.Utills;
@@ -23,7 +24,7 @@ namespace Authentication.Tests.AdminControllerTests
             var userService = FakeAdminServiceFactory.GetFakeDeleteUserService(AdminResult.Ok, $"User with id {id} deleted");
             var adminController = new AdminController(userService, logger);
 
-            var result = await adminController.DeleteUser(id);
+            var result = await adminController.DeleteUser(id, CancellationToken.None);
 
             Assert.IsType<OkObjectResult>(result);
             Assert.Equal($"User with id {id} deleted", ((OkObjectResult)result).Value);
@@ -37,7 +38,7 @@ namespace Authentication.Tests.AdminControllerTests
             var userService = FakeAdminServiceFactory.GetFakeDeleteUserService(AdminResult.UserNotFound, $"User with {id} not found");
             var adminController = new AdminController(userService, logger);
 
-            var result = await adminController.DeleteUser(id);
+            var result = await adminController.DeleteUser(id, CancellationToken.None);
 
             Assert.IsType<NotFoundObjectResult>(result);
             Assert.Equal($"User with {id} not found", ((NotFoundObjectResult)result).Value);

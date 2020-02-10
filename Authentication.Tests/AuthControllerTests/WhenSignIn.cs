@@ -31,7 +31,7 @@ namespace Authentication.Tests.AuthControllerTests
                 Password = "Terminator2013"
             };
 
-            var result = await authController.SignIn(loginModel);
+            var result = await authController.SignIn(loginModel, CancellationToken.None);
 
             Assert.IsType<OkObjectResult>(result);
         }
@@ -51,7 +51,7 @@ namespace Authentication.Tests.AuthControllerTests
                 Password = "Terminator2013"
             };
 
-            var result = await authController.SignIn(loginModel);
+            var result = await authController.SignIn(loginModel, CancellationToken.None);
 
             Assert.IsType<NotFoundObjectResult>(result);
         }
@@ -71,7 +71,7 @@ namespace Authentication.Tests.AuthControllerTests
                 Password = "Terminator2013"
             };
 
-            var result = await authController.SignIn(loginModel);
+            var result = await authController.SignIn(loginModel, CancellationToken.None);
 
             Assert.IsType<ForbidResult>(result);
         }
@@ -91,7 +91,7 @@ namespace Authentication.Tests.AuthControllerTests
                 Password = "Terminator2013"
             };
 
-            var result = await authController.SignIn(loginModel);
+            var result = await authController.SignIn(loginModel, CancellationToken.None);
 
             Assert.IsType<BadRequestObjectResult>(result);
         }
