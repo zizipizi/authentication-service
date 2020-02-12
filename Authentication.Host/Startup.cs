@@ -1,5 +1,6 @@
 using System;
 using Authentication.Data.Models;
+using Authentication.Host.Middlewares;
 using Authentication.Host.Repositories;
 using Authentication.Host.Services;
 using Microsoft.AspNetCore.Builder;
@@ -13,6 +14,7 @@ using NSV.Security.JWT;
 using NSV.Security.Password;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Logging;
+using Prometheus;
 using Serilog;
 using StackExchange.Redis;
 using StackExchange.Redis.Extensions.Core.Abstractions;
@@ -110,7 +112,7 @@ namespace Authentication.Host
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            
             app.UseSerilogRequestLogging();
 
             app.UseHttpsRedirection();
@@ -124,12 +126,15 @@ namespace Authentication.Host
             });
 
             app.UseRouting();
+            app.UseHttpMetrics();
+            app.UseMiddleware<RequestMetricMiddleware>();
 
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapMetrics();
             });
 
         }
