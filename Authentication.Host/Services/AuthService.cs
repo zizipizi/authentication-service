@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,11 +42,11 @@ namespace Authentication.Host.Services
             _cache = cache;
         }
 
-        public async Task<Result<AuthResult, TokenModel>> SignIn(LoginModel model, CancellationToken token)
+        public async Task<Result<AuthResult, TokenModel>> SignIn(LoginModel model, CancellationToken cancellationToken)
         {
             try
             {
-                var user = await _userRepository.GetUserByNameAsync(model.UserName, token);
+                var user = await _userRepository.GetUserByNameAsync(model.UserName, cancellationToken);
 
                 var validateResult = _passwordService.Validate(model.Password, user.Password);
 
@@ -52,7 +55,7 @@ namespace Authentication.Host.Services
                     if (user.IsActive)
                     {
                         var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role);
-                        await _tokenRepository.AddTokensAsync(user.Id, access.Tokens, token);
+                        await _tokenRepository.AddTokensAsync(user.Id, access.Tokens, cancellationToken);
 
                         return new Result<AuthResult, TokenModel>(AuthResult.Ok, access.Tokens);
                     }
@@ -71,50 +74,28 @@ namespace Authentication.Host.Services
             }
         }
 
-        public async Task<Result<AuthResult, TokenModel>> RefreshToken(BodyTokenModel model, CancellationToken token)
+        public async Task<Result<AuthResult, TokenModel>> RefreshToken(BodyTokenModel model, CancellationToken cancellationToken)
         {
-
-            var tok = new BodyTokenModel
-            {
-                AccessToken = "asdads23123",
-                RefreshToken = "joijojoijwejr823"
-            };
-
-            _cache.SetString("tokModel", JsonConvert.SerializeObject(tok));
-
-            var myModel = JsonConvert.DeserializeObject<BodyTokenModel>(_cache.GetString("tokModel"));
-            
-            var s = Encoding.UTF8.GetString(_cache.Get("MyK2ey"));
-
             try
-            { 
+            {
                 var validateResult = _jwtService.RefreshAccessToken(model.AccessToken, model.RefreshToken);
 
-                if (await _tokenRepository.CheckRefreshTokenAsync(validateResult.Tokens, token))
+                if (!await _tokenRepository.IsRefreshTokenBlockedAsync(validateResult.Tokens.RefreshToken.Jti, cancellationToken))
                 {
-                    if (!long.TryParse(validateResult.UserId, out var userId))
+                    if (!long.TryParse(validateResult.UserId, out var userId)) 
                     {
                         _logger.LogError($"Wrong user identifier {validateResult.UserId}");
                         return new Result<AuthResult, TokenModel>(AuthResult.Error, message: "Wrong identifier");
                     }
 
-                    var refreshTokenCache =
-                        await _cache.GetAsync($"blacklist:{validateResult.Tokens.RefreshToken.Jti}", token);
-
-                    if (refreshTokenCache != null)
-                    {
-                        // todo: why AuthResult.TokenExpired and not AuthResult.UserBlocked
-                        return new Result<AuthResult, TokenModel>(AuthResult.TokenExpired, message: "Token is blocked");
-                    }
-
                     if (validateResult.Result == JwtTokenResult.TokenResult.Ok)
                     {
-                        await _tokenRepository.AddTokensAsync(userId, validateResult.Tokens, token);
+                        await _tokenRepository.AddTokensAsync(userId, validateResult.Tokens, cancellationToken);
                         return new Result<AuthResult, TokenModel>(AuthResult.Ok, validateResult.Tokens);
                     }
                 }
 
-                return new Result<AuthResult, TokenModel>(AuthResult.TokenValidationProblem);
+                return new Result<AuthResult, TokenModel>(AuthResult.TokenIsBlocked, message:"Token is blocked");
             }
             catch (EntityNotFoundException ex)
             {

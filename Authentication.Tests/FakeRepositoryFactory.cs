@@ -22,6 +22,44 @@ namespace Authentication.Tests
             return userRepositoryFake.Object;
         }
 
+        public static ITokenRepository IsRefreshTokenBlocked_Ok()
+        {
+            var tokenRepositoryFake = new Mock<ITokenRepository>();
+            tokenRepositoryFake.Setup(c =>
+                    c.IsRefreshTokenBlockedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(false));
+
+            return tokenRepositoryFake.Object;
+        }
+
+        public static ITokenRepository IsRefreshTokenBlocked_TokenBlocked()
+        {
+            var tokenRepositoryFake = new Mock<ITokenRepository>();
+            tokenRepositoryFake.Setup(c =>
+                    c.IsRefreshTokenBlockedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(true));
+
+            return tokenRepositoryFake.Object;
+        }
+
+        public static ITokenRepository BlockRefreshToken_Ok()
+        {
+            var tokenRepositoryFake = new Mock<ITokenRepository>();
+            tokenRepositoryFake.Setup(c => c.BlockRefreshTokenAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            return tokenRepositoryFake.Object;
+        }
+
+        public static ITokenRepository BlockRefreshToken_Exception()
+        {
+            var tokenRepositoryFake = new Mock<ITokenRepository>();
+            tokenRepositoryFake.Setup(c => c.BlockRefreshTokenAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Throws(new Exception());
+
+            return tokenRepositoryFake.Object;
+        }
+
         public static IUserRepository CreateFakeUser()
         {
             var userRepositoryFake = new Mock<IUserRepository>();
@@ -106,7 +144,7 @@ namespace Authentication.Tests
         public static ITokenRepository RefreshToken_Ok()
         {
             var tokenRepositoryFake = new Mock<ITokenRepository>();
-            tokenRepositoryFake.Setup(c => c.CheckRefreshTokenAsync(It.IsAny<TokenModel>(), It.IsAny<CancellationToken>()))
+            tokenRepositoryFake.Setup(c => c.IsRefreshTokenBlockedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(true));
 
             return tokenRepositoryFake.Object;
@@ -116,7 +154,7 @@ namespace Authentication.Tests
         {
             var tokenRepositoryFake = new Mock<ITokenRepository>();
             tokenRepositoryFake.Setup(c =>
-                    c.CheckRefreshTokenAsync(It.IsAny<TokenModel>(), It.IsAny<CancellationToken>()))
+                    c.IsRefreshTokenBlockedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(false));
 
             return tokenRepositoryFake.Object;

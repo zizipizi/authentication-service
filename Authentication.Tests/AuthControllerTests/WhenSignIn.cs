@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Authentication.Host.Controllers;
 using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -31,7 +33,7 @@ namespace Authentication.Tests.AuthControllerTests
                 Password = "Terminator2013"
             };
 
-            var result = await authController.SignIn(loginModel);
+            var result = await authController.SignIn(loginModel, CancellationToken.None);
 
             Assert.IsType<OkObjectResult>(result);
         }
@@ -51,7 +53,7 @@ namespace Authentication.Tests.AuthControllerTests
                 Password = "Terminator2013"
             };
 
-            var result = await authController.SignIn(loginModel);
+            var result = await authController.SignIn(loginModel, CancellationToken.None);
 
             Assert.IsType<NotFoundObjectResult>(result);
         }
@@ -64,16 +66,15 @@ namespace Authentication.Tests.AuthControllerTests
 
 
             var authController = new AuthController(authService, logger);
-
+            ;
             var loginModel = new LoginModel
             {
                 UserName = "Terminator",
                 Password = "Terminator2013"
             };
-
-            var result = await authController.SignIn(loginModel);
-
-            Assert.IsType<ForbidResult>(result);
+            var res = new StatusCodeResult(403);
+            var result = await authController.SignIn(loginModel, CancellationToken.None);
+            Assert.IsType<UnauthorizedObjectResult>(result);
         }
 
         [Fact]
@@ -91,7 +92,7 @@ namespace Authentication.Tests.AuthControllerTests
                 Password = "Terminator2013"
             };
 
-            var result = await authController.SignIn(loginModel);
+            var result = await authController.SignIn(loginModel, CancellationToken.None);
 
             Assert.IsType<BadRequestObjectResult>(result);
         }

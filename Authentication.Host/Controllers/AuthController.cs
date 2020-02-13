@@ -22,40 +22,39 @@ namespace Authentication.Host.Controllers
         }
 
         [HttpPost("refresh")]
-        public async Task<IActionResult> RefreshToken(BodyTokenModel model, CancellationToken token)
+        public async Task<IActionResult> RefreshToken(BodyTokenModel model, CancellationToken cancellationToken)
         {
-            var result = await _authService.RefreshToken(model, CancellationToken.None);
+            var result = await _authService.RefreshToken(model, cancellationToken);
 
             switch (result.Value)
             {
                 case AuthResult.Ok:
                     return Ok(result.Model);
                 case AuthResult.TokenValidationProblem:
-                    return Conflict("Refresh token not validate");
-                case AuthResult.TokenExpired:
-                    return Unauthorized("Token blocked");
+                    return Conflict(result.Message);
+                case AuthResult.TokenIsBlocked:
+                    return Unauthorized(result.Message);
             }
 
             return BadRequest("Error while refresh");
         }
 
         [HttpPost("signin")]
-        public async Task<IActionResult> SignIn(LoginModel model)
+        public async Task<IActionResult> SignIn(LoginModel model, CancellationToken cancellationToken)
         {
-            var result = await _authService.SignIn(model, CancellationToken.None);
+            var result = await _authService.SignIn(model, cancellationToken);
 
             switch (result.Value)
             {
                 case AuthResult.UserNotFound:
-                    _logger.LogWarning($"{result.Message}");
                     return NotFound(result.Message);
                 case AuthResult.Ok:
                     return Ok(result.Model);
                 case AuthResult.UserBlocked:
-                    return Forbid("Bearer");
+                    return Unauthorized(result.Message);
             }
 
-            _logger.LogWarning(result.Message);
+            _logger.LogError(result.Message);
             return BadRequest(result.Message);
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using Authentication.Data.Exceptions;
 using Authentication.Data.Models;
 using Authentication.Data.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using NSV.Security.JWT;
 
@@ -13,25 +15,62 @@ namespace Authentication.Host.Repositories
 {
     public class TokenRepository : RepositoryBase, ITokenRepository
     {
-        public TokenRepository(AuthContext context, ILogger<TokenRepository> logger) 
+        private readonly IDistributedCache _cache;
+        public TokenRepository(AuthContext context, ILogger<TokenRepository> logger, IDistributedCache cache) 
             : base(context, logger)
         {
+            _cache = cache;
         }
 
-        public async Task<bool> CheckRefreshTokenAsync(TokenModel tokenModel, CancellationToken token)
+        public async Task<bool> IsRefreshTokenBlockedAsync(string refreshJti, CancellationToken token)
         {
-            var refreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == tokenModel.RefreshToken.Jti, token);
+            
+            var cacheRefreshToken = await _cache.GetAsync($"blacklist:{refreshJti}", token);
 
-            return refreshToken != null && !refreshToken.IsBlocked;
+            return cacheRefreshToken != null;
+
+            // Проверка в БД была заглушкой, теперь проверяем только в кэше. На всякий случай оставил проверку в БД закомменченной. Мб нужна будет
+
+            //var DbRefreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == tokenModel.RefreshToken.Jti, token);
+            //return DbRefreshToken != null && !DbRefreshToken.IsBlocked;
         }
 
-        public async Task BlockAllTokensAsync(long id, CancellationToken token)
+        //Block when user signout. Block only current refresh token.
+        //And all access with same refresh jti???
+        public async Task BlockRefreshTokenAsync(string refreshJti, CancellationToken cancellationToken)
         {
-            _context.RefreshTokens.Where(c => !c.IsBlocked && c.UserId == id)
-                .ToList()
-                .ForEach(c => c.IsBlocked = true);
+            var refreshToken = await _context.RefreshTokens.FirstOrDefaultAsync(c => c.Jti == refreshJti, cancellationToken);
 
-            await _context.SaveChangesAsync(token);
+            if (!await IsRefreshTokenBlockedAsync(refreshJti, cancellationToken))
+            {
+                refreshToken.IsBlocked = true;
+
+                await _cache.SetStringAsync($"blacklist:{refreshJti}", refreshJti, new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpiration = refreshToken.Expired
+                }, cancellationToken);
+
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        //Block all when user change password or admin block user
+        public async Task BlockAllTokensAsync(long id, CancellationToken cancellationToken)
+        {
+            var tokens = _context.RefreshTokens.Where(c => !c.IsBlocked && c.UserId == id && c.Expired > DateTime.UtcNow)
+                .ToList();
+            
+            foreach (var token in tokens)
+            {
+                _cache.SetString($"blacklist:{token.Jti}", token.Jti, new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpiration = token.Expired
+                });
+
+                token.IsBlocked = true;
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
         public async Task AddTokensAsync(long userId, TokenModel tokenModel, CancellationToken token)

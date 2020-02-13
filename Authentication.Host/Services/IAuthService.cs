@@ -14,8 +14,8 @@ namespace Authentication.Host.Services
 {
     public interface IAuthService
     {
-        Task<Result<AuthResult, TokenModel>> SignIn(LoginModel model, CancellationToken token);
+        Task<Result<AuthResult, TokenModel>> SignIn(LoginModel model, CancellationToken cancellationToken);
 
-        Task<Result<AuthResult, TokenModel>> RefreshToken(BodyTokenModel model, CancellationToken token);
+        Task<Result<AuthResult, TokenModel>> RefreshToken(BodyTokenModel model, CancellationToken cancellationToken);
     }
 }

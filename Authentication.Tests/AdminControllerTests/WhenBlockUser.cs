@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Results.Enums;
 using Authentication.Tests.AdminControllerTests.Utills;
@@ -23,7 +24,7 @@ namespace Authentication.Tests.AdminControllerTests
             var userService = FakeAdminServiceFactory.GetFakeBlockUserService(AdminResult.Ok, $"User with Id {id} is blocked");
             var adminController = new AdminController(userService, logger);
 
-            var result = await adminController.BlockUser(id);
+            var result = await adminController.BlockUser(id, CancellationToken.None);
 
             Assert.IsType<OkObjectResult>(result);
             Assert.Equal($"User with Id {id} is blocked", ((OkObjectResult)result).Value);
@@ -37,7 +38,7 @@ namespace Authentication.Tests.AdminControllerTests
             var userService = FakeAdminServiceFactory.GetFakeBlockUserService(AdminResult.UserNotFound, $"User with id {id} not found");
             var adminController = new AdminController(userService, logger);
 
-            var result = await adminController.BlockUser(id);
+            var result = await adminController.BlockUser(id, CancellationToken.None);
 
             Assert.IsType<NotFoundObjectResult>(result);
             Assert.Equal($"User with id {id} not found", ((NotFoundObjectResult)result).Value);

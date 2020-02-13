@@ -7,7 +7,7 @@
         UserBlocked,
         UserNotFound,
         TokenValidationProblem,
-        TokenExpired,
+        TokenIsBlocked,
         Error
     }
 }

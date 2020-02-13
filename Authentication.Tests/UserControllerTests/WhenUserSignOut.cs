@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Controllers;
 using Authentication.Host.Results.Enums;
@@ -9,6 +10,7 @@ using Authentication.Tests.UserControllerTests.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Moq;
 using NSV.Security.JWT;
 using Xunit;
@@ -32,6 +34,7 @@ namespace Authentication.Tests.UserControllerTests
                     new Claim(ClaimTypes.NameIdentifier, "1"),
                     new Claim(ClaimTypes.NameIdentifier, "1"),
                     new Claim(ClaimTypes.Role, "User"),
+                    new Claim(JwtRegisteredClaimNames.Jti, "jti333")
                 }
             ));
 
@@ -47,7 +50,8 @@ namespace Authentication.Tests.UserControllerTests
                 }
             };
 
-            var result = await userController.SignOut(tokenModel);
+            
+            var result = await userController.SignOut(tokenModel, CancellationToken.None);
 
             Assert.IsType<NoContentResult>(result);
         }
@@ -82,7 +86,7 @@ namespace Authentication.Tests.UserControllerTests
                 }
             };
 
-            var result = await userController.SignOut(tokenModel);
+            var result = await userController.SignOut(tokenModel, CancellationToken.None);
 
             Assert.IsType<OkObjectResult>(result);
         }

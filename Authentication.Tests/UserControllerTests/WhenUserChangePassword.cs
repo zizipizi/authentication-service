@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Controllers;
 using Authentication.Host.Results.Enums;
@@ -42,7 +43,7 @@ namespace Authentication.Tests.UserControllerTests
                 }
             };
 
-            var result = await userController.ChangePassword(changePassModel);
+            var result = await userController.ChangePassword(changePassModel, CancellationToken.None);
 
             Assert.IsType<OkObjectResult>(result);
         }
@@ -75,7 +76,7 @@ namespace Authentication.Tests.UserControllerTests
                     }
                 };
 
-                var result = await userController.ChangePassword(changePassModel);
+                var result = await userController.ChangePassword(changePassModel, CancellationToken.None);
 
                 Assert.IsType<BadRequestObjectResult>(result);
             }
@@ -109,7 +110,7 @@ namespace Authentication.Tests.UserControllerTests
                 }
             };
 
-            var result = await userController.ChangePassword(changePassModel);
+            var result = await userController.ChangePassword(changePassModel, CancellationToken.None);
 
             Assert.IsType<NoContentResult>(result);
         }
@@ -143,7 +144,7 @@ namespace Authentication.Tests.UserControllerTests
                 }
             };
 
-            var result = await userController.ChangePassword(changePassModel);
+            var result = await userController.ChangePassword(changePassModel, CancellationToken.None);
 
             Assert.IsType<NotFoundObjectResult>(result);
         }

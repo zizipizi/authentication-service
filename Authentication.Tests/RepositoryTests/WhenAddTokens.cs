@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Models.Entities;
 using Authentication.Host.Repositories;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NSV.Security.JWT;
@@ -18,8 +19,9 @@ namespace Authentication.Tests.RepositoryTests
         {
             var authContext = FakeContextFactory.AddTokensWithRefresh();
             var logger = new Mock<ILogger<TokenRepository>>().Object;
+            var cache = new Mock<IDistributedCache>().Object;
 
-            var tokenRepository = new TokenRepository(authContext, logger);
+            var tokenRepository = new TokenRepository(authContext, logger, cache);
             
             var refreshJti = "123123podaps123123";
             var tokenModel = new TokenModel(
@@ -42,6 +44,7 @@ namespace Authentication.Tests.RepositoryTests
         {
             var authContext = FakeContextFactory.AddTokenWithoutRefresh();
             var logger = new Mock<ILogger<TokenRepository>>().Object;
+            var cache = new Mock<IDistributedCache>().Object;
             var refreshJti = "123123podaps123123";
 
             var tokenModel = new TokenModel(
@@ -62,7 +65,7 @@ namespace Authentication.Tests.RepositoryTests
             authContext.RefreshTokens.Add(refreshToken);
             authContext.SaveChanges();
 
-            var tokenRepository = new TokenRepository(authContext, logger);
+            var tokenRepository = new TokenRepository(authContext, logger, cache);
 
             await tokenRepository.AddTokensAsync(1, tokenModel, CancellationToken.None);
 
