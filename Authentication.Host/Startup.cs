@@ -13,6 +13,8 @@ using Microsoft.OpenApi.Models;
 using NSV.Security.JWT;
 using NSV.Security.Password;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using Prometheus;
 using Serilog;
@@ -40,6 +42,8 @@ namespace Authentication.Host
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+
             services.AddControllers();
             services.AddHealthChecks();
 
@@ -127,10 +131,12 @@ namespace Authentication.Host
 
             app.UseRouting();
             app.UseHttpMetrics();
+            
             app.UseMiddleware<RequestMetricMiddleware>();
-
+            
             app.UseAuthentication();
             app.UseAuthorization();
+           
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

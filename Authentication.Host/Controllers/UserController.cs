@@ -26,7 +26,7 @@ namespace Authentication.Host.Controllers
             _userService = userService;
             _logger = logger;
         }
-
+        [ActionName("signout")]
         [HttpPost("signout")]
         public async Task<IActionResult> SignOut(BodyTokenModel model, CancellationToken cancellationToken)
         {
@@ -49,6 +49,7 @@ namespace Authentication.Host.Controllers
             return Ok(result.Message);
         }
 
+        [ActionName("changepass")]
         [HttpPost("changepass")]
         public async Task<IActionResult> ChangePassword(ChangePassModel passwords, CancellationToken cancellationToken)
         {
