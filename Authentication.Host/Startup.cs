@@ -131,8 +131,8 @@ namespace Authentication.Host
 
             app.UseRouting();
             app.UseHttpMetrics();
-            
-            app.UseMiddleware<RequestMetricMiddleware>();
+
+            app.UseRequestCounterMetrics();
             
             app.UseAuthentication();
             app.UseAuthorization();
