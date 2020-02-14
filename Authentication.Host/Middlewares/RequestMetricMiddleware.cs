@@ -30,8 +30,6 @@ namespace Authentication.Host.Middlewares
         {
             var currentRequest = httpContext.Request.Path.Value;
 
-            var ac = new ActionContext(httpContext, httpContext.GetRouteData(), new ActionDescriptor());
-            
             try
             {
                 await _request.Invoke(httpContext);
