@@ -1,5 +1,7 @@
 using System;
+using System.Net.Http;
 using Authentication.Data.Models;
+using Authentication.Host.Healthchecks;
 using Authentication.Host.Middlewares;
 using Authentication.Host.Repositories;
 using Authentication.Host.Services;
@@ -13,6 +15,7 @@ using Microsoft.OpenApi.Models;
 using NSV.Security.JWT;
 using NSV.Security.Password;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
@@ -45,7 +48,6 @@ namespace Authentication.Host
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
             services.AddControllers();
-            services.AddHealthChecks();
 
             services.AddSwaggerGen(c =>
             {
@@ -76,7 +78,6 @@ namespace Authentication.Host
             });
 
             services.AddJwt();
-
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -88,26 +89,19 @@ namespace Authentication.Host
                 options.TokenValidationParameters = JwtSettings.TokenValidationParameters();
             });
 
-            var red = new ConfigurationOptions
-            {
-                EndPoints =
-                {
-                    {
-                        "localhost", 6379
-                    }
-                },
-                DefaultDatabase = 0,
-                AllowAdmin = true,
-                ClientName = "master",
-                ConnectRetry = 2
-            };
             services.AddPassword(Configuration);
 
+            var redisOptions = ConfigurationOptions.Parse(Configuration.GetConnectionString("Redis"));
             services.AddStackExchangeRedisCache(options =>
-            {
-                options.ConfigurationOptions = red;
-            });
-            
+                {
+                    options.ConfigurationOptions = redisOptions;
+                });
+            services.AddHttpClient();
+            services.AddHealthChecks()
+                .AddDbContextCheck<AuthContext>()
+                .AddRedis(redisOptions.ToString())
+                .AddPrometheus(Configuration.GetConnectionString("Prometheus"));
+            //.AddElasticsearch()
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
@@ -116,7 +110,9 @@ namespace Authentication.Host
             {
                 app.UseDeveloperExceptionPage();
             }
-            
+
+            app.UseHealthChecks("/hc");
+
             app.UseSerilogRequestLogging();
 
             app.UseHttpsRedirection();
@@ -131,7 +127,7 @@ namespace Authentication.Host
 
             app.UseRouting();
             app.UseHttpMetrics();
-
+            
             app.UseRequestCounterMetrics();
             
             app.UseAuthentication();
