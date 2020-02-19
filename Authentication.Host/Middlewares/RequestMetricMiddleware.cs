@@ -10,7 +10,7 @@ namespace Authentication.Host.Middlewares
     {
         private readonly RequestDelegate _next;
 
-        private readonly List<string> ignoreRequests = new List<string> { "metrics", "swagger" };
+        private readonly List<string> _ignoreRequests = new List<string> { "metrics", "swagger" };
 
         public RequestMetricMiddleware(RequestDelegate next)
         {
@@ -27,7 +27,7 @@ namespace Authentication.Host.Middlewares
             }
             finally
             {
-                if (!ignoreRequests.Contains(currentRequest))
+                if (!_ignoreRequests.Contains(currentRequest))
                 {
                     var action = httpContext.GetRouteData().Values["Action"].ToString();
                     var method = httpContext.Request.Method;

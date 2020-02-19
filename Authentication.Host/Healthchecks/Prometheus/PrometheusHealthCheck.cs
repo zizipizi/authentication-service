@@ -27,10 +27,10 @@ namespace Authentication.Host
 
             if (response.IsSuccessStatusCode)
             {
-                return await Task.FromResult(HealthCheckResult.Healthy("Healthy"));
+                return HealthCheckResult.Healthy("Healthy");
             }
 
-            return await Task.FromResult(HealthCheckResult.Unhealthy("Unhealthy"));
+            return HealthCheckResult.Unhealthy("Unhealthy");
         }
     }
 }
