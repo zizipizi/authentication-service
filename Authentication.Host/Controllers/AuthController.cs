@@ -21,6 +21,7 @@ namespace Authentication.Host.Controllers
             _logger = logger;
         }
 
+        [ActionName("refresh")]
         [HttpPost("refresh")]
         public async Task<IActionResult> RefreshToken(BodyTokenModel model, CancellationToken cancellationToken)
         {
@@ -39,6 +40,7 @@ namespace Authentication.Host.Controllers
             return BadRequest("Error while refresh");
         }
 
+        [ActionName("signin")]
         [HttpPost("signin")]
         public async Task<IActionResult> SignIn(LoginModel model, CancellationToken cancellationToken)
         {

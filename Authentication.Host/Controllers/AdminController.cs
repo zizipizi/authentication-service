@@ -22,7 +22,7 @@ namespace Authentication.Host.Controllers
             _adminService = adminService;
             _logger = logger;
         }
-
+        [ActionName("all")]
         [HttpGet("all")]
         public async Task<IActionResult> GetAll()
         {
@@ -31,6 +31,7 @@ namespace Authentication.Host.Controllers
             return Ok(result);
         }
 
+        [ActionName("createuser")]
         [HttpPost("create")]
         public async Task<IActionResult> CreateUser(UserCreateModel model, CancellationToken cancellationToken)
         {
@@ -43,6 +44,7 @@ namespace Authentication.Host.Controllers
             return Conflict(result.Message);
         }
 
+        [ActionName("deleteuser")]
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteUser(int id, CancellationToken cancellationToken)
         {
@@ -55,6 +57,7 @@ namespace Authentication.Host.Controllers
             return NotFound(result.Message);
         }
 
+        [ActionName("blockuser")]
         [HttpGet("block/{id}")]
         public async Task<IActionResult> BlockUser(int id, CancellationToken cancellationToken)
         {
