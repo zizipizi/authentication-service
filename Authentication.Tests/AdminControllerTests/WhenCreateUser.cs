@@ -8,6 +8,7 @@ using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Authentication.Tests.AdminControllerTests.Utills;
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -21,26 +22,28 @@ namespace Authentication.Tests.AdminControllerTests
         public async Task CreateUser_Success()
         {
             var logger = new Mock<ILogger<AdminController>>().Object;
-            var userService = FakeAdminServiceFactory.CreateFakeUserService(AdminResult.Ok, $"123");
-            var adminController = new AdminController(userService, logger);
+            var adminService = FakeAdminServiceFactory.CreateUser(AdminResult.Ok, $"123");
+            var adminController = new AdminController(adminService, logger);
             var userModel = new UserCreateModel();
 
             var result = await adminController.CreateUser(userModel, CancellationToken.None);
 
-            Assert.IsType<OkObjectResult>(result);
+            result.Should().BeOfType<OkObjectResult>();
+            //Assert.IsType<OkObjectResult>(result);
         }
 
         [Fact]
         public async Task CreateUser_UserExist()
         {
             var logger = new Mock<ILogger<AdminController>>().Object;
-            var userService = FakeAdminServiceFactory.CreateFakeUserService(AdminResult.UserExist, $"123");
-            var adminController = new AdminController(userService, logger);
+            var adminService = FakeAdminServiceFactory.CreateUser(AdminResult.UserExist, $"123");
+            var adminController = new AdminController(adminService, logger);
             var userModel = new UserCreateModel();
 
             var result = await adminController.CreateUser(userModel, CancellationToken.None);
 
-            Assert.IsType<ConflictObjectResult>(result);
+            result.Should().BeOfType<ConflictObjectResult>();
+            //Assert.IsType<ConflictObjectResult>(result);
         }
     }
 }

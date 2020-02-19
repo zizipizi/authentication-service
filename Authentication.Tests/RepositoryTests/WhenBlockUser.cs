@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Authentication.Data.Exceptions;
 using Authentication.Data.Models.Domain;
 using Authentication.Host.Repositories;
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -30,7 +31,8 @@ namespace Authentication.Tests.RepositoryTests
 
             var result = await authContext.Users.FirstOrDefaultAsync(c => c.Id == 1);
 
-            Assert.False(result.IsActive);
+            result.IsActive.Should().BeFalse();
+            //Assert.False(result.IsActive);
         }
 
         [Fact]
@@ -43,8 +45,12 @@ namespace Authentication.Tests.RepositoryTests
             var tokenRepository = new TokenRepository(authContext, new Mock<ILogger<TokenRepository>>().Object, cache);
             var userRepository = new UserRepository(tokenRepository, authContext, logger);
 
-            var ex = await Assert.ThrowsAsync<EntityNotFoundException>(async () => await userRepository.BlockUserAsync(2, CancellationToken.None));
-            Assert.Equal("User not found", ex.Message);
+            Func<Task> act = async () => { await userRepository.BlockUserAsync(2, CancellationToken.None); };
+
+            act.Should().Throw<EntityNotFoundException>().WithMessage("User not found");
+
+            //var ex = await Assert.ThrowsAsync<EntityNotFoundException>(async () => await userRepository.BlockUserAsync(2, CancellationToken.None));
+            //Assert.Equal("User not found", ex.Message);
 
         }
     }

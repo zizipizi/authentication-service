@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Repositories;
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
@@ -33,7 +34,10 @@ namespace Authentication.Tests.RepositoryTests
                 ("sdfk;sldkfsdl;fksdf0", DateTime.Now.AddMinutes(30), refreshJti)
             );
 
-            Assert.True(await tokenRepository.IsRefreshTokenBlockedAsync(refreshJti, CancellationToken.None));
+            var result = await tokenRepository.IsRefreshTokenBlockedAsync(refreshJti, CancellationToken.None);
+            result.Should().BeTrue();
+
+            //Assert.True(await tokenRepository.IsRefreshTokenBlockedAsync(refreshJti, CancellationToken.None));
         }
 
         [Fact]
@@ -51,7 +55,10 @@ namespace Authentication.Tests.RepositoryTests
                 ("sdfk;sldkfsdl;fksdf0", DateTime.Now.AddMinutes(30), refreshJti)
             );
 
-            Assert.False(await tokenRepository.IsRefreshTokenBlockedAsync(refreshJti, CancellationToken.None));
+            var result = await tokenRepository.IsRefreshTokenBlockedAsync(refreshJti, CancellationToken.None);
+            result.Should().BeFalse();
+
+            //Assert.False(await tokenRepository.IsRefreshTokenBlockedAsync(refreshJti, CancellationToken.None));
         }
     }
 }

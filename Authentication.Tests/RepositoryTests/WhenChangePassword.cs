@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Exceptions;
 using Authentication.Host.Repositories;
+using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -29,7 +30,9 @@ namespace Authentication.Tests.RepositoryTests
 
             var user = authContext.Users.FirstOrDefault(c => c.Id == 1);
 
-            Assert.Equal("NewPassword", user.Password);
+            user.Password.Should().BeEquivalentTo("NewPassword");
+
+            //Assert.Equal("NewPassword", user.Password);
         }
 
         [Fact]
@@ -42,8 +45,12 @@ namespace Authentication.Tests.RepositoryTests
             var tokenRepository = new TokenRepository(authContext, new Mock<ILogger<TokenRepository>>().Object, cache);
             var userRepository = new UserRepository(tokenRepository, authContext, logger);
 
-            var ex = await Assert.ThrowsAsync<EntityNotFoundException>(async () => await userRepository.UpdateUserPassword(2, "NewPassword", CancellationToken.None));
-            Assert.Equal("User not found", ex.Message);
+            Func<Task> act = async () => await userRepository.UpdateUserPassword(2, "NewPassword", CancellationToken.None);
+
+            act.Should().Throw<EntityNotFoundException>().WithMessage("User not found");
+
+            //var ex = await Assert.ThrowsAsync<EntityNotFoundException>(async () => await userRepository.UpdateUserPassword(2, "NewPassword", CancellationToken.None));
+            //Assert.Equal("User not found", ex.Message);
         }
     }
 }

@@ -23,7 +23,7 @@ namespace Authentication.Host
         {
             var request = new HttpRequestMessage(HttpMethod.Get, _connectionString);
 
-            var response = await _httpClientFactory.Invoke().SendAsync(request);
+            var response = await _httpClientFactory().SendAsync(request);
 
             if (response.IsSuccessStatusCode)
             {

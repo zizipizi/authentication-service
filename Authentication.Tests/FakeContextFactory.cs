@@ -235,6 +235,7 @@ namespace Authentication.Tests
 
         #endregion
 
+
         #region CheckRefreshTokenForBlock
 
         public static AuthContext CheckRefreshToken_Ok()

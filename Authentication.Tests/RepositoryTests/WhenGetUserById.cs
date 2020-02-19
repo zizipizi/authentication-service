@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Authentication.Data.Exceptions;
 using Authentication.Data.Models.Entities;
 using Authentication.Host.Repositories;
+using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -27,8 +28,11 @@ namespace Authentication.Tests.RepositoryTests
 
             var result = await userRepository.GetUserByIdAsync(1, CancellationToken.None);
 
-            Assert.Equal(1, result.Id);
-            Assert.Equal("Login", result.Login);
+            result.Id.Should().Be(1);
+            result.Login.Should().BeEquivalentTo("Login");
+
+            //Assert.Equal(1, result.Id);
+            //Assert.Equal("Login", result.Login);
         }
 
         [Fact]
@@ -41,8 +45,11 @@ namespace Authentication.Tests.RepositoryTests
             var tokenRepository = new TokenRepository(authContext, new Mock<ILogger<TokenRepository>>().Object, cache);
             var userRepository = new UserRepository(tokenRepository, authContext, logger);
 
-            var ex = await Assert.ThrowsAsync<EntityNotFoundException>(async () => await userRepository.GetUserByIdAsync(3, CancellationToken.None));
-            Assert.Equal("User not found", ex.Message);
+            Func<Task> act = async () => await userRepository.GetUserByIdAsync(3, CancellationToken.None);
+            act.Should().Throw<EntityNotFoundException>().WithMessage("User not found");
+
+            //var ex = await Assert.ThrowsAsync<EntityNotFoundException>(async () => await userRepository.GetUserByIdAsync(3, CancellationToken.None));
+            //Assert.Equal("User not found", ex.Message);
         }
     }
 }

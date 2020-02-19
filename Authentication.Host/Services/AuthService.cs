@@ -50,18 +50,22 @@ namespace Authentication.Host.Services
 
                 var validateResult = _passwordService.Validate(model.Password, user.Password);
 
-                if (validateResult.Result == PasswordValidateResult.ValidateResult.Ok)
+                if (validateResult.Result != PasswordValidateResult.ValidateResult.Ok)
                 {
-                    if (user.IsActive)
-                    {
-                        var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role);
-                        await _tokenRepository.AddTokensAsync(user.Id, access.Tokens, cancellationToken);
-
-                        return new Result<AuthResult, TokenModel>(AuthResult.Ok, access.Tokens);
-                    }
-                    return new Result<AuthResult, TokenModel>(AuthResult.UserBlocked, message: "User is blocked");
+                    _logger.LogError($"Password Validation result while signin {validateResult.Result.ToString()}");
+                    return new Result<AuthResult, TokenModel>(AuthResult.WrongLoginOrPass, message: "Wrong login or password");
                 }
-                return new Result<AuthResult, TokenModel>(AuthResult.WrongLoginOrPass, message: "Wrong login or password");
+
+                if (!user.IsActive)
+                    return new Result<AuthResult, TokenModel>(AuthResult.UserBlocked, message: "User is blocked");
+
+
+                var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role);
+
+                await _tokenRepository.AddTokensAsync(user.Id, access.Tokens, cancellationToken);
+
+                return new Result<AuthResult, TokenModel>(AuthResult.Ok, access.Tokens);
+
             }
             catch (EntityNotFoundException)
             {
@@ -80,22 +84,19 @@ namespace Authentication.Host.Services
             {
                 var validateResult = _jwtService.RefreshAccessToken(model.AccessToken, model.RefreshToken);
 
-                if (!await _tokenRepository.IsRefreshTokenBlockedAsync(validateResult.Tokens.RefreshToken.Jti, cancellationToken))
+                if (validateResult.Result != JwtTokenResult.TokenResult.Ok)
                 {
-                    if (!long.TryParse(validateResult.UserId, out var userId)) 
-                    {
-                        _logger.LogError($"Wrong user identifier {validateResult.UserId}");
-                        return new Result<AuthResult, TokenModel>(AuthResult.Error, message: "Wrong identifier");
-                    }
-
-                    if (validateResult.Result == JwtTokenResult.TokenResult.Ok)
-                    {
-                        await _tokenRepository.AddTokensAsync(userId, validateResult.Tokens, cancellationToken);
-                        return new Result<AuthResult, TokenModel>(AuthResult.Ok, validateResult.Tokens);
-                    }
+                    _logger.LogError($"Validation result while refreshing: {validateResult.Result.ToString()}");
+                    return new Result<AuthResult, TokenModel>(AuthResult.TokenValidationProblem, message: "Validation problem, please try again");
                 }
 
-                return new Result<AuthResult, TokenModel>(AuthResult.TokenIsBlocked, message:"Token is blocked");
+                var isTokenBlocked = await _tokenRepository.IsRefreshTokenBlockedAsync(validateResult.Tokens.RefreshToken.Jti, cancellationToken);
+
+                if (isTokenBlocked)
+                    return new Result<AuthResult, TokenModel>(AuthResult.TokenIsBlocked, message: "Token is blocked");
+
+                await _tokenRepository.AddTokensAsync(long.Parse(validateResult.UserId), validateResult.Tokens, cancellationToken);
+                return new Result<AuthResult, TokenModel>(AuthResult.Ok, validateResult.Tokens);
             }
             catch (EntityNotFoundException ex)
             {

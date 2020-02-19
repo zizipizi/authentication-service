@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Exceptions;
 using Authentication.Data.Models.Domain;
 using Authentication.Host.Repositories;
+using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -38,8 +40,11 @@ namespace Authentication.Tests.RepositoryTests
 
             var result = authContext.Users.FirstOrDefault(c => c.Login == "Login");
 
-            Assert.Equal("Login", result.Login);
-            Assert.Equal("Password", result.Password);
+            result.Login.Should().BeEquivalentTo("Login");
+            result.Password.Should().BeEquivalentTo("Password");
+
+            //Assert.Equal("Login", result.Login);
+            //Assert.Equal("Password", result.Password);
         }
 
         [Fact]
@@ -74,8 +79,11 @@ namespace Authentication.Tests.RepositoryTests
 
             await userRepository.CreateUserAsync(user, CancellationToken.None);
 
-            var ex = await Assert.ThrowsAsync<EntityNotFoundException>(async () => await userRepository.CreateUserAsync(newUser, CancellationToken.None));
-            Assert.Equal("User already exist", ex.Message);
+            Func<Task> act = async () => await userRepository.CreateUserAsync(newUser, CancellationToken.None);
+            act.Should().Throw<EntityNotFoundException>().WithMessage("User already exist");
+
+            //var ex = await Assert.ThrowsAsync<EntityNotFoundException>(async () => await userRepository.CreateUserAsync(newUser, CancellationToken.None));
+            //Assert.Equal("User already exist", ex.Message);
         }
 
     }
