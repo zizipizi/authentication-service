@@ -4,7 +4,9 @@ using Authentication.Data.Models;
 using Authentication.Host.Healthchecks;
 using Authentication.Host.Middlewares;
 using Authentication.Host.Repositories;
+using Authentication.Host.Repositories.RepositoryExtensions;
 using Authentication.Host.Services;
+using Authentication.Host.Services.ServiceExtensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -40,12 +42,12 @@ namespace Authentication.Host
             services.AddDbContext<AuthContext>(options =>
                 options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<ITokenRepository, TokenRepository>();
-            services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IAdminService, AdminService>();
-            services.AddScoped<IUserService, UserService>();
-            services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+            services.AddUserRepository();
+            services.AddTokenRepository();
+
+            services.AddAuthService();
+            services.AddUserService();
+            services.AddAdminService();
 
             services.AddControllers();
 
@@ -78,6 +80,7 @@ namespace Authentication.Host
             });
 
             services.AddJwt();
+
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -96,12 +99,14 @@ namespace Authentication.Host
                 {
                     options.ConfigurationOptions = redisOptions;
                 });
+
             services.AddHttpClient();
+
             services.AddHealthChecks()
                 .AddDbContextCheck<AuthContext>()
                 .AddRedis(redisOptions.ToString())
                 .AddPrometheus(Configuration.GetConnectionString("Prometheus"));
-            //.AddElasticsearch()
+                //.AddElasticsearch()
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)

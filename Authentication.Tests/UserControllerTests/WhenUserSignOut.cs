@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Authentication.Host.Controllers;
 using Authentication.Host.Results.Enums;
 using Authentication.Tests.UserControllerTests.Utils;
+using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -53,7 +54,8 @@ namespace Authentication.Tests.UserControllerTests
             
             var result = await userController.SignOut(tokenModel, CancellationToken.None);
 
-            Assert.IsType<NoContentResult>(result);
+            result.Should().BeOfType<NoContentResult>();
+            //Assert.IsType<NoContentResult>(result);
         }
 
         [Fact]
@@ -88,7 +90,8 @@ namespace Authentication.Tests.UserControllerTests
 
             var result = await userController.SignOut(tokenModel, CancellationToken.None);
 
-            Assert.IsType<OkObjectResult>(result);
+            result.Should().BeOfType<OkObjectResult>();
+            //Assert.IsType<OkObjectResult>(result);
         }
 
     }

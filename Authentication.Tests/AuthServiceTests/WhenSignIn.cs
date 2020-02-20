@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
+using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -39,7 +40,8 @@ namespace Authentication.Tests.AuthServiceTests
 
             var result = await authService.SignIn(loginModel, CancellationToken.None);
 
-            Assert.Equal(AuthResult.Ok, result.Value);
+            result.Value.Should().BeEquivalentTo(AuthResult.Ok);
+            //Assert.Equal(AuthResult.Ok, result.Value);
         }
 
         [Fact]
@@ -64,7 +66,8 @@ namespace Authentication.Tests.AuthServiceTests
 
             var result = await authService.SignIn(loginModel, CancellationToken.None);
 
-            Assert.Equal(AuthResult.UserNotFound, result.Value);
+            result.Value.Should().BeEquivalentTo(AuthResult.UserNotFound);
+            //Assert.Equal(AuthResult.UserNotFound, result.Value);
         }
 
         [Fact]
@@ -89,7 +92,8 @@ namespace Authentication.Tests.AuthServiceTests
 
             var result = await authService.SignIn(loginModel, CancellationToken.None);
 
-            Assert.Equal(AuthResult.Error, result.Value);
+            result.Value.Should().BeEquivalentTo(AuthResult.Error);
+            //Assert.Equal(AuthResult.Error, result.Value);
         }
     }
 }

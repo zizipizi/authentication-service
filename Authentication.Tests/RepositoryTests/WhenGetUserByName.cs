@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Exceptions;
 using Authentication.Host.Repositories;
+using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -27,9 +28,11 @@ namespace Authentication.Tests.RepositoryTests
             var result = await userRepository.GetUserByNameAsync("Login", CancellationToken.None);
             var result2 = await userRepository.GetUserByNameAsync("Login2", CancellationToken.None);
 
+            result.Login.Should().BeEquivalentTo("Login");
+            result2.Login.Should().BeEquivalentTo("Login2");
 
-            Assert.Equal("Login", result.Login);
-            Assert.Equal("Login2", result2.Login);
+            //Assert.Equal("Login", result.Login);
+            //Assert.Equal("Login2", result2.Login);
         }
 
         [Fact]
@@ -45,10 +48,16 @@ namespace Authentication.Tests.RepositoryTests
             var result = userRepository.GetUserByNameAsync("Login4", CancellationToken.None);
             var result2= userRepository.GetUserByNameAsync("Login5", CancellationToken.None);
 
-            var ex = await Assert.ThrowsAsync<EntityNotFoundException>(async () => await result);
-            Assert.Equal("User not found", ex.Message);
-            var ex2 = await Assert.ThrowsAsync<EntityNotFoundException>(async () => await result2);
-            Assert.Equal("User not found", ex.Message);
+            Func<Task> act = async () => await result;
+            Func<Task> act2 = async () => await result2;
+
+            act.Should().Throw<EntityNotFoundException>().WithMessage("User not found");
+            act2.Should().Throw<EntityNotFoundException>().WithMessage("User not found");
+
+            //var ex = await Assert.ThrowsAsync<EntityNotFoundException>(async () => await result);
+            //Assert.Equal("User not found", ex.Message);
+            //var ex2 = await Assert.ThrowsAsync<EntityNotFoundException>(async () => await result2);
+            //Assert.Equal("User not found", ex.Message);
         }
     }
 }

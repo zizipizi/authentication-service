@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Authentication.Host.Controllers;
 using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
+using FluentAssertions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -35,7 +36,8 @@ namespace Authentication.Tests.AuthControllerTests
 
             var result = await authController.SignIn(loginModel, CancellationToken.None);
 
-            Assert.IsType<OkObjectResult>(result);
+            result.Should().BeOfType<OkObjectResult>();
+            //Assert.IsType<OkObjectResult>(result);
         }
 
         [Fact]
@@ -55,7 +57,8 @@ namespace Authentication.Tests.AuthControllerTests
 
             var result = await authController.SignIn(loginModel, CancellationToken.None);
 
-            Assert.IsType<NotFoundObjectResult>(result);
+            result.Should().BeOfType<NotFoundObjectResult>();
+            //Assert.IsType<NotFoundObjectResult>(result);
         }
 
         [Fact]
@@ -74,7 +77,9 @@ namespace Authentication.Tests.AuthControllerTests
             };
             var res = new StatusCodeResult(403);
             var result = await authController.SignIn(loginModel, CancellationToken.None);
-            Assert.IsType<UnauthorizedObjectResult>(result);
+
+            result.Should().BeOfType<UnauthorizedObjectResult>();
+            //Assert.IsType<UnauthorizedObjectResult>(result);
         }
 
         [Fact]
@@ -94,7 +99,8 @@ namespace Authentication.Tests.AuthControllerTests
 
             var result = await authController.SignIn(loginModel, CancellationToken.None);
 
-            Assert.IsType<BadRequestObjectResult>(result);
+            result.Should().BeOfType<BadRequestObjectResult>();
+            //Assert.IsType<BadRequestObjectResult>(result);
         }
     }
 }

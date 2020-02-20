@@ -15,6 +15,10 @@ namespace Authentication.Tests
 {
     public static class FakeRepositoryFactory
     {
+        #region UserRepository
+
+        #region FakeUser
+
         public static IUserRepository FakeUser()
         {
             var userRepositoryFake = new Mock<IUserRepository>();
@@ -22,43 +26,9 @@ namespace Authentication.Tests
             return userRepositoryFake.Object;
         }
 
-        public static ITokenRepository IsRefreshTokenBlocked_Ok()
-        {
-            var tokenRepositoryFake = new Mock<ITokenRepository>();
-            tokenRepositoryFake.Setup(c =>
-                    c.IsRefreshTokenBlockedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(false));
+        #endregion
 
-            return tokenRepositoryFake.Object;
-        }
-
-        public static ITokenRepository IsRefreshTokenBlocked_TokenBlocked()
-        {
-            var tokenRepositoryFake = new Mock<ITokenRepository>();
-            tokenRepositoryFake.Setup(c =>
-                    c.IsRefreshTokenBlockedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(true));
-
-            return tokenRepositoryFake.Object;
-        }
-
-        public static ITokenRepository BlockRefreshToken_Ok()
-        {
-            var tokenRepositoryFake = new Mock<ITokenRepository>();
-            tokenRepositoryFake.Setup(c => c.BlockRefreshTokenAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
-            return tokenRepositoryFake.Object;
-        }
-
-        public static ITokenRepository BlockRefreshToken_Exception()
-        {
-            var tokenRepositoryFake = new Mock<ITokenRepository>();
-            tokenRepositoryFake.Setup(c => c.BlockRefreshTokenAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Throws(new Exception());
-
-            return tokenRepositoryFake.Object;
-        }
+        #region CreateUser
 
         public static IUserRepository CreateFakeUser()
         {
@@ -78,6 +48,10 @@ namespace Authentication.Tests
             return userRepositoryFake.Object;
         }
 
+        #endregion
+
+        #region BlockUser
+
         public static IUserRepository BlockFakeUser()
         {
             var userRepositoryFake = new Mock<IUserRepository>();
@@ -96,6 +70,10 @@ namespace Authentication.Tests
             return userRepositoryFake.Object;
         }
 
+        #endregion
+
+        #region DeleteUser
+
         public static IUserRepository DeleteFakeUser()
         {
             var userRepositoryFake = new Mock<IUserRepository>();
@@ -113,6 +91,41 @@ namespace Authentication.Tests
 
             return userRepositoryFake.Object;
         }
+
+        #endregion
+
+        #region ChangePassword
+
+        public static IUserRepository ChangePassword_Ok()
+        {
+            var userRepositoryFake = new Mock<IUserRepository>();
+            userRepositoryFake.Setup(c => c.GetUserByIdAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(new User { UserName = "UserName", Password = "Password", Login = "Login" }));
+
+            return userRepositoryFake.Object;
+        }
+
+        public static IUserRepository ChangePassword_EntityException()
+        {
+            var userRepositoryFake = new Mock<IUserRepository>();
+            userRepositoryFake.Setup(c => c.GetUserByIdAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+                .Throws(new EntityNotFoundException("Error"));
+
+            return userRepositoryFake.Object;
+        }
+
+        public static IUserRepository ChangePassword_Exception()
+        {
+            var userRepositoryFake = new Mock<IUserRepository>();
+            userRepositoryFake.Setup(c => c.GetUserByIdAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+                .Throws(new Exception("Error"));
+
+            return userRepositoryFake.Object;
+        }
+
+        #endregion
+
+        #region SignIn
 
         public static IUserRepository SignIn()
         {
@@ -141,16 +154,15 @@ namespace Authentication.Tests
             return userRepositoryFake.Object;
         }
 
-        public static ITokenRepository RefreshToken_Ok()
-        {
-            var tokenRepositoryFake = new Mock<ITokenRepository>();
-            tokenRepositoryFake.Setup(c => c.IsRefreshTokenBlockedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(true));
+#endregion
 
-            return tokenRepositoryFake.Object;
-        }
+        #endregion
 
-        public static ITokenRepository CheckRefreshToken_Error()
+        #region TokenRepository
+
+        #region IsRefreshTokenBlocked?
+
+        public static ITokenRepository IsRefreshTokenBlocked_Ok()
         {
             var tokenRepositoryFake = new Mock<ITokenRepository>();
             tokenRepositoryFake.Setup(c =>
@@ -159,6 +171,42 @@ namespace Authentication.Tests
 
             return tokenRepositoryFake.Object;
         }
+
+        public static ITokenRepository IsRefreshTokenBlocked_TokenBlocked()
+        {
+            var tokenRepositoryFake = new Mock<ITokenRepository>();
+            tokenRepositoryFake.Setup(c =>
+                    c.IsRefreshTokenBlockedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(true));
+
+            return tokenRepositoryFake.Object;
+        }
+
+        #endregion
+
+        #region BlockRefreshToken
+
+        public static ITokenRepository BlockRefreshToken_Ok()
+        {
+            var tokenRepositoryFake = new Mock<ITokenRepository>();
+            tokenRepositoryFake.Setup(c => c.BlockRefreshTokenAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            return tokenRepositoryFake.Object;
+        }
+
+        public static ITokenRepository BlockRefreshToken_Exception()
+        {
+            var tokenRepositoryFake = new Mock<ITokenRepository>();
+            tokenRepositoryFake.Setup(c => c.BlockRefreshTokenAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Throws(new Exception());
+
+            return tokenRepositoryFake.Object;
+        }
+
+        #endregion
+
+        #region BlockAllTokens
 
         public static ITokenRepository BlockAllTokens_Ok()
         {
@@ -187,32 +235,9 @@ namespace Authentication.Tests
             return tokenRepositoryFake.Object;
         }
 
-        public static IUserRepository ChangePassword_Ok()
-        {
-            var userRepositoryFake = new Mock<IUserRepository>();
-            userRepositoryFake.Setup(c => c.GetUserByIdAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(new User {UserName = "UserName", Password = "Password", Login = "Login"}));
+        #endregion
 
-            return userRepositoryFake.Object;
-        }
-
-        public static IUserRepository ChangePassword_EntityException()
-        {
-            var userRepositoryFake = new Mock<IUserRepository>();
-            userRepositoryFake.Setup(c => c.GetUserByIdAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .Throws(new EntityNotFoundException("Error"));
-
-            return userRepositoryFake.Object;
-        }
-
-        public static IUserRepository ChangePassword_Exception()
-        {
-            var userRepositoryFake = new Mock<IUserRepository>();
-            userRepositoryFake.Setup(c => c.GetUserByIdAsync(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-                .Throws(new Exception("Error"));
-
-            return userRepositoryFake.Object;
-        }
+        #region FakeToken
 
         public static ITokenRepository FakeToken()
         {
@@ -220,6 +245,10 @@ namespace Authentication.Tests
             
             return tokenRepositoryFake.Object;
         }
+
+        #endregion
+
+        #region AddTokens
 
         public static ITokenRepository AddTokens_Ok()
         {
@@ -229,5 +258,9 @@ namespace Authentication.Tests
 
             return tokenRepositoryFake.Object;
         }
+
+#endregion
+
+        #endregion
     }
 }

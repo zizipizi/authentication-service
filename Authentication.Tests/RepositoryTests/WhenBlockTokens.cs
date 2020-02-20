@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Repositories;
+using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -24,8 +25,10 @@ namespace Authentication.Tests.RepositoryTests
 
             var allTokens = authContext.RefreshTokens.ToList();
 
-            Assert.True(allTokens[0].IsBlocked);
-            Assert.True(allTokens[1].IsBlocked);
+            allTokens[0].IsBlocked.Should().BeTrue();
+            allTokens[1].IsBlocked.Should().BeTrue();
+            //Assert.True(allTokens[0].IsBlocked);
+            //Assert.True(allTokens[1].IsBlocked);
         }
     }
 }

@@ -5,6 +5,7 @@ using Authentication.Host.Models;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
+using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NSV.Security.JWT;
@@ -34,7 +35,8 @@ namespace Authentication.Tests.AdminServiceTests
 
             var result = await userService.CreateUserAsync(userCreateModel, CancellationToken.None);
 
-            Assert.Equal(AdminResult.Ok, result.Value);
+            result.Value.Should().BeEquivalentTo(AdminResult.Ok);
+            //Assert.Equal(AdminResult.Ok, result.Value);
         }
 
         [Fact]
@@ -57,7 +59,8 @@ namespace Authentication.Tests.AdminServiceTests
 
             var result = await userService.CreateUserAsync(userCreateModel, CancellationToken.None);
 
-            Assert.Equal(AdminResult.UserExist, result.Value);
+            result.Value.Should().BeEquivalentTo(AdminResult.UserExist);
+            //Assert.Equal(AdminResult.UserExist, result.Value);
         }
     }
 }

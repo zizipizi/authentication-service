@@ -23,14 +23,14 @@ namespace Authentication.Host
         {
             var request = new HttpRequestMessage(HttpMethod.Get, _connectionString);
 
-            var response = await _httpClientFactory.Invoke().SendAsync(request);
+            var response = await _httpClientFactory().SendAsync(request);
 
             if (response.IsSuccessStatusCode)
             {
-                return await Task.FromResult(HealthCheckResult.Healthy("Healthy"));
+                return HealthCheckResult.Healthy("Healthy");
             }
 
-            return await Task.FromResult(HealthCheckResult.Unhealthy("Unhealthy"));
+            return HealthCheckResult.Unhealthy("Unhealthy");
         }
     }
 }

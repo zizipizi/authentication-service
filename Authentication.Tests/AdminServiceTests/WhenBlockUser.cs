@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
+using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NSV.Security.JWT;
@@ -14,7 +15,7 @@ namespace Authentication.Tests.AdminServiceTests
     public class WhenBlockUser
     {
         [Fact]
-        public async Task BlockUser_Sucess()
+        public async Task BlockUser_Success()
         {
             var id = 1;
             var passwordService = new Mock<IPasswordService>().Object;
@@ -25,8 +26,8 @@ namespace Authentication.Tests.AdminServiceTests
 
             var result = await userService.BlockUserAsync(id, CancellationToken.None);
 
-            Assert.IsType<Result<AdminResult>>(result);
-            Assert.Equal(AdminResult.Ok, result.Value);
+            result.Value.Should().BeEquivalentTo(AdminResult.Ok);
+            //Assert.Equal(AdminResult.Ok, result.Value);
         }
 
         [Fact]
@@ -42,8 +43,8 @@ namespace Authentication.Tests.AdminServiceTests
 
             var result = await userService.BlockUserAsync(id, CancellationToken.None);
 
-            Assert.IsType<Result<AdminResult>>(result);
-            Assert.Equal(AdminResult.UserNotFound, result.Value);
+            result.Value.Should().BeEquivalentTo(AdminResult.UserNotFound);
+            //Assert.Equal(AdminResult.UserNotFound, result.Value);
         }
     }
 }

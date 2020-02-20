@@ -7,6 +7,7 @@ using Authentication.Host.Controllers;
 using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
 using Authentication.Tests.AuthControllerTests.Utils;
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -33,7 +34,9 @@ namespace Authentication.Tests.AuthControllerTests
 
             var result = await authController.RefreshToken(bodyToken, CancellationToken.None);
 
-            Assert.IsType<OkObjectResult>(result);
+            result.Should().BeOfType<OkObjectResult>();
+
+            //Assert.IsType<OkObjectResult>(result);
         }
 
         [Fact]
@@ -53,7 +56,9 @@ namespace Authentication.Tests.AuthControllerTests
 
             var result = await authController.RefreshToken(bodyToken, CancellationToken.None);
 
-            Assert.IsType<ConflictObjectResult>(result);
+            result.Should().BeOfType<ConflictObjectResult>();
+
+            //Assert.IsType<ConflictObjectResult>(result);
         }
 
 
@@ -74,7 +79,9 @@ namespace Authentication.Tests.AuthControllerTests
 
             var result = await authController.RefreshToken(bodyToken, CancellationToken.None);
 
-            Assert.IsType<UnauthorizedObjectResult>(result);
+            result.Should().BeOfType<UnauthorizedObjectResult>();
+
+            //Assert.IsType<UnauthorizedObjectResult>(result);
         }
 
         [Fact]
@@ -94,7 +101,9 @@ namespace Authentication.Tests.AuthControllerTests
 
             var result = await authController.RefreshToken(bodyToken, CancellationToken.None);
 
-            Assert.IsType<BadRequestObjectResult>(result);
+            result.Should().BeOfType<BadRequestObjectResult>();
+
+            //Assert.IsType<BadRequestObjectResult>(result);
         }
 
 

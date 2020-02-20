@@ -12,7 +12,7 @@ namespace Authentication.Tests.AdminControllerTests.Utills
     public static class FakeAdminServiceFactory
     {
         // Create user
-        public static IAdminService CreateFakeUserService(AdminResult result, string message)
+        public static IAdminService CreateUser(AdminResult result, string message)
         {
             var userServiceFake = new Mock<IAdminService>();
 
@@ -23,7 +23,7 @@ namespace Authentication.Tests.AdminControllerTests.Utills
         }
 
         // Block user
-        public static IAdminService GetFakeBlockUserService(AdminResult result, string message)
+        public static IAdminService BlockUser(AdminResult result, string message)
         {
             var userServiceFake = new Mock<IAdminService>();
 
@@ -34,7 +34,7 @@ namespace Authentication.Tests.AdminControllerTests.Utills
         }
 
         // Delete user
-        public static IAdminService GetFakeDeleteUserService(AdminResult result, string message)
+        public static IAdminService DeleteUser(AdminResult result, string message)
         {
             var userServiceFake = new Mock<IAdminService>();
 

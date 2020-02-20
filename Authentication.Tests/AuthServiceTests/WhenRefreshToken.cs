@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
+using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -44,7 +45,8 @@ namespace Authentication.Tests.AuthServiceTests
 
             var result = await authService.RefreshToken(bodyTokenModel, CancellationToken.None);
 
-            Assert.Equal(AuthResult.Ok, result.Value);
+            result.Value.Should().BeEquivalentTo(AuthResult.Ok);
+            //Assert.Equal(AuthResult.Ok, result.Value);
         }
 
         [Fact]
@@ -77,7 +79,8 @@ namespace Authentication.Tests.AuthServiceTests
 
             var result = await authService.RefreshToken(bodyTokenModel, CancellationToken.None);
 
-            Assert.Equal(AuthResult.TokenIsBlocked, result.Value);
+            result.Value.Should().BeEquivalentTo(AuthResult.TokenIsBlocked);
+            //Assert.Equal(AuthResult.TokenIsBlocked, result.Value);
         }
     }
 }

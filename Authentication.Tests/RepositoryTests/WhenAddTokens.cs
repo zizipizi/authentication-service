@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Models.Entities;
 using Authentication.Host.Repositories;
+using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -34,9 +35,12 @@ namespace Authentication.Tests.RepositoryTests
             var refreshToken = authContext.RefreshTokens.FirstOrDefault(c => c.Jti == refreshJti);
             var accessToken = authContext.AccessTokens.FirstOrDefault(c => c.RefreshToken == refreshToken);
 
-            Assert.NotNull(refreshToken);
-            Assert.Equal(refreshJti, refreshToken.Jti);
-            Assert.NotNull(accessToken);
+            refreshToken.Should().NotBeNull();
+            refreshToken.Jti.Should().BeEquivalentTo(refreshJti);
+            accessToken.Should().NotBeNull();
+            //Assert.NotNull(refreshToken);
+            //Assert.Equal(refreshJti, refreshToken.Jti);
+            //Assert.NotNull(accessToken);
         }
 
         [Fact]
@@ -71,8 +75,10 @@ namespace Authentication.Tests.RepositoryTests
 
             var accessToken = authContext.AccessTokens.FirstOrDefault(c => c.RefreshToken == refreshToken);
 
-            Assert.NotNull(accessToken);
-            Assert.Equal("asdakasdjaksjdkad", accessToken.Token);
+            accessToken.Should().NotBeNull();
+            accessToken.Token.Should().BeEquivalentTo("asdakasdjaksjdkad");
+            //Assert.NotNull(accessToken);
+            //Assert.Equal("asdakasdjaksjdkad", accessToken.Token);
         }
     }
 }

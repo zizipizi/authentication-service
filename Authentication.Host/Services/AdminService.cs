@@ -62,9 +62,14 @@ namespace Authentication.Host.Services
             {
                 var pass = _passwordService.Hash(model.Password);
 
-                if (pass.Result == PasswordHashResult.HashResult.Ok)
+                if (pass.Result != PasswordHashResult.HashResult.Ok)
                 {
-                    var id = await _userRepository.CreateUserAsync(new User()
+                    _logger.LogError($"Hash result while creating user {pass.Result.ToString()}");
+                    return new Result<AdminResult, UserInfo>(AdminResult.Error, message: "Please try again");
+                }
+
+                var id = await _userRepository.CreateUserAsync(
+                    new User()
                     {
                         Login = model.Login,
                         Password = pass.Hash,
@@ -72,16 +77,13 @@ namespace Authentication.Host.Services
                         Role = model.Role.Split(",").Select(p => p.Trim())
                     }, token);
 
-                    var newUser = new UserInfo
-                    {
-                        Id = id,
-                        Login = model.Login
-                    };
+                var newUser = new UserInfo
+                {
+                    Id = id,
+                    Login = model.Login
+                };
 
-                    return new Result<AdminResult, UserInfo>(AdminResult.Ok, model: newUser, "User created");
-                }
-
-                return new Result<AdminResult, UserInfo>(AdminResult.Error, message:"Please try again");
+                return new Result<AdminResult, UserInfo>(AdminResult.Ok, model: newUser, "User created");
             }
             catch (EntityNotFoundException)
             {

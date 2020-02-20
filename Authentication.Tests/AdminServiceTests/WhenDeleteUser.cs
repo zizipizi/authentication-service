@@ -9,6 +9,7 @@ using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Authentication.Tests.AdminControllerTests.Utills;
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -32,7 +33,8 @@ namespace Authentication.Tests.AdminServiceTests
 
             var result = await userService.DeleteUserAsync(id, CancellationToken.None);
 
-            Assert.Equal(AdminResult.Ok, result.Value);
+            result.Value.Should().BeEquivalentTo(AdminResult.Ok);
+            //Assert.Equal(AdminResult.Ok, result.Value);
         }
 
         [Fact]
@@ -48,7 +50,8 @@ namespace Authentication.Tests.AdminServiceTests
 
             var result = await userService.DeleteUserAsync(id, CancellationToken.None);
 
-            Assert.Equal(AdminResult.UserNotFound, result.Value);
+            result.Value.Should().BeEquivalentTo(AdminResult.UserNotFound);
+            //Assert.Equal(AdminResult.UserNotFound, result.Value);
         }
 
     }
