@@ -18,7 +18,7 @@ namespace Authentication.Tests.RepositoryTests
         [Fact]
         public async Task AddTokensWithRefresh()
         {
-            var authContext = FakeContextFactory.AddTokensWithRefresh();
+            var authContext = FakeContextFactory.AddTokensWithRefresh(out long id);
             var logger = new Mock<ILogger<TokenRepository>>().Object;
             var cache = new Mock<IDistributedCache>().Object;
 
@@ -30,7 +30,7 @@ namespace Authentication.Tests.RepositoryTests
                 ("sdfk;sldkfsdl;fksdf0", DateTime.Now.AddMinutes(30), refreshJti)
                 );
 
-            await tokenRepository.AddTokensAsync(1, tokenModel, CancellationToken.None);
+            await tokenRepository.AddTokensAsync(id, tokenModel, CancellationToken.None);
 
             var refreshToken = authContext.RefreshTokens.FirstOrDefault(c => c.Jti == refreshJti);
             var accessToken = authContext.AccessTokens.FirstOrDefault(c => c.RefreshToken == refreshToken);
@@ -46,7 +46,7 @@ namespace Authentication.Tests.RepositoryTests
         [Fact]
         public async Task AddTokenWithoutRefresh()
         {
-            var authContext = FakeContextFactory.AddTokenWithoutRefresh();
+            var authContext = FakeContextFactory.AddTokenWithoutRefresh(out var id);
             var logger = new Mock<ILogger<TokenRepository>>().Object;
             var cache = new Mock<IDistributedCache>().Object;
             var refreshJti = "123123podaps123123";
@@ -63,7 +63,7 @@ namespace Authentication.Tests.RepositoryTests
                 Expired = DateTime.Now.AddMinutes(30),
                 Jti = refreshJti,
                 IsBlocked = false,
-                UserId = 1
+                UserId = id
             };
 
             authContext.RefreshTokens.Add(refreshToken);
@@ -71,7 +71,7 @@ namespace Authentication.Tests.RepositoryTests
 
             var tokenRepository = new TokenRepository(authContext, logger, cache);
 
-            await tokenRepository.AddTokensAsync(1, tokenModel, CancellationToken.None);
+            await tokenRepository.AddTokensAsync(id, tokenModel, CancellationToken.None);
 
             var accessToken = authContext.AccessTokens.FirstOrDefault(c => c.RefreshToken == refreshToken);
 

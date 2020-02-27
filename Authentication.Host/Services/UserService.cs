@@ -20,21 +20,19 @@ namespace Authentication.Host.Services
         private readonly IPasswordService _passwordService;
         private readonly IJwtService _jwtService;
         private readonly ILogger _logger;
-        private readonly IDistributedCache _cache;
 
         public UserService(IUserRepository userRepository, 
             ITokenRepository tokenRepository, 
             IPasswordService passwordService, 
             IJwtService jwtService, 
-            ILogger<UserService> logger, 
-            IDistributedCache cache)
+            ILogger<UserService> logger
+            )
         {
             _userRepository = userRepository;
             _tokenRepository = tokenRepository;
             _passwordService = passwordService;
             _jwtService = jwtService;
             _logger = logger;
-            _cache = cache;
         }
 
         public async Task<Result<UserResult>> SignOutAsync(long id, string refreshJti, CancellationToken cancellationToken)

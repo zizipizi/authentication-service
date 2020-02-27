@@ -17,7 +17,7 @@ namespace Authentication.Tests
     {
         #region GetUserById
 
-        public static AuthContext GetUserById_Ok()
+        public static AuthContext GetUserById_Ok(out long userId)
         {
             var options = new DbContextOptionsBuilder<AuthContext>()
                 .UseInMemoryDatabase(databaseName: "Get_User_By_Id")
@@ -27,11 +27,13 @@ namespace Authentication.Tests
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
+            userId = context.Users.Max(c => c.Id) + 1;
+
             var user = new UserEntity
             {
                 Login = "Login",
                 Password = "Password",
-                Id = 1
+                Id = userId
             };
 
             context.Add(user);
@@ -40,7 +42,7 @@ namespace Authentication.Tests
             return context;
         }
 
-        public static AuthContext GetUserById_EntityException()
+        public static AuthContext GetUserById_EntityException(out long userId)
         {
             var options = new DbContextOptionsBuilder<AuthContext>()
                 .UseInMemoryDatabase(databaseName: "Get_User_By_Id_Entity_Exception")
@@ -50,11 +52,13 @@ namespace Authentication.Tests
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
+            userId = context.Users.Max(c => c.Id) + 1;
+
             var user = new UserEntity
             {
                 Login = "Login",
                 Password = "Password",
-                Id = 1
+                Id = userId
             };
 
             context.Add(user);
@@ -77,18 +81,20 @@ namespace Authentication.Tests
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
+            long userId = context.Users.Max(c => c.Id) + 1;
+
             var user = new UserEntity
             {
                 Login = "Login",
                 Password = "Password",
-                Id = 1
+                Id = userId
             };
 
             var user2 = new UserEntity
             {
                 Login = "Login2",
                 Password = "Password2",
-                Id = 2
+                Id = userId + 1
             };
 
             context.Add(user);
@@ -133,7 +139,7 @@ namespace Authentication.Tests
 
 
         #region BlockUser
-        public static AuthContext BlockUser_Ok()
+        public static AuthContext BlockUser_Ok(out long userId)
         {
             var options = new DbContextOptionsBuilder<AuthContext>()
                 .UseInMemoryDatabase(databaseName: "BlockUser_Ok")
@@ -143,11 +149,13 @@ namespace Authentication.Tests
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
+            userId = context.Users.Max(c => c.Id) + 1;
+
             var user = new UserEntity
             {
                 Login = "Login",
                 Password = "Password",
-                Id = 1,
+                Id = userId,
                 IsActive = true
             };
 
@@ -157,7 +165,7 @@ namespace Authentication.Tests
             return context;
         }
 
-        public static AuthContext BlockUser_EntityException()
+        public static AuthContext BlockUser_EntityException(out long userId)
         {
             var options = new DbContextOptionsBuilder<AuthContext>()
                 .UseInMemoryDatabase(databaseName: "BlockUser_Ok")
@@ -167,11 +175,13 @@ namespace Authentication.Tests
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
+            userId = context.Users.Max(c => c.Id) + 1;
+
             var user = new UserEntity
             {
                 Login = "Login",
                 Password = "Password",
-                Id = 1,
+                Id = userId,
                 IsActive = true
             };
 
@@ -185,7 +195,7 @@ namespace Authentication.Tests
 
         #region UpdateUserPassword
 
-        public static AuthContext UpdateUserPassword_Ok()
+        public static AuthContext UpdateUserPassword_Ok(out long userId)
         {
             var options = new DbContextOptionsBuilder<AuthContext>()
                 .UseInMemoryDatabase(databaseName: "UpdateUserPassword_Ok")
@@ -195,11 +205,13 @@ namespace Authentication.Tests
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
+            userId = context.Users.Max(c => c.Id) + 1;
+
             var user = new UserEntity
             {
                 Login = "Login",
                 Password = "Password",
-                Id = 1,
+                Id = userId,
                 IsActive = true
             };
 
@@ -209,7 +221,7 @@ namespace Authentication.Tests
             return context;
         }
 
-        public static AuthContext UpdateUserPassword_EntityException()
+        public static AuthContext UpdateUserPassword_EntityException(out long userId)
         {
             var options = new DbContextOptionsBuilder<AuthContext>()
                 .UseInMemoryDatabase(databaseName: "UpdateUserPassword_EntityException")
@@ -218,12 +230,13 @@ namespace Authentication.Tests
             AuthContext context = new AuthContext(options);
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
+            userId = context.Users.Max(c => c.Id) + 1;
 
             var user = new UserEntity
             {
                 Login = "Login",
                 Password = "Password",
-                Id = 1,
+                Id = userId,
                 IsActive = true
             };
 
@@ -295,7 +308,7 @@ namespace Authentication.Tests
 
         #region BlockAllTokens
 
-        public static AuthContext BlockAllTokens_Ok()
+        public static AuthContext BlockAllTokens_Ok(out long userId)
         {
             var options = new DbContextOptionsBuilder<AuthContext>()
                 .UseInMemoryDatabase(databaseName: "BlockAllTokens_Ok")
@@ -304,12 +317,14 @@ namespace Authentication.Tests
             AuthContext context = new AuthContext(options);
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
+            
+            userId = context.Users.Max(c => c.Id) + 1;
 
             var user = new UserEntity
             {
                 Login = "Login",
                 Password = "Password",
-                Id = 1,
+                Id = userId,
                 IsActive = true
             };
 
@@ -347,7 +362,7 @@ namespace Authentication.Tests
 
         #region AddTokens
 
-        public static AuthContext AddTokensWithRefresh()
+        public static AuthContext AddTokensWithRefresh(out long userId)
         {
             var options = new DbContextOptionsBuilder<AuthContext>()
                 .UseInMemoryDatabase(databaseName: "AddTokensWithRefresh")
@@ -357,11 +372,13 @@ namespace Authentication.Tests
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
+            userId = context.Users.Max(c => c.Id) + 1;
+
             var user = new UserEntity
             {
                 Login = "Login",
                 Password = "Password",
-                Id = 1,
+                Id = userId,
                 IsActive = true
             };
 
@@ -370,7 +387,7 @@ namespace Authentication.Tests
             return context;
         }
 
-        public static AuthContext AddTokenWithoutRefresh()
+        public static AuthContext AddTokenWithoutRefresh(out long userId)
         {
             var options = new DbContextOptionsBuilder<AuthContext>()
                 .UseInMemoryDatabase(databaseName: "AddTokensWithoutRefresh")
@@ -380,11 +397,13 @@ namespace Authentication.Tests
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
+            userId = context.Users.Max(c => c.Id) + 1;
+
             var user = new UserEntity
             {
                 Login = "Login",
                 Password = "Password",
-                Id = 1,
+                Id = userId,
                 IsActive = true
             };
 

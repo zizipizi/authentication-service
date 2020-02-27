@@ -19,16 +19,16 @@ namespace Authentication.Tests.RepositoryTests
         [Fact]
         public async Task ChangePassword_Ok()
         {
-            var authContext = FakeContextFactory.UpdateUserPassword_Ok();
+            var authContext = FakeContextFactory.UpdateUserPassword_Ok(out var id);
             var logger = new Mock<ILogger<UserRepository>>().Object;
             var cache = new Mock<IDistributedCache>().Object;
 
             var tokenRepository = new TokenRepository(authContext, new Mock<ILogger<TokenRepository>>().Object, cache);
             var userRepository = new UserRepository(tokenRepository, authContext, logger);
 
-            await userRepository.UpdateUserPassword(1, "NewPassword", CancellationToken.None);
+            await userRepository.UpdateUserPassword(id, "NewPassword", CancellationToken.None);
 
-            var user = authContext.Users.FirstOrDefault(c => c.Id == 1);
+            var user = authContext.Users.FirstOrDefault(c => c.Id == id);
 
             user.Password.Should().BeEquivalentTo("NewPassword");
 
@@ -38,16 +38,16 @@ namespace Authentication.Tests.RepositoryTests
         [Fact]
         public async Task ChangePassword_EntityException()
         {
-            var authContext = FakeContextFactory.UpdateUserPassword_EntityException();
+            var authContext = FakeContextFactory.UpdateUserPassword_EntityException(out var id);
             var logger = new Mock<ILogger<UserRepository>>().Object;
             var cache = new Mock<IDistributedCache>().Object;
 
             var tokenRepository = new TokenRepository(authContext, new Mock<ILogger<TokenRepository>>().Object, cache);
             var userRepository = new UserRepository(tokenRepository, authContext, logger);
 
-            Func<Task> act = async () => await userRepository.UpdateUserPassword(2, "NewPassword", CancellationToken.None);
+            Func<Task> act = async () => await userRepository.UpdateUserPassword(id + 1, "NewPassword", CancellationToken.None);
 
-            act.Should().Throw<EntityNotFoundException>().WithMessage("User not found");
+            await act.Should().ThrowAsync<EntityNotFoundException>().WithMessage("User not found");
 
             //var ex = await Assert.ThrowsAsync<EntityNotFoundException>(async () => await userRepository.UpdateUserPassword(2, "NewPassword", CancellationToken.None));
             //Assert.Equal("User not found", ex.Message);

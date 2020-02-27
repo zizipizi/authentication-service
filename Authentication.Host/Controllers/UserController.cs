@@ -30,7 +30,7 @@ namespace Authentication.Host.Controllers
         [HttpPost("signout")]
         public async Task<IActionResult> SignOut(BodyTokenModel model, CancellationToken cancellationToken)
         {
-            var (idStr, token) = GetUserInfo();
+            var idStr = GetUserInfo().id;
 
             if (!long.TryParse(idStr, out var id))
             {

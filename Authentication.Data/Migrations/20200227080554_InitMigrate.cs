@@ -1,9 +1,10 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Authentication.Data.Migrations
 {
-    public partial class InitMig : Migration
+    public partial class InitMigrate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -12,7 +13,7 @@ namespace Authentication.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<long>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     role = table.Column<string>(nullable: true),
                     description = table.Column<string>(nullable: true)
                 },
@@ -26,7 +27,7 @@ namespace Authentication.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<long>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     user_name = table.Column<string>(maxLength: 128, nullable: false),
                     login = table.Column<string>(maxLength: 128, nullable: false),
                     password = table.Column<string>(maxLength: 1024, nullable: false),
@@ -43,7 +44,7 @@ namespace Authentication.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<long>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     user_id = table.Column<long>(nullable: false),
                     token = table.Column<string>(nullable: true),
                     expired = table.Column<DateTime>(nullable: false),
@@ -92,7 +93,7 @@ namespace Authentication.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<long>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     user_id = table.Column<long>(nullable: false),
                     token = table.Column<string>(nullable: true),
                     expired = table.Column<DateTime>(nullable: false),
@@ -120,17 +121,22 @@ namespace Authentication.Data.Migrations
             migrationBuilder.InsertData(
                 table: "Role",
                 columns: new[] { "id", "description", "role" },
-                values: new object[] { 1L, "Admin privilegies", "Admin" });
+                values: new object[,]
+                {
+                    { 1L, "Admin privilegies", "Admin" },
+                    { 2L, "User privilegies", "User" },
+                    { 3L, "Guest privilegies", "Guest" }
+                });
 
             migrationBuilder.InsertData(
-                table: "Role",
-                columns: new[] { "id", "description", "role" },
-                values: new object[] { 2L, "User privilegies", "User" });
+                table: "User",
+                columns: new[] { "id", "created", "is_active", "login", "password", "user_name" },
+                values: new object[] { 1L, new DateTime(2020, 2, 27, 8, 5, 54, 687, DateTimeKind.Utc).AddTicks(8333), true, "Admin", "Bd+C/r8cbbBRAdxW+E6rX6j/76zBoqRv|1000|Aec62fL4vVsk6lVxO/OgQqQJZzPeDWiT", "admin" });
 
             migrationBuilder.InsertData(
-                table: "Role",
-                columns: new[] { "id", "description", "role" },
-                values: new object[] { 3L, "Guest privilegies", "Guest" });
+                table: "UserRole",
+                columns: new[] { "role_id", "user_id" },
+                values: new object[] { 1L, 1L });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Access_token_RefreshTokenJti",

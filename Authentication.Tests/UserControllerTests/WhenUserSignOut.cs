@@ -40,18 +40,19 @@ namespace Authentication.Tests.UserControllerTests
             ));
 
 
-            var userController = new UserController(userService, logger);
-
-            userController.ControllerContext = new ControllerContext()
+            var userController = new UserController(userService, logger)
             {
-                HttpContext = new DefaultHttpContext()
+                ControllerContext = new ControllerContext()
                 {
-                    User = user,
-                    Request = { Headers = { ["Authorization"] = "asdk" } }
+                    HttpContext = new DefaultHttpContext()
+                    {
+                        User = user,
+                        Request = { Headers = { ["Authorization"] = "asdk" } }
+                    }
                 }
             };
 
-            
+
             var result = await userController.SignOut(tokenModel, CancellationToken.None);
 
             result.Should().BeOfType<NoContentResult>();
@@ -77,14 +78,15 @@ namespace Authentication.Tests.UserControllerTests
             ));
 
 
-            var userController = new UserController(userService, logger);
-
-            userController.ControllerContext = new ControllerContext()
+            var userController = new UserController(userService, logger)
             {
-                HttpContext = new DefaultHttpContext()
+                ControllerContext = new ControllerContext()
                 {
-                    User = user,
-                    Request = { Headers = { ["Authorization"] = "asdk" } }
+                    HttpContext = new DefaultHttpContext()
+                    {
+                        User = user,
+                        Request = { Headers = { ["Authorization"] = "asdk" } }
+                    }
                 }
             };
 
