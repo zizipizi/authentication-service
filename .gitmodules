@@ -1,0 +1,3 @@
+[submodule "Processing.Kafka"]
+	path = Processing.Kafka
+	url = https://git.betfavorit.cf/.net-backend/processing.kafka.git
