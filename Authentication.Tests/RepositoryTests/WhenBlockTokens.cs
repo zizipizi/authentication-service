@@ -15,13 +15,13 @@ namespace Authentication.Tests.RepositoryTests
         [Fact]
         public async Task BlockAllTokens_Ok()
         {
-            var authContext = FakeContextFactory.BlockAllTokens_Ok();
-            var logger = new Mock<ILogger<UserRepository>>().Object;
+            var authContext = FakeContextFactory.BlockAllTokens_Ok(out var id);
+            var logger = new Mock<ILogger<TokenRepository>>().Object;
             var cache = new Mock<IDistributedCache>().Object;
+            
+            var tokenRepository = new TokenRepository(authContext, logger, cache);
 
-            var tokenRepository = new TokenRepository(authContext, new Mock<ILogger<TokenRepository>>().Object, cache);
-
-            await tokenRepository.BlockAllTokensAsync(1, CancellationToken.None);
+            await tokenRepository.BlockAllTokensAsync(id, CancellationToken.None);
 
             var allTokens = authContext.RefreshTokens.ToList();
 

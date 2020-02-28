@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Authentication.Data.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -49,6 +50,22 @@ namespace Authentication.Data.Models
                     Role = "Guest",
                     Description = "Guest privilegies"
                 }
+            });
+
+            modelBuilder.Entity<UserEntity>().HasData(new UserEntity
+            {
+                Id = 1,
+                Login = "Admin",
+                UserName = "admin",
+                Password = "8TmZ94UJv6zkZntGk0IQ0DZgyx4YzW3p|1000|CQ/LrH+yplj0rGTBGbmJihBwTMKeHXId", //password: Admin123
+                Created = DateTime.UtcNow,
+                IsActive = true,
+            });
+
+            modelBuilder.Entity<UserRolesEntity>().HasData(new UserRolesEntity
+            {
+                RoleId = 1,
+                UserId = 1
             });
         }
     }

@@ -43,8 +43,11 @@ namespace Authentication.Host
 
         public void ConfigureServices(IServiceCollection services)
         {
+            //services.AddDbContext<AuthContext>(options =>
+            //    options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+
             services.AddDbContext<AuthContext>(options =>
-                options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseNpgsql(Configuration.GetConnectionString("Db")));
 
             services.AddUserRepository();
             services.AddTokenRepository();
@@ -119,7 +122,7 @@ namespace Authentication.Host
                 //.AddElasticsearch()
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {

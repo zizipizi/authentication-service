@@ -51,8 +51,8 @@ namespace Authentication.Tests.RepositoryTests
             Func<Task> act = async () => await result;
             Func<Task> act2 = async () => await result2;
 
-            act.Should().Throw<EntityNotFoundException>().WithMessage("User not found");
-            act2.Should().Throw<EntityNotFoundException>().WithMessage("User not found");
+            await act.Should().ThrowAsync<EntityNotFoundException>().WithMessage("User not found");
+            await act2.Should().ThrowAsync<EntityNotFoundException>().WithMessage("User not found");
 
             //var ex = await Assert.ThrowsAsync<EntityNotFoundException>(async () => await result);
             //Assert.Equal("User not found", ex.Message);

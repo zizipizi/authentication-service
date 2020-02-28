@@ -12,8 +12,11 @@ namespace Authentication.Host
     {
         public static void Main(string[] args)
         {
+            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
             var configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
+                .AddJsonFile($"appsettings.{env}.json")
                 .Build();
 
             Log.Logger = new LoggerConfiguration()

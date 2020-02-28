@@ -23,12 +23,11 @@ namespace Authentication.Tests.UserServiceTests
             var logger = new Mock<ILogger<UserService>>().Object;
             var passwordService = new Mock<IPasswordService>().Object;
             var jwtService = new Mock<IJwtService>().Object;
-            var cache = new Mock<IDistributedCache>().Object;
 
             var fakeUserRepository = FakeRepositoryFactory.ChangePassword_Ok();
             var fakeTokenRepository = FakeRepositoryFactory.BlockAllTokens_Ok();
 
-            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger, cache);
+            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
 
             var changePassModel = new ChangePassModel
             {
@@ -47,13 +46,12 @@ namespace Authentication.Tests.UserServiceTests
             var logger = new Mock<ILogger<UserService>>().Object;
             var passwordService = new Mock<IPasswordService>().Object;
             var jwtService = new Mock<IJwtService>().Object;
-            var cache = new Mock<IDistributedCache>().Object;
 
 
             var fakeUserRepository = FakeRepositoryFactory.ChangePassword_EntityException();
             var fakeTokenRepository = FakeRepositoryFactory.FakeToken();
 
-            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger, cache);
+            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
 
             var changePassModel = new ChangePassModel
             {
@@ -72,12 +70,11 @@ namespace Authentication.Tests.UserServiceTests
             var logger = new Mock<ILogger<UserService>>().Object;
             var passwordService = new Mock<IPasswordService>().Object;
             var jwtService = new Mock<IJwtService>().Object;
-            var cache = new Mock<IDistributedCache>().Object;
 
             var fakeUserRepository = FakeRepositoryFactory.ChangePassword_Exception();
             var fakeTokenRepository = FakeRepositoryFactory.FakeToken();
 
-            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger, cache);
+            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
 
             var changePassModel = new ChangePassModel
             {

@@ -23,12 +23,11 @@ namespace Authentication.Tests.UserServiceTests
             var logger = new Mock<ILogger<UserService>>().Object;
             var passwordService = new Mock<IPasswordService>().Object;
             var jwtService = new Mock<IJwtService>().Object;
-            var cache = new Mock<IDistributedCache>().Object;
 
             var fakeUserRepository = FakeRepositoryFactory.FakeUser();
             var fakeTokenRepository = FakeRepositoryFactory.BlockRefreshToken_Ok();
 
-            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger, cache);
+            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
 
             var result = await userService.SignOutAsync(1, "asdasd", CancellationToken.None);
 
@@ -41,12 +40,11 @@ namespace Authentication.Tests.UserServiceTests
             var logger = new Mock<ILogger<UserService>>().Object;
             var passwordService = new Mock<IPasswordService>().Object;
             var jwtService = new Mock<IJwtService>().Object;
-            var cache = new Mock<IDistributedCache>().Object;
 
             var fakeUserRepository = FakeRepositoryFactory.FakeUser();
             var fakeTokenRepository = FakeRepositoryFactory.BlockRefreshToken_Exception();
 
-            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger, cache);
+            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
 
             var result = await userService.SignOutAsync(1, "asdasd", CancellationToken.None);
 

@@ -33,14 +33,15 @@ namespace Authentication.Tests.UserControllerTests
             }
             ));
 
-            var userController = new UserController(userService, logger);
-
-            userController.ControllerContext = new ControllerContext()
+            var userController = new UserController(userService, logger)
             {
-                HttpContext = new DefaultHttpContext()
+                ControllerContext = new ControllerContext()
                 {
-                    User = user,
-                    Request = { Headers = { ["Authorization"] = "asdk"}}
+                    HttpContext = new DefaultHttpContext()
+                    {
+                        User = user,
+                        Request = { Headers = { ["Authorization"] = "asdk" } }
+                    }
                 }
             };
 
@@ -67,18 +68,19 @@ namespace Authentication.Tests.UserControllerTests
                     }
                 ));
 
-                var userController = new UserController(userService, logger);
-
-                userController.ControllerContext = new ControllerContext()
+            var userController = new UserController(userService, logger)
+            {
+                ControllerContext = new ControllerContext()
                 {
                     HttpContext = new DefaultHttpContext()
                     {
                         User = user,
                         Request = { Headers = { ["Authorization"] = "asdk" } }
                     }
-                };
+                }
+            };
 
-                var result = await userController.ChangePassword(changePassModel, CancellationToken.None);
+            var result = await userController.ChangePassword(changePassModel, CancellationToken.None);
 
                 result.Should().BeOfType<BadRequestObjectResult>();
                 //Assert.IsType<BadRequestObjectResult>(result);
@@ -102,14 +104,15 @@ namespace Authentication.Tests.UserControllerTests
                 }
             ));
 
-            var userController = new UserController(userService, logger);
-
-            userController.ControllerContext = new ControllerContext()
+            var userController = new UserController(userService, logger)
             {
-                HttpContext = new DefaultHttpContext()
+                ControllerContext = new ControllerContext()
                 {
-                    User = user,
-                    Request = { Headers = { ["Authorization"] = "asdk" } }
+                    HttpContext = new DefaultHttpContext()
+                    {
+                        User = user,
+                        Request = { Headers = { ["Authorization"] = "asdk" } }
+                    }
                 }
             };
 
@@ -137,14 +140,15 @@ namespace Authentication.Tests.UserControllerTests
                 }
             ));
 
-            var userController = new UserController(userService, logger);
-
-            userController.ControllerContext = new ControllerContext()
+            var userController = new UserController(userService, logger)
             {
-                HttpContext = new DefaultHttpContext()
+                ControllerContext = new ControllerContext()
                 {
-                    User = user,
-                    Request = { Headers = { ["Authorization"] = "asdk" } }
+                    HttpContext = new DefaultHttpContext()
+                    {
+                        User = user,
+                        Request = { Headers = { ["Authorization"] = "asdk" } }
+                    }
                 }
             };
 
