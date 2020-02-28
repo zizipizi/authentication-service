@@ -75,7 +75,7 @@ namespace Authentication.Tests.AuthControllerTests
                 UserName = "Terminator",
                 Password = "Terminator2013"
             };
-            var res = new StatusCodeResult(403);
+
             var result = await authController.SignIn(loginModel, CancellationToken.None);
 
             result.Should().BeOfType<UnauthorizedObjectResult>();
