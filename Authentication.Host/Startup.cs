@@ -7,6 +7,7 @@ using Authentication.Host.Repositories;
 using Authentication.Host.Repositories.RepositoryExtensions;
 using Authentication.Host.Services;
 using Authentication.Host.Services.ServiceExtensions;
+using Confluent.Kafka;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
+using Processing.Kafka.Consumer;
+using Processing.Kafka.Producer;
+using Processing.Kafka.Protobuf;
 using Prometheus;
 using Serilog;
 using StackExchange.Redis;
@@ -53,6 +57,12 @@ namespace Authentication.Host
             services.AddAdminService();
 
             services.AddControllers();
+
+            services.AddSingleton(typeof(IConsumerFactory<,>), typeof(ConsumerFactory<,>));
+            services.AddSingleton(typeof(IDeserializer<>), typeof(ProtobufSerializer<>));
+            services.AddSingleton(typeof(IProducerFactory<,>), typeof(ProducerFactory<,>));
+            services.AddSingleton(typeof(ISerializer<>), typeof(ProtobufSerializer<>));
+
 
             services.AddSwaggerGen(c =>
             {
