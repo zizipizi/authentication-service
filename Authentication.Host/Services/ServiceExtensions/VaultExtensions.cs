@@ -12,6 +12,7 @@ using VaultSharp.V1.AuthMethods.LDAP;
 
 namespace Authentication.Host.Services.ServiceExtensions
 {
+    // В дальнейшем разнести всё
     public static class VaultExtensions
     { 
         public static IServiceCollection AddVault(this IServiceCollection service, Action<VaultOptions> options)

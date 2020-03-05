@@ -94,6 +94,7 @@ namespace Authentication.Host
                 });
             });
 
+            
             //Всё будет не так, надо будет переделать когда админы разберутся с Vault
 
             services.AddVault(options =>
