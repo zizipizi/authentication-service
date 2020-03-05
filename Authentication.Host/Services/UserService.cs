@@ -6,10 +6,12 @@ using Authentication.Host.Models;
 using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
+using Confluent.Kafka;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using NSV.Security.JWT;
 using NSV.Security.Password;
+using Processing.Kafka.Producer;
 
 namespace Authentication.Host.Services
 {
@@ -20,12 +22,14 @@ namespace Authentication.Host.Services
         private readonly IPasswordService _passwordService;
         private readonly IJwtService _jwtService;
         private readonly ILogger _logger;
+        private readonly IProducerFactory<int, string> _kafka;
 
         public UserService(IUserRepository userRepository, 
             ITokenRepository tokenRepository, 
             IPasswordService passwordService, 
             IJwtService jwtService, 
-            ILogger<UserService> logger
+            ILogger<UserService> logger,
+            IProducerFactory<int,string> kafka
             )
         {
             _userRepository = userRepository;
@@ -33,6 +37,7 @@ namespace Authentication.Host.Services
             _passwordService = passwordService;
             _jwtService = jwtService;
             _logger = logger;
+            _kafka = kafka;
         }
 
         public async Task<Result<UserResult>> SignOutAsync(long id, string refreshJti, CancellationToken cancellationToken)
@@ -40,7 +45,14 @@ namespace Authentication.Host.Services
             try
             {
                 await _tokenRepository.BlockRefreshTokenAsync(refreshJti, cancellationToken);
-
+                using (var mes = _kafka.Create("BlockedTokens"))
+                {
+                    for (int i = 0; i < 10; i++)
+                    {
+                        var res = await mes.SendAsync(1, refreshJti);
+                        _logger.LogInformation("Sended");
+                    }
+                }
                 return new Result<UserResult>(UserResult.Ok);
             }
             catch (Exception ex)

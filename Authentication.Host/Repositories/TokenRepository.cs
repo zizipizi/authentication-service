@@ -54,6 +54,16 @@ namespace Authentication.Host.Repositories
             }
         }
 
+        public async Task<IEnumerable<string>> GetAccessTokens(long id)
+        {
+            var tokens = await _context.AccessTokens
+                .Where(c => c.UserId == id && c.Exprired > DateTime.UtcNow)
+                .Select(c => c.Token)
+                .ToListAsync();
+
+            return tokens;
+        }
+
         //Block all when user change password or admin block user
         public async Task BlockAllTokensAsync(long id, CancellationToken cancellationToken)
         {
