@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Models.Domain;
@@ -10,12 +11,12 @@ namespace Authentication.Host.Services
 {
     public interface IAdminService
     {
-        Task<IEnumerable<User>> GetAllAsync();
+        Task<Result<HttpStatusCode, IEnumerable<User>>> GetAllUsersAsync(CancellationToken cancellationToken);
 
-        Task<Result<AdminResult, UserInfo>> CreateUserAsync(UserCreateModel model, CancellationToken token);
+        Task<Result<HttpStatusCode, UserInfo>> CreateUserAsync(UserCreateModel model, CancellationToken cancellationToken);
 
-        Task<Result<AdminResult>> BlockUserAsync(int id, CancellationToken token);
+        Task<Result<HttpStatusCode>> BlockUserAsync(long id, CancellationToken cancellationToken);
 
-        Task<Result<AdminResult>> DeleteUserAsync(int id, CancellationToken token);
+        Task<Result<HttpStatusCode>> DeleteUserAsync(long id, CancellationToken cancellationToken);
     }
 }

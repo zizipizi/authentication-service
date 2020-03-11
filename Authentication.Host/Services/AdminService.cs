@@ -1,117 +1,99 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Authentication.Data;
-using Authentication.Data.Exceptions;
 using Authentication.Data.Models.Domain;
-using Authentication.Data.Models.Entities;
 using Authentication.Host.Models;
 using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Logging;
-using NSV.Security.JWT;
 using NSV.Security.Password;
 
 namespace Authentication.Host.Services
 {
     public class AdminService : IAdminService
     {
-        private readonly IUserRepository _userRepository;
+        private readonly IAdminRepository _adminRepository;
+        private readonly ICacheRepository _cacheRepository;
         private readonly IPasswordService _passwordService;
-        private readonly ILogger _logger;
 
-        public AdminService(IUserRepository userRepository, IPasswordService passwordService, ILogger<AdminService> logger)
+        public AdminService(IAdminRepository adminRepository, ICacheRepository cacheRepository, IPasswordService passwordService)
         {
-            _userRepository = userRepository;
+            _adminRepository = adminRepository;
+            _cacheRepository = cacheRepository;
             _passwordService = passwordService;
-            _logger = logger;
         }
 
-        public async Task<IEnumerable<User>> GetAllAsync()
+        public async Task<Result<HttpStatusCode, IEnumerable<User>>> GetAllUsersAsync(CancellationToken cancellationToken)
         {
-            var result = await _userRepository.GetAllUsersAsync(CancellationToken.None);
-            return result;
+            var result = await _adminRepository.GetAllUsersAsync(cancellationToken);
+
+            return result.Value == AdminRepositoryResult.Ok 
+                ? new Result<HttpStatusCode, IEnumerable<User>>(HttpStatusCode.OK, result.Model) 
+                : new Result<HttpStatusCode, IEnumerable<User>>(HttpStatusCode.ServiceUnavailable, message: "Please, try again");
         }
 
-        public async Task<Result<AdminResult>> BlockUserAsync(int id, CancellationToken token)
+        public async Task<Result<HttpStatusCode, UserInfo>> CreateUserAsync(UserCreateModel model, CancellationToken cancellationToken)
         {
-            try
+            var newUserPasswordHash = _passwordService.Hash(model.Password);
+
+            if (newUserPasswordHash.Result != PasswordHashResult.HashResult.Ok)
+                return new Result<HttpStatusCode, UserInfo>(HttpStatusCode.BadRequest, message: newUserPasswordHash.Result.ToString());
+
+            var createUserResult = await _adminRepository.CreateUserAsync(new User
             {
-                await _userRepository.BlockUserAsync(id, token);
-                return new Result<AdminResult>(AdminResult.Ok, $"User with id {id} blocked");
-            }
-            catch (EntityNotFoundException)
+                Login = model.Login,
+                Password = newUserPasswordHash.Hash,
+                UserName = model.UserName,
+                Role = model.Role.Split(",").Select(p => p.Trim())
+            }, cancellationToken);
+
+            switch (createUserResult.Value)
             {
-                return new Result<AdminResult>(AdminResult.UserNotFound, $"User with id {id} not found");
+                case AdminRepositoryResult.UserExist:
+                    return new Result<HttpStatusCode, UserInfo>(HttpStatusCode.Conflict, message: "User with same login exist");
+                case AdminRepositoryResult.Error:
+                    return new Result<HttpStatusCode, UserInfo>(HttpStatusCode.ServiceUnavailable, message: "Please, try again");
             }
-            catch (Exception ex)
+
+            var newUserInfo = new UserInfo
             {
-                _logger.LogError(ex, ex.Message);
-                return new Result<AdminResult>(AdminResult.Error, "DB error");
-            }
+                Id = createUserResult.Model.Id,
+                Login = model.Login
+            };
+
+            return new Result<HttpStatusCode, UserInfo>(HttpStatusCode.OK, newUserInfo, "User created");
         }
 
-        public async Task<Result<AdminResult, UserInfo>> CreateUserAsync(UserCreateModel model, CancellationToken token)
+        public async Task<Result<HttpStatusCode>> BlockUserAsync(long id, CancellationToken token)
         {
-            try
+            var userBlockResult = await _adminRepository.BlockUserAsync(id, token);
+
+            switch (userBlockResult.Value)
             {
-                var pass = _passwordService.Hash(model.Password);
-
-                if (pass.Result != PasswordHashResult.HashResult.Ok)
-                {
-                    _logger.LogError($"Hash result while creating user {pass.Result.ToString()}");
-                    return new Result<AdminResult, UserInfo>(AdminResult.Error, message: "Please try again");
-                }
-
-                var id = await _userRepository.CreateUserAsync(
-                    new User()
-                    {
-                        Login = model.Login,
-                        Password = pass.Hash,
-                        UserName = model.UserName,
-                        Role = model.Role.Split(",").Select(p => p.Trim())
-                    }, token);
-
-                var newUser = new UserInfo
-                {
-                    Id = id,
-                    Login = model.Login
-                };
-
-                return new Result<AdminResult, UserInfo>(AdminResult.Ok, model: newUser, "User created");
+                case AdminRepositoryResult.UserNotFound:
+                    return new Result<HttpStatusCode>(HttpStatusCode.NotFound);
+                case AdminRepositoryResult.Error:
+                    return new Result<HttpStatusCode>(HttpStatusCode.ServiceUnavailable);
             }
-            catch (EntityNotFoundException)
-            {
-                return new Result<AdminResult, UserInfo>(AdminResult.UserExist, message:"User with same login exist");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return new Result<AdminResult, UserInfo>(AdminResult.Error, message:"DB error");
-            }
+
+            var addToBlacklistResult =  await _cacheRepository.AddRefreshTokensToBlacklistAsync(userBlockResult.Model, token);
+
+            if (addToBlacklistResult.Value == CacheRepositoryResult.Error)
+                return new Result<HttpStatusCode>(HttpStatusCode.ServiceUnavailable);
+
+            return new Result<HttpStatusCode>(HttpStatusCode.OK);
         }
 
-        public async Task<Result<AdminResult>> DeleteUserAsync(int id, CancellationToken token)
+        public async Task<Result<HttpStatusCode>> DeleteUserAsync(long id, CancellationToken cancellationToken)
         {
-            try
-            {
-                await _userRepository.DeleteUserAsync(id, token);
-                return new Result<AdminResult>(AdminResult.Ok, $"User with id {id} deleted");
-            }
-            catch (EntityNotFoundException)
-            {
-                return new Result<AdminResult>(AdminResult.UserNotFound, $"User with id {id} not found");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return new Result<AdminResult>(AdminResult.Error, "DB error");
-            }
+            var deleteUserResult = await _adminRepository.DeleteUserAsync(id, cancellationToken);
+
+            return deleteUserResult.Value == AdminRepositoryResult.UserNotFound 
+                ? new Result<HttpStatusCode>(HttpStatusCode.NotFound) 
+                : new Result<HttpStatusCode>(HttpStatusCode.OK);
         }
     }
 }

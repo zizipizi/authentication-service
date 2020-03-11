@@ -1,11 +1,9 @@
 ﻿namespace Authentication.Host.Results.Enums
 {
-    public enum UserResult
+    public enum UserRepositoryResult
     {
         Ok,
         WrongPassword,
-        RefreshTokenExpired,
-        RefreshNotMatchAccess,
         UserNotFound,
         Error,
         PasswordChangedNeedAuth

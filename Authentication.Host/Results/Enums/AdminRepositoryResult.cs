@@ -1,10 +1,9 @@
 ﻿namespace Authentication.Host.Results.Enums
 {
-    public enum AdminResult
+    public enum AdminRepositoryResult
     {
         Ok,
         UserNotFound,
-        UserBlocked,
         UserExist,
         Error
     }

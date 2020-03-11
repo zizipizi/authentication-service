@@ -1,10 +1,15 @@
-﻿using System.Threading;
+﻿using System.Linq;
+using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Exceptions;
+using Authentication.Data.Models.Domain;
 using Authentication.Host.Models;
+using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
+using Authentication.Tests.AdminServiceTests.Utils;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -17,14 +22,8 @@ namespace Authentication.Tests.AdminServiceTests
     public class WhenCreateUser
     {
         [Fact]
-        public async Task CreateUser_Sucess()
+        public async Task CreateUser_Success()
         {
-            var passService = new Mock<IPasswordService>().Object;
-            var logger = new Mock<ILogger<AdminService>>().Object;
-
-            var userRepo = FakeRepositoryFactory.CreateFakeUser();
-            var userService = new AdminService(userRepo, passService, logger);
-
             var userCreateModel = new UserCreateModel
             {
                 Login = "SomeLogin",
@@ -33,21 +32,35 @@ namespace Authentication.Tests.AdminServiceTests
                 UserName = "UserName"
             };
 
-            var result = await userService.CreateUserAsync(userCreateModel, CancellationToken.None);
+            var user = new User
+            {
+                Login = "SomeLogin",
+                Password = "SomeLongPassword",
+                Role = userCreateModel.Role.Split(",").Select(p => p.Trim()),
+                UserName = "UserName"
+            };
 
-            result.Value.Should().BeEquivalentTo(AdminResult.Ok);
-            //Assert.Equal(AdminResult.Ok, result.Value);
+            var cacheRepo = new Mock<ICacheRepository>().Object;
+
+            var passService = FakePasswordServiceFactory.FakeHashPassword(PasswordHashResult.HashResult.Ok);
+            var adminRepo = FakeAdminRepositoryFactory.FakeCreateUser(AdminRepositoryResult.Ok, user);
+
+            var adminService = new AdminService(adminRepo, cacheRepo, passService);
+
+            var result = await adminService.CreateUserAsync(userCreateModel, CancellationToken.None);
+
+            result.Value.Should().BeEquivalentTo(HttpStatusCode.OK);
         }
 
         [Fact]
         public async Task CreateUser_Exist()
         {
-            var passService = new Mock<IPasswordService>().Object;
-            var logger = new Mock<ILogger<AdminService>>().Object;
+            var cacheRepo = new Mock<ICacheRepository>().Object;
 
-            var userRepo = FakeRepositoryFactory.CreateFakeUser_Exception();
+            var passService = FakePasswordServiceFactory.FakeHashPassword(PasswordHashResult.HashResult.Ok);
 
-            var userService = new AdminService(userRepo, passService, logger);
+            var adminRepo = FakeAdminRepositoryFactory.FakeCreateUser(AdminRepositoryResult.UserExist);
+            var userService = new AdminService(adminRepo, cacheRepo, passService);
 
             var userCreateModel = new UserCreateModel
             {
@@ -59,8 +72,53 @@ namespace Authentication.Tests.AdminServiceTests
 
             var result = await userService.CreateUserAsync(userCreateModel, CancellationToken.None);
 
-            result.Value.Should().BeEquivalentTo(AdminResult.UserExist);
-            //Assert.Equal(AdminResult.UserExist, result.Value);
+            result.Value.Should().BeEquivalentTo(HttpStatusCode.Conflict);
+        }
+
+        [Fact]
+        public async Task CreateUser_ServiceUnavailable()
+        {
+            var cacheRepo = new Mock<ICacheRepository>().Object;
+
+            var passService = FakePasswordServiceFactory.FakeHashPassword(PasswordHashResult.HashResult.Ok);
+
+            var adminRepo = FakeAdminRepositoryFactory.FakeCreateUser(AdminRepositoryResult.Error);
+            var userService = new AdminService(adminRepo, cacheRepo, passService);
+
+            var userCreateModel = new UserCreateModel
+            {
+                Login = "SomeLogin",
+                Password = "SomeLongPassword",
+                Role = "Admin",
+                UserName = "UserName"
+            };
+
+            var result = await userService.CreateUserAsync(userCreateModel, CancellationToken.None);
+
+            result.Value.Should().BeEquivalentTo(HttpStatusCode.ServiceUnavailable);
+        }
+
+        [Fact]
+        public async Task CreateUser_BadRequest()
+        {
+            var cacheRepo = new Mock<ICacheRepository>().Object;
+
+            var passService = FakePasswordServiceFactory.FakeHashPassword(PasswordHashResult.HashResult.PasswordEmpty);
+
+            var adminRepo = FakeAdminRepositoryFactory.FakeCreateUser(AdminRepositoryResult.Ok);
+            var userService = new AdminService(adminRepo, cacheRepo, passService);
+
+            var userCreateModel = new UserCreateModel
+            {
+                Login = "SomeLogin",
+                Password = "SomeLongPassword",
+                Role = "Admin",
+                UserName = "UserName"
+            };
+
+            var result = await userService.CreateUserAsync(userCreateModel, CancellationToken.None);
+
+            result.Value.Should().BeEquivalentTo(HttpStatusCode.BadRequest);
         }
     }
 }

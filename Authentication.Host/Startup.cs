@@ -50,12 +50,16 @@ namespace Authentication.Host
             services.AddDbContext<AuthContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("Db")));
 
+            services.AddUserService();
             services.AddUserRepository();
-            services.AddTokenRepository();
 
             services.AddAuthService();
-            services.AddUserService();
+            services.AddScoped<IAuthRepository, AuthRepository>();
+
+            services.AddScoped<ICacheRepository, CacheRepository>();
+
             services.AddAdminService();
+            services.AddScoped<IAdminRepository, AdminRepository>();
 
             services.AddControllers();
 

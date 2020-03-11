@@ -1,6 +1,6 @@
 ﻿namespace Authentication.Host.Results.Enums
 {
-    public enum AuthResult
+    public enum AuthRepositoryResult
     {
         Ok,
         WrongLoginOrPass,

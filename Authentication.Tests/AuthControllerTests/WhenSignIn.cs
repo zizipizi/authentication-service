@@ -1,6 +1,7 @@
 ﻿using Authentication.Tests.AuthControllerTests.Utils;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,32 +23,33 @@ namespace Authentication.Tests.AuthControllerTests
         [Fact]
         public async Task SignIn_Ok()
         {
-            var authService = FakeAuthServiceFactory.FakeSignIn(AuthResult.Ok);
-            var logger = new Mock<ILogger<AuthController>>().Object;
-
-
-            var authController = new AuthController(authService, logger);
-
             var loginModel = new LoginModel
             {
                 UserName = "Terminator",
                 Password = "Terminator2013"
             };
 
+            var bodyTokenModel = new BodyTokenModel
+            {
+                AccessToken = "asdasdasdasd",
+                RefreshToken = "asdasddawqe"
+            };
+
+            var authService = FakeAuthServiceFactory.FakeSignIn(HttpStatusCode.OK, bodyTokenModel);
+
+            var authController = new AuthController(authService);
+
             var result = await authController.SignIn(loginModel, CancellationToken.None);
 
             result.Should().BeOfType<OkObjectResult>();
-            //Assert.IsType<OkObjectResult>(result);
         }
 
         [Fact]
         public async Task SignIn_NotFound()
         {
-            var authService = FakeAuthServiceFactory.FakeSignIn(AuthResult.UserNotFound);
-            var logger = new Mock<ILogger<AuthController>>().Object;
+            var authService = FakeAuthServiceFactory.FakeSignIn(HttpStatusCode.NotFound);
 
-
-            var authController = new AuthController(authService, logger);
+            var authController = new AuthController(authService);
 
             var loginModel = new LoginModel
             {
@@ -57,14 +59,13 @@ namespace Authentication.Tests.AuthControllerTests
 
             var result = await authController.SignIn(loginModel, CancellationToken.None);
 
-            result.Should().BeOfType<NotFoundObjectResult>();
-            //Assert.IsType<NotFoundObjectResult>(result);
+            result.Should().BeOfType<NotFoundResult>();
         }
 
         [Fact]
         public async Task SignIn_UserBlocked()
         {
-            var authService = FakeAuthServiceFactory.FakeSignIn(AuthResult.UserBlocked);
+            var authService = FakeAuthServiceFactory.FakeSignIn(HttpStatusCode.Unauthorized);
             var logger = new Mock<ILogger<AuthController>>().Object;
 
 
@@ -78,18 +79,15 @@ namespace Authentication.Tests.AuthControllerTests
 
             var result = await authController.SignIn(loginModel, CancellationToken.None);
 
-            result.Should().BeOfType<UnauthorizedObjectResult>();
-            //Assert.IsType<UnauthorizedObjectResult>(result);
+            result.Should().BeOfType<UnauthorizedResult>();
         }
 
         [Fact]
-        public async Task SignIn_Error()
+        public async Task SignIn_ServiceUnavailable()
         {
-            var authService = FakeAuthServiceFactory.FakeSignIn(AuthResult.Error);
-            var logger = new Mock<ILogger<AuthController>>().Object;
+            var authService = FakeAuthServiceFactory.FakeSignIn(HttpStatusCode.ServiceUnavailable);
 
-
-            var authController = new AuthController(authService, logger);
+            var authController = new AuthController(authService);
 
             var loginModel = new LoginModel
             {
@@ -99,8 +97,7 @@ namespace Authentication.Tests.AuthControllerTests
 
             var result = await authController.SignIn(loginModel, CancellationToken.None);
 
-            result.Should().BeOfType<BadRequestObjectResult>();
-            //Assert.IsType<BadRequestObjectResult>(result);
+            result.Should().BeOfType(typeof(StatusCodeResult));
         }
     }
 }

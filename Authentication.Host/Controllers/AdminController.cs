@@ -1,11 +1,13 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Models;
+using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Authentication.Host.Controllers
 {
@@ -16,19 +18,19 @@ namespace Authentication.Host.Controllers
     {
         private readonly IAdminService _adminService;
         private readonly ILogger _logger;
-
-        public AdminController(IAdminService adminService, ILogger<AdminController> logger)
+        public AdminController(IAdminService adminService, ILogger<AdminController> logger = null)
         {
             _adminService = adminService;
-            _logger = logger;
+            _logger = logger ?? new NullLogger<AdminController>();
         }
+
         [ActionName("all")]
         [HttpGet("all")]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
         {
-            var result = await _adminService.GetAllAsync();
-            _logger.LogInformation("Getting all users");
-            return Ok(result);
+            var result = await _adminService.GetAllUsersAsync(cancellationToken);
+
+            return result.ToActionResult();
         }
 
         [ActionName("createuser")]
@@ -36,12 +38,8 @@ namespace Authentication.Host.Controllers
         public async Task<IActionResult> CreateUser(UserCreateModel model, CancellationToken cancellationToken)
         {
             var result = await _adminService.CreateUserAsync(model, cancellationToken);
-            
-            if (result.Value == AdminResult.Ok)
-                return Ok(result.Model);
 
-            _logger.LogWarning($"Conflict {result.Message}");
-            return Conflict(result.Message);
+            return result.ToActionResult();
         }
 
         [ActionName("deleteuser")]
@@ -50,24 +48,16 @@ namespace Authentication.Host.Controllers
         {
             var result = await _adminService.DeleteUserAsync(id, cancellationToken);
 
-            if (result.Value == AdminResult.Ok)
-                return Ok(result.Message);
-
-            _logger.LogWarning($"{result.Message}");
-            return NotFound(result.Message);
+            return result.ToActionResult();
         }
 
         [ActionName("blockuser")]
         [HttpGet("block/{id}")]
-        public async Task<IActionResult> BlockUser(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> BlockUser(long id, CancellationToken cancellationToken)
         {
             var result = await _adminService.BlockUserAsync(id, cancellationToken);
 
-            if (result.Value == AdminResult.Ok)
-                return Ok(result.Message);
-
-            _logger.LogWarning($"{result.Message}");
-            return NotFound(result.Message);
+            return result.ToActionResult();
         }
     }
 }

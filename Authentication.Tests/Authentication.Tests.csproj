@@ -20,7 +20,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="AdminServiceTests\Utils\" />
+    <Folder Include="RepositoryTests\AuthRepositoryTests\" />
+    <Folder Include="RepositoryTests\AdminRepositoryTests\" />
+    <Folder Include="RepositoryTests\UserRepositoryTests\" />
   </ItemGroup>
 
 </Project>

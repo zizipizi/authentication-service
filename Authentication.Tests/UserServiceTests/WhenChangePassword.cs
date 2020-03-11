@@ -1,16 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Models;
+using Authentication.Host.Repositories;
+using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
+using Authentication.Tests.UserServiceTests.Utils;
+using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NSV.Security.JWT;
 using NSV.Security.Password;
+using Processing.Kafka.Producer;
 using Xunit;
 
 namespace Authentication.Tests.UserServiceTests
@@ -20,14 +26,24 @@ namespace Authentication.Tests.UserServiceTests
         [Fact]
         public async Task ChangePassword_Ok()
         {
-            var logger = new Mock<ILogger<UserService>>().Object;
-            var passwordService = new Mock<IPasswordService>().Object;
-            var jwtService = new Mock<IJwtService>().Object;
+            var passwordService = FakePasswordServiceFactory.FakeValidate(PasswordValidateResult.ValidateResult.Ok);
 
-            var fakeUserRepository = FakeRepositoryFactory.ChangePassword_Ok();
-            var fakeTokenRepository = FakeRepositoryFactory.BlockAllTokens_Ok();
+            var jwtService = FakeJwtServiceFactory.FakeIssueAccessToken(JwtTokenResult.TokenResult.Ok);
 
-            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
+            var cacheRepo = new Mock<ICacheRepository>().Object;
+
+            var kafka = new Mock<IProducerFactory<int,string>>().Object;
+
+            var userRepoOptions = new UserRepoOptionsBuilder()
+                .GetUserByIdReturns(UserRepositoryResult.Ok)
+                .UpdateUserPasswordsReturns(UserRepositoryResult.Ok)
+                .BlockAllRefreshTokensReturns(UserRepositoryResult.Ok)
+                .Build();
+
+
+            var userRepo = FakeUserRepositoryFactory.FakeUserRepo(userRepoOptions);
+
+            var userService = new UserService(userRepo, passwordService, jwtService, cacheRepo, kafka);
 
             var changePassModel = new ChangePassModel
             {
@@ -37,21 +53,29 @@ namespace Authentication.Tests.UserServiceTests
 
             var result = await userService.ChangePasswordAsync(changePassModel, 1, "asdasd", CancellationToken.None);
 
-            Assert.Equal(UserResult.Ok, result.Value);
+            result.Value.Should().BeEquivalentTo(HttpStatusCode.OK);
         }
 
         [Fact]
-        public async Task ChangePassword_ThrowsEntityException()
+        public async Task ChangePassword_WrongOldPassword()
         {
-            var logger = new Mock<ILogger<UserService>>().Object;
-            var passwordService = new Mock<IPasswordService>().Object;
-            var jwtService = new Mock<IJwtService>().Object;
+            var passwordService = FakePasswordServiceFactory.FakeValidate(PasswordValidateResult.ValidateResult.Invalid);
 
+            var jwtService = FakeJwtServiceFactory.FakeIssueAccessToken(JwtTokenResult.TokenResult.Ok);
 
-            var fakeUserRepository = FakeRepositoryFactory.ChangePassword_EntityException();
-            var fakeTokenRepository = FakeRepositoryFactory.FakeToken();
+            var cacheRepo = new Mock<ICacheRepository>().Object;
 
-            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
+            var kafka = new Mock<IProducerFactory<int, string>>().Object;
+
+            var userRepoOptions = new UserRepoOptionsBuilder()
+                .GetUserByIdReturns(UserRepositoryResult.Ok)
+                .UpdateUserPasswordsReturns(UserRepositoryResult.Ok)
+                .BlockAllRefreshTokensReturns(UserRepositoryResult.Ok)
+                .Build();
+
+            var userRepo = FakeUserRepositoryFactory.FakeUserRepo(userRepoOptions);
+
+            var userService = new UserService(userRepo, passwordService, jwtService, cacheRepo, kafka);
 
             var changePassModel = new ChangePassModel
             {
@@ -61,20 +85,27 @@ namespace Authentication.Tests.UserServiceTests
 
             var result = await userService.ChangePasswordAsync(changePassModel, 1, "asdasd", CancellationToken.None);
 
-            Assert.Equal(UserResult.Error, result.Value);
+            result.Value.Should().BeEquivalentTo(HttpStatusCode.BadRequest);
         }
 
         [Fact]
-        public async Task ChangePassword_ThrowsException()
+        public async Task ChangePassword_ServiceUnavailable()
         {
-            var logger = new Mock<ILogger<UserService>>().Object;
             var passwordService = new Mock<IPasswordService>().Object;
             var jwtService = new Mock<IJwtService>().Object;
+            var cacheRepo = new Mock<ICacheRepository>().Object;
+            var kafka = new Mock<IProducerFactory<int, string>>().Object;
 
-            var fakeUserRepository = FakeRepositoryFactory.ChangePassword_Exception();
-            var fakeTokenRepository = FakeRepositoryFactory.FakeToken();
+            var userRepoOptions = new UserRepoOptionsBuilder()
+                .GetUserByIdReturns(UserRepositoryResult.Ok)
+                .UpdateUserPasswordsReturns(UserRepositoryResult.Error)
+                .BlockAllRefreshTokensReturns(UserRepositoryResult.Ok)
+                .Build();
 
-            var userService = new UserService(fakeUserRepository, fakeTokenRepository, passwordService, jwtService, logger);
+
+            var userRepo = FakeUserRepositoryFactory.FakeUserRepo(userRepoOptions);
+
+            var userService = new UserService(userRepo, passwordService, jwtService, cacheRepo, kafka);
 
             var changePassModel = new ChangePassModel
             {
@@ -84,7 +115,7 @@ namespace Authentication.Tests.UserServiceTests
 
             var result = await userService.ChangePasswordAsync(changePassModel, 1, "asdasd", CancellationToken.None);
 
-            Assert.Equal(UserResult.Error, result.Value);
+            result.Value.Should().BeEquivalentTo(HttpStatusCode.ServiceUnavailable);
         }
 
     }

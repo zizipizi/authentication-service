@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,128 +9,112 @@ using Authentication.Data.Models;
 using Authentication.Data.Models.Domain;
 using Authentication.Data.Models.Domain.Translators;
 using Authentication.Data.Models.Entities;
+using Authentication.Host.Models.Translators;
+using Authentication.Host.Results;
+using Authentication.Host.Results.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using NSV.Security.JWT;
 
 namespace Authentication.Host.Repositories
 {
-    public class UserRepository : RepositoryBase, IUserRepository
+    public class UserRepository : IUserRepository
     {
-        private readonly ITokenRepository _tokenRepository;
-
-        public UserRepository(ITokenRepository tokenRepository, AuthContext context, ILogger<UserRepository> logger)
-            : base(context, logger)
+        private readonly AuthContext _context;
+        private readonly ILogger _logger;
+        public UserRepository(AuthContext context, ILogger<UserRepository> logger = null)
         {
-            _tokenRepository = tokenRepository;
+            _context = context;
+            _logger = logger ?? new NullLogger<UserRepository>();
         }
 
-        public async Task<IEnumerable<User>> GetAllUsersAsync(CancellationToken token)
-        { 
-            var  users = await _context.Users
-                .AsNoTracking()
-                .Include(p => p.Roles)
-                .ThenInclude(p => p.RoleEn)
-                .Select(p => p.ToDomain())
-                .ToListAsync(token);
-
-            _logger.LogInformation("TRUE");
-            return users;
-        }
-
-        public async Task<User> GetUserByNameAsync(string userName, CancellationToken token)
+        public async Task<Result<UserRepositoryResult, User>> GetUserByIdAsync(long id, CancellationToken token)
         {
-            var user = await _context.Users
-                .AsNoTracking()
-                .Include(p => p.Roles)
-                .ThenInclude(p => p.RoleEn)
-                .SingleOrDefaultAsync(obj => obj.Login == userName, token);
-            if (user == null)
+            UserEntity user;
+            try
             {
-                _logger.LogError("User not found");
-                throw new EntityNotFoundException("User not found");
+                 user = await _context.Users
+                    .AsNoTracking()
+                    .Include(p => p.Roles)
+                    .ThenInclude(p => p.RoleEn)
+                    .SingleOrDefaultAsync(obj => obj.Id == id, token);
+
+                 return user == null 
+                     ? new Result<UserRepositoryResult, User>(UserRepositoryResult.UserNotFound) 
+                     : new Result<UserRepositoryResult, User>(UserRepositoryResult.Ok, user.ToDomain());
             }
-
-            return user.ToDomain();
-        }
-
-        public async Task<User> GetUserByIdAsync(long id, CancellationToken token)
-        {
-            var user = await _context.Users
-                .AsNoTracking()
-                .Include(p => p.Roles)
-                .ThenInclude(p => p.RoleEn)
-                .SingleOrDefaultAsync(obj => obj.Id == id, token);
-
-            if (user == null)
+            catch (Exception ex)
             {
-                _logger.LogError("User not found");
-                throw new EntityNotFoundException("User not found");
+                _logger.LogError(ex.Message);
+                return new Result<UserRepositoryResult, User>(UserRepositoryResult.Error);
             }
-
-            return user.ToDomain();
         }
 
-        public async Task<long> CreateUserAsync(User user, CancellationToken token)
+        public async Task<Result<UserRepositoryResult, TokenModel>> BlockRefreshTokenAsync(string refreshJti, CancellationToken cancellationToken)
         {
-            var newUser = user.ToEntity();
-            var userExist = await _context.Users.AnyAsync(c => c.Login == user.Login, token);
+            try
+            {
+                var token = await _context.RefreshTokens
+                    .Include(c => c.AccessToken)
+                    .FirstOrDefaultAsync(c => c.Jti == refreshJti, cancellationToken);
 
-            if (userExist)
-                throw new EntityNotFoundException("User already exist");
+                token.IsBlocked = true;
+                await _context.SaveChangesAsync(cancellationToken);
 
-            await _context.Users.AddAsync(newUser, token);
+                return new Result<UserRepositoryResult, TokenModel>(UserRepositoryResult.Ok, token.toTokenModel());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return new Result<UserRepositoryResult, TokenModel>(UserRepositoryResult.Error);
+            }
+        }
 
-            var roles = await _context.Roles
-                .Where(x => user.Role.Contains(x.Role))
-                .Select(x => x.Id)
-                .ToArrayAsync(token);
+        public async Task<Result<UserRepositoryResult, IEnumerable<TokenModel>>> BlockAllRefreshTokensAsync(long userId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var tokens = await _context.RefreshTokens
+                    .Where(c => !c.IsBlocked && c.UserId == userId && c.Expired > DateTime.UtcNow)
+                    .ToListAsync(cancellationToken);
 
-            var userRoles = roles
-                .Select(roleId => new UserRolesEntity
+                var tokenList = new List<TokenModel>();
+
+                foreach (var token in tokens)
                 {
-                    UserEn = newUser,
-                    RoleId = roleId
-                });
+                    token.IsBlocked = true;
+                    tokenList.Add(token.toTokenModel());
+                }
 
-            await _context.UsersRoles.AddRangeAsync(userRoles, token);
+                await _context.SaveChangesAsync(cancellationToken);
 
-            await _context.SaveChangesAsync(token);
-
-            return newUser.Id;
-        }
-
-        public async Task DeleteUserAsync(long id, CancellationToken token)
-        {
-             await BlockUserAsync(id, token);
-        }
-
-        public async Task BlockUserAsync(long id, CancellationToken token)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id, token);
-            
-            if (user != null)
-            {
-                user.IsActive = false;
-
-                await _tokenRepository.BlockAllTokensAsync(user.Id, token);
-
-                await _context.SaveChangesAsync(token);
+                return new Result<UserRepositoryResult, IEnumerable<TokenModel>>(UserRepositoryResult.Ok, tokenList);
             }
-            else
+            catch (Exception ex)
             {
-                throw new EntityNotFoundException("User not found");
+                _logger.LogError(ex.Message);
+                return new Result<UserRepositoryResult, IEnumerable<TokenModel>>(UserRepositoryResult.Error);
             }
         }
 
-        public async Task UpdateUserPassword(long id, string password, CancellationToken token)
+        public async Task<Result<UserRepositoryResult>> UpdateUserPasswordAsync(long id, string password, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.FindAsync(id);
+            try
+            {
+                var user = await _context.Users.FindAsync(id);
 
-            if (user == null)
-                throw new EntityNotFoundException("User not found");
+                user.Password = password;
+                await _context.SaveChangesAsync(cancellationToken);
 
-            user.Password = password;
-            await _context.SaveChangesAsync(token);
+                return new Result<UserRepositoryResult>(UserRepositoryResult.Ok);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return new Result<UserRepositoryResult>(UserRepositoryResult.Error);
+            }
+
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 using System.Threading;
@@ -21,14 +22,12 @@ namespace Authentication.Tests.UserControllerTests
     public class WhenUserSignOut
     {
         [Fact]
-        public async Task SignOut_TokenExpired()
+        public async Task SignOut_Ok()
         {
+            var userService = FakeUserServiceFactory.UserSignOut(HttpStatusCode.NoContent);
+
             var tokenModel = FakeModels.FakeTokenModel();
 
-            var logger = new Mock<ILogger<UserController>>().Object;
-
-
-            var userService = FakeUserServiceFactory.UserSignOut(UserResult.Ok, "");
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.Name, "asd"),
@@ -39,8 +38,7 @@ namespace Authentication.Tests.UserControllerTests
                 }
             ));
 
-
-            var userController = new UserController(userService, logger)
+            var userController = new UserController(userService)
             {
                 ControllerContext = new ControllerContext()
                 {
@@ -52,33 +50,29 @@ namespace Authentication.Tests.UserControllerTests
                 }
             };
 
-
             var result = await userController.SignOut(tokenModel, CancellationToken.None);
 
             result.Should().BeOfType<NoContentResult>();
-            //Assert.IsType<NoContentResult>(result);
         }
 
         [Fact]
-        public async Task SignOut_BadRequest()
+        public async Task SignOut_ServiceUnavailable()
         {
             var tokenModel = FakeModels.FakeTokenModel();
 
-            var logger = new Mock<ILogger<UserController>>().Object;
+            var userService = FakeUserServiceFactory.UserSignOut(HttpStatusCode.ServiceUnavailable);
 
-
-            var userService = FakeUserServiceFactory.UserSignOut(UserResult.Error, "");
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.Name, "asd"),
                     new Claim(ClaimTypes.NameIdentifier, "1"),
                     new Claim(ClaimTypes.NameIdentifier, "1"),
                     new Claim(ClaimTypes.Role, "User"),
+                    new Claim(JwtRegisteredClaimNames.Jti, "jti333")
                 }
             ));
 
-
-            var userController = new UserController(userService, logger)
+            var userController = new UserController(userService)
             {
                 ControllerContext = new ControllerContext()
                 {
@@ -90,11 +84,10 @@ namespace Authentication.Tests.UserControllerTests
                 }
             };
 
+
             var result = await userController.SignOut(tokenModel, CancellationToken.None);
 
-            result.Should().BeOfType<OkObjectResult>();
-            //Assert.IsType<OkObjectResult>(result);
+            result.Should().BeOfType(typeof(StatusCodeResult));
         }
-
     }
 }

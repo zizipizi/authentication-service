@@ -4,12 +4,14 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Models;
+using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Authentication.Host.Controllers
 {
@@ -21,10 +23,10 @@ namespace Authentication.Host.Controllers
         private readonly IUserService _userService;
         private readonly ILogger _logger;
 
-        public UserController(IUserService userService, ILogger<UserController> logger)
+        public UserController(IUserService userService, ILogger<UserController> logger = null)
         {
             _userService = userService;
-            _logger = logger;
+            _logger = logger ?? new NullLogger<UserController>();
         }
         [ActionName("signout")]
         [HttpPost("signout")]
@@ -41,12 +43,7 @@ namespace Authentication.Host.Controllers
 
             var result = await _userService.SignOutAsync(id, refreshJti, cancellationToken);
 
-            if (result.Value == UserResult.Ok)
-            {
-                return NoContent();
-            }
-
-            return Ok(result.Message);
+            return result.ToActionResult();
         }
 
         [ActionName("changepass")]
@@ -60,20 +57,7 @@ namespace Authentication.Host.Controllers
             }
             var result = await _userService.ChangePasswordAsync(passwords, id, token, cancellationToken);
 
-            switch (result.Value)
-            {
-                case UserResult.WrongPassword:
-                    return BadRequest(result.Message);
-                case UserResult.PasswordChangedNeedAuth:
-                    return NoContent();
-                case UserResult.Ok:
-                    return Ok(result.Model);
-                case UserResult.Error:
-                    return StatusCode(StatusCodes.Status503ServiceUnavailable);
-            }
-
-            _logger.LogInformation($"{result.Message}");
-            return NotFound(result.Message);
+            return result.ToActionResult();
         }
 
         private (string id, string token) GetUserInfo()

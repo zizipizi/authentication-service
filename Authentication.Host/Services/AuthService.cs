@@ -2,16 +2,23 @@
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Schema;
 using Authentication.Data.Exceptions;
 using Authentication.Host.Models;
+using Authentication.Host.Models.Translators;
 using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json;
 using NSV.Security.JWT;
 using NSV.Security.Password;
@@ -22,91 +29,73 @@ namespace Authentication.Host.Services
     {
         private readonly IJwtService _jwtService;
         private readonly IPasswordService _passwordService;
-        private readonly IUserRepository _userRepository;
-        private readonly ITokenRepository _tokenRepository;
         private readonly ILogger _logger;
-        private readonly IDistributedCache _cache;
+        private readonly ICacheRepository _cacheRepository;
+        private readonly IAuthRepository _authRepository;
 
         public AuthService(IJwtService jwtService, 
-            IPasswordService passwordService, 
-            IUserRepository userRepository, 
-            ITokenRepository tokenRepository,
-            ILogger<AuthService> logger, 
-            IDistributedCache cache)
+            IPasswordService passwordService,
+            ICacheRepository cacheRepository,
+            IAuthRepository authRepository,
+            ILogger<AuthService> logger = null)
         {
             _jwtService = jwtService;
             _passwordService = passwordService;
-            _userRepository = userRepository;
-            _tokenRepository = tokenRepository;
-            _logger = logger;
-            _cache = cache;
+            _cacheRepository = cacheRepository;
+            _authRepository = authRepository;
+            _logger = logger ?? new NullLogger<AuthService>();
         }
 
-        public async Task<Result<AuthResult, TokenModel>> SignIn(LoginModel model, CancellationToken cancellationToken)
+        public async Task<Result<HttpStatusCode, BodyTokenModel>> SignIn(LoginModel model, CancellationToken cancellationToken)
         {
-            try
+            var userResult = await _authRepository.GetUserByNameAsync(model.UserName, cancellationToken);
+
+            switch (userResult.Value)
             {
-                var user = await _userRepository.GetUserByNameAsync(model.UserName, cancellationToken);
-
-                var validateResult = _passwordService.Validate(model.Password, user.Password);
-
-                if (validateResult.Result != PasswordValidateResult.ValidateResult.Ok)
-                {
-                    _logger.LogError($"Password Validation result while signin {validateResult.Result.ToString()}");
-                    return new Result<AuthResult, TokenModel>(AuthResult.WrongLoginOrPass, message: "Wrong login or password");
-                }
-
-                if (!user.IsActive)
-                    return new Result<AuthResult, TokenModel>(AuthResult.UserBlocked, message: "User is blocked");
-
-
-                var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role);
-
-                await _tokenRepository.AddTokensAsync(user.Id, access.Tokens, cancellationToken);
-
-                return new Result<AuthResult, TokenModel>(AuthResult.Ok, access.Tokens);
-
+                case AuthRepositoryResult.UserNotFound:
+                    return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.NotFound);
+                case AuthRepositoryResult.Error:
+                    return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.ServiceUnavailable, message: "Please try again");
             }
-            catch (EntityNotFoundException)
+
+            var validateResult = _passwordService.Validate(model.Password, userResult.Model.Password);
+
+            if (validateResult.Result != PasswordValidateResult.ValidateResult.Ok)
             {
-                return new Result<AuthResult, TokenModel>(AuthResult.UserNotFound, message: "User not found");
+                _logger.LogError($"Password Validation result while signin {validateResult.Result.ToString()}");
+                return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.Unauthorized, message: "Wrong login or password");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return new Result<AuthResult, TokenModel>(AuthResult.Error, message: "DB Error");
-            }
+
+            if (!userResult.Model.IsActive)
+                return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.Unauthorized, message: "User is blocked");
+
+            var newTokens = _jwtService.IssueAccessToken(userResult.Model.Id.ToString(), userResult.Model.Login, userResult.Model.Role);
+
+            await _authRepository.AddTokensAsync(userResult.Model.Id, newTokens.Tokens, cancellationToken);
+
+            return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.OK, newTokens.Tokens.toBodyTokenModel());
         }
 
-        public async Task<Result<AuthResult, TokenModel>> RefreshToken(BodyTokenModel model, CancellationToken cancellationToken)
+        public async Task<Result<HttpStatusCode, BodyTokenModel>> RefreshToken(BodyTokenModel model, CancellationToken cancellationToken)
         {
-            try
+            var validateResult = _jwtService.RefreshAccessToken(model.AccessToken, model.RefreshToken);
+
+            if (validateResult.Result == JwtTokenResult.TokenResult.Ok)
             {
-                var validateResult = _jwtService.RefreshAccessToken(model.AccessToken, model.RefreshToken);
+                var isTokenBlocked = await _cacheRepository.IsRefreshTokenBlockedAsync(validateResult.Tokens.RefreshToken.Jti, cancellationToken);
 
-                if (validateResult.Result != JwtTokenResult.TokenResult.Ok)
-                {
-                    _logger.LogError($"Validation result while refreshing: {validateResult.Result.ToString()}");
-                    return new Result<AuthResult, TokenModel>(AuthResult.TokenValidationProblem, message: "Validation problem, please try again");
-                }
+                if (isTokenBlocked.Value == CacheRepositoryResult.IsBlocked)
+                    return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.Unauthorized, message:"Token is blocked");
 
-                var isTokenBlocked = await _tokenRepository.IsRefreshTokenBlockedAsync(validateResult.Tokens.RefreshToken.Jti, cancellationToken);
+                var addToken = await _authRepository.AddTokensAsync(long.Parse(validateResult.UserId), validateResult.Tokens, cancellationToken);
 
-                if (isTokenBlocked)
-                    return new Result<AuthResult, TokenModel>(AuthResult.TokenIsBlocked, message: "Token is blocked");
+                if (addToken.Value != AuthRepositoryResult.Ok)
+                    return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.ServiceUnavailable, message: "Please, try again");
 
-                await _tokenRepository.AddTokensAsync(long.Parse(validateResult.UserId), validateResult.Tokens, cancellationToken);
-                return new Result<AuthResult, TokenModel>(AuthResult.Ok, validateResult.Tokens);
+                return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.OK, validateResult.Tokens.toBodyTokenModel());
             }
-            catch (EntityNotFoundException ex)
-            {
-                return new Result<AuthResult, TokenModel>(AuthResult.Error, message:ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return new Result<AuthResult, TokenModel>(AuthResult.Error, message:"DB Error");
-            }
+
+            return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.Unauthorized, message: validateResult.Result.ToString());
         }
     }
 }

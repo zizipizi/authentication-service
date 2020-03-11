@@ -3,6 +3,7 @@ using Authentication.Host.Services;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,35 +21,39 @@ namespace Authentication.Tests.AdminControllerTests
         [Fact]
         public async Task BlockUser_Sucess()
         {
-            int id = 1;
-            var logger = new Mock<ILogger<AdminController>>().Object;
-            var adminService = FakeAdminServiceFactory.BlockUser(AdminResult.Ok, $"User with Id {id} is blocked");
-            var adminController = new AdminController(adminService, logger);
+            long id = 1;
+            var adminService = FakeAdminServiceFactory.BlockUser(HttpStatusCode.OK);
+            var adminController = new AdminController(adminService);
 
             var result = await adminController.BlockUser(id, CancellationToken.None);
 
-            result.Should().BeOfType<OkObjectResult>();
-            ((OkObjectResult) result).Value.Should().BeEquivalentTo($"User with Id {id} is blocked");
-
-            //Assert.IsType<OkObjectResult>(result);
-            //Assert.Equal($"User with Id {id} is blocked", ((OkObjectResult)result).Value);
+            result.Should().BeOfType<OkResult>();
+            //((OkObjectResult) result).Value.Should().BeEquivalentTo($"User with Id {id} is blocked");
         }
 
         [Fact]
         public async Task BlockUser_NotFound()
         {
-            int id = 1;
-            var logger = new Mock<ILogger<AdminController>>().Object;
-            var adminService = FakeAdminServiceFactory.BlockUser(AdminResult.UserNotFound, $"User with id {id} not found");
-            var adminController = new AdminController(adminService, logger);
+            long id = 1;
+            var adminService = FakeAdminServiceFactory.BlockUser(HttpStatusCode.NotFound);
+            var adminController = new AdminController(adminService);
 
             var result = await adminController.BlockUser(id, CancellationToken.None);
 
-            result.Should().BeOfType<NotFoundObjectResult>();
-            ((NotFoundObjectResult)result).Value.Should().BeEquivalentTo($"User with id {id} not found");
+            result.Should().BeOfType<NotFoundResult>();
+            //((NotFoundObjectResult)result).Value.Should().BeEquivalentTo($"User with id {id} not found");
+        }
 
-            //Assert.IsType<NotFoundObjectResult>(result);
-            //Assert.Equal($"User with id {id} not found", ((NotFoundObjectResult)result).Value);
+        [Fact]
+        public async Task BlockUser_ServiceUnavailable()
+        {
+            long id = 1;
+            var adminService = FakeAdminServiceFactory.BlockUser(HttpStatusCode.ServiceUnavailable);
+            var adminController = new AdminController(adminService);
+
+            var result = await adminController.BlockUser(id, CancellationToken.None);
+
+            result.Should().BeOfType<StatusCodeResult>();
         }
     }
 }

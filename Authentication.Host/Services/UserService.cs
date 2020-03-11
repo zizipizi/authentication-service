@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Exceptions;
 using Authentication.Host.Models;
+using Authentication.Host.Models.Translators;
 using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
 using Confluent.Kafka;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using NSV.Security.JWT;
@@ -18,81 +21,72 @@ namespace Authentication.Host.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
-        private readonly ITokenRepository _tokenRepository;
         private readonly IPasswordService _passwordService;
         private readonly IJwtService _jwtService;
-        private readonly ILogger _logger;
+        private readonly ICacheRepository _cacheRepository;
         private readonly IProducerFactory<int, string> _kafka;
 
-        public UserService(IUserRepository userRepository, 
-            ITokenRepository tokenRepository, 
+        public UserService(IUserRepository userRepository,
             IPasswordService passwordService, 
             IJwtService jwtService, 
-            ILogger<UserService> logger,
+            ICacheRepository cacheRepository,
             IProducerFactory<int,string> kafka
             )
         {
             _userRepository = userRepository;
-            _tokenRepository = tokenRepository;
             _passwordService = passwordService;
             _jwtService = jwtService;
-            _logger = logger;
+            _cacheRepository = cacheRepository;
             _kafka = kafka;
         }
 
-        public async Task<Result<UserResult>> SignOutAsync(long id, string refreshJti, CancellationToken cancellationToken)
+        public async Task<Result<HttpStatusCode>> SignOutAsync(long id, string refreshJti, CancellationToken cancellationToken)
         {
-            try
+            var blockResult = await _userRepository.BlockRefreshTokenAsync(refreshJti, cancellationToken);
+            if (blockResult.Value == UserRepositoryResult.Error)
+                return new Result<HttpStatusCode>(HttpStatusCode.BadRequest);
+
+            var isRefreshTokenBlockedResult = await _cacheRepository.IsRefreshTokenBlockedAsync(refreshJti, cancellationToken);
+
+            if (isRefreshTokenBlockedResult.Value == CacheRepositoryResult.IsNotBlocked)
+                await _cacheRepository.AddRefreshTokenToBlacklistAsync(blockResult.Model, cancellationToken);
+
+            using (var message = _kafka.Create("BlockedTokens"))
             {
-                await _tokenRepository.BlockRefreshTokenAsync(refreshJti, cancellationToken);
-                using (var mes = _kafka.Create("BlockedTokens"))
-                {
-                    for (int i = 0; i < 10; i++)
-                    {
-                        var res = await mes.SendAsync(1, refreshJti);
-                        _logger.LogInformation("Sended");
-                    }
-                }
-                return new Result<UserResult>(UserResult.Ok);
+                var res = await message.SendAsync((int)id, blockResult.Model.AccessToken.Value);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return new Result<UserResult>(UserResult.Error);
-            }
+
+            return new Result<HttpStatusCode>(HttpStatusCode.NoContent);
         }
 
-        public async Task<Result<UserResult, TokenModel>> ChangePasswordAsync(ChangePassModel model, long id, string accessToken, CancellationToken cancellationToken)
+        public async Task<Result<HttpStatusCode, BodyTokenModel>> ChangePasswordAsync(ChangePassModel model, long id, string accessToken, CancellationToken cancellationToken)
         {
-            try
-            {
-                var user = await _userRepository.GetUserByIdAsync(id, cancellationToken);
+            var user = await _userRepository.GetUserByIdAsync(id, cancellationToken);
+            if (user.Value == UserRepositoryResult.Error)
+                return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.BadRequest);
 
-                var passwordValidateResult = _passwordService.Validate(model.OldPassword, user.Password);
+            var passwordValidateResult = _passwordService.Validate(model.OldPassword, user.Model.Password);
 
-                if (passwordValidateResult.Result == PasswordValidateResult.ValidateResult.Invalid)
-                {
-                    return new Result<UserResult, TokenModel>(UserResult.WrongPassword, message: "Wrong password");
-                }
+            if (passwordValidateResult.Result == PasswordValidateResult.ValidateResult.Invalid)
+                return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.BadRequest, message: "Wrong old password");
 
-                var newPasswordHash = _passwordService.Hash(model.NewPassword);
+            var newPasswordHash = _passwordService.Hash(model.NewPassword);
 
-                await _userRepository.UpdateUserPassword(user.Id, newPasswordHash.Hash, cancellationToken);
-                await _tokenRepository.BlockAllTokensAsync(user.Id, cancellationToken);
+            var updatePasswordResult = await _userRepository.UpdateUserPasswordAsync(user.Model.Id, newPasswordHash.Hash, cancellationToken);
 
-                var access = _jwtService.IssueAccessToken(user.Id.ToString(), user.Login, user.Role);
-                return new Result<UserResult, TokenModel>(UserResult.Ok, model: access.Tokens);
-            }
-            catch (EntityNotFoundException ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return new Result<UserResult, TokenModel>(UserResult.Error, message: "DB Error");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                return new Result<UserResult, TokenModel>(UserResult.Error, message:"Service problem");
-            }
+            if (updatePasswordResult.Value == UserRepositoryResult.Error)
+                return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.ServiceUnavailable);
+
+            var blockAllTokensResult = await _userRepository.BlockAllRefreshTokensAsync(user.Model.Id, cancellationToken);
+
+            if (blockAllTokensResult.Value == UserRepositoryResult.Error)
+                return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.ServiceUnavailable);
+
+            await _cacheRepository.AddRefreshTokensToBlacklistAsync(blockAllTokensResult.Model, cancellationToken);
+
+            var newTokens = _jwtService.IssueAccessToken(user.Model.Id.ToString(), user.Model.Login, user.Model.Role);
+            
+            return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.OK, model: newTokens.Tokens.toBodyTokenModel());
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Models;
@@ -12,22 +13,22 @@ namespace Authentication.Tests.UserControllerTests.Utils
 {
     public static class FakeUserServiceFactory
     {
-        public static IUserService UserSignOut(UserResult result, string message)
+        public static IUserService UserSignOut(HttpStatusCode statusCode)
         {
             var userServiceFake = new Mock<IUserService>();
 
             userServiceFake.Setup(c => c.SignOutAsync(It.IsAny<long>(), It.IsAny<string>(), CancellationToken.None))
-                .Returns(Task.FromResult(new Result<UserResult>(result)));
+                .ReturnsAsync(new Result<HttpStatusCode>(statusCode));
 
             return userServiceFake.Object;
         }
 
-        public static IUserService UserChangePassword(UserResult result, BodyTokenModel model, string message)
+        public static IUserService UserChangePassword(HttpStatusCode statusCode, BodyTokenModel model = null, string message = "")
         {
             var userServiceFake = new Mock<IUserService>();
 
             userServiceFake.Setup(c => c.ChangePasswordAsync(It.IsAny<ChangePassModel>(), It.IsAny<long>(), It.IsAny<string>(), CancellationToken.None))
-                .Returns(Task.FromResult(new Result<UserResult, TokenModel>(result)));
+                .ReturnsAsync(new Result<HttpStatusCode, BodyTokenModel>(statusCode, model));
 
             return userServiceFake.Object;
         }

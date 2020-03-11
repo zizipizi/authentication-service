@@ -1,13 +1,16 @@
 ﻿using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Models;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
+using Authentication.Tests.AuthServiceTests.Utils;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Query.ExpressionTranslators.Internal;
 using NSV.Security.JWT;
 using NSV.Security.Password;
 using Xunit;
@@ -17,25 +20,23 @@ namespace Authentication.Tests.AuthServiceTests
     public class WhenRefreshToken
     {
         [Fact]
-        public async Task RefrehToken_OK()
+        public async Task RefreshToken_OK()
         {
-            var logger = new Mock<ILogger<AuthService>>().Object;
             var passwordService = new Mock<IPasswordService>().Object;
-            var jwtService = new Mock<IJwtService>();
-            jwtService
-                .Setup(x => x.RefreshAccessToken(It.IsAny<string>(), It.IsAny<string>()))
-                .Returns((string a, string r) => new JwtTokenResult(JwtTokenResult.TokenResult.Ok,
-                    new TokenModel((a, DateTime.MaxValue, Guid.NewGuid().ToString()),
-                        (r, DateTime.MaxValue, Guid.NewGuid().ToString())), "1"));
 
-            var cache = new Mock<IDistributedCache>();
-            cache.Setup(x => x.GetAsync(It.IsAny<string>(), CancellationToken.None))
-                .Returns(Task.FromResult((byte[]) null));
+            var jwtService = FakeJwtServiceFactory.FakeRefreshAccessToken(JwtTokenResult.TokenResult.Ok);
 
-            var fakeTokenRepository = FakeRepositoryFactory.IsRefreshTokenBlocked_Ok();
-            var fakeUserRepository = FakeRepositoryFactory.FakeUser();
+            var cacheRepo = FakeCacheRepositoryFactory.FakeIsRefreshTokenBlockedAsync(CacheRepositoryResult.IsNotBlocked);
 
-            var authService = new AuthService(jwtService.Object, passwordService, fakeUserRepository, fakeTokenRepository, logger, cache.Object);
+            var authRepoOptions = new AuthRepoOptionsBuilder()
+                .UserIsActive(true)
+                .AddTokensMethodReturns(AuthRepositoryResult.Ok)
+                .GetUserByNameReturns(AuthRepositoryResult.Ok)
+                .Build();
+
+            var authRepo = FakeAuthRepositoryFactory.FakeAuthRepository(authRepoOptions);
+
+            var authService = new AuthService(jwtService, passwordService, cacheRepo, authRepo);
 
             var bodyTokenModel = new BodyTokenModel
             {
@@ -45,31 +46,28 @@ namespace Authentication.Tests.AuthServiceTests
 
             var result = await authService.RefreshToken(bodyTokenModel, CancellationToken.None);
 
-            result.Value.Should().BeEquivalentTo(AuthResult.Ok);
-            //Assert.Equal(AuthResult.Ok, result.Value);
+            result.Value.Should().BeEquivalentTo(HttpStatusCode.OK);
         }
 
         [Fact]
-        public async Task RefrehToken_Blocked()
+        public async Task RefreshToken_TokenIsBlocked()
         {
-            var logger = new Mock<ILogger<AuthService>>().Object;
+
             var passwordService = new Mock<IPasswordService>().Object;
-            var jwtService = new Mock<IJwtService>();
-            var cache = new Mock<IDistributedCache>();
 
-            cache.Setup(x => x.GetAsync(It.IsAny<string>(), CancellationToken.None))
-                .Returns(Task.FromResult((new byte['2'])));
+            var jwtService = FakeJwtServiceFactory.FakeRefreshAccessToken(JwtTokenResult.TokenResult.Ok);
 
-            jwtService
-                .Setup(x => x.RefreshAccessToken(It.IsAny<string>(), It.IsAny<string>()))
-                .Returns((string a, string r) => new JwtTokenResult(JwtTokenResult.TokenResult.Ok,
-                    new TokenModel((a, DateTime.MaxValue, Guid.NewGuid().ToString()),
-                        (r, DateTime.MaxValue, Guid.NewGuid().ToString())), "1"));
+            var cacheRepo = FakeCacheRepositoryFactory.FakeIsRefreshTokenBlockedAsync(CacheRepositoryResult.IsBlocked);
 
-            var fakeTokenRepository = FakeRepositoryFactory.IsRefreshTokenBlocked_TokenBlocked();
-            var fakeUserRepository = FakeRepositoryFactory.FakeUser();
+            var authRepoOptions = new AuthRepoOptionsBuilder()
+                .UserIsActive(true)
+                .AddTokensMethodReturns(AuthRepositoryResult.Ok)
+                .GetUserByNameReturns(AuthRepositoryResult.Ok)
+                .Build();
 
-            var authService = new AuthService(jwtService.Object, passwordService, fakeUserRepository, fakeTokenRepository, logger, cache.Object);
+            var authRepo = FakeAuthRepositoryFactory.FakeAuthRepository(authRepoOptions);
+
+            var authService = new AuthService(jwtService, passwordService, cacheRepo, authRepo);
 
             var bodyTokenModel = new BodyTokenModel
             {
@@ -79,8 +77,68 @@ namespace Authentication.Tests.AuthServiceTests
 
             var result = await authService.RefreshToken(bodyTokenModel, CancellationToken.None);
 
-            result.Value.Should().BeEquivalentTo(AuthResult.TokenIsBlocked);
-            //Assert.Equal(AuthResult.TokenIsBlocked, result.Value);
+            result.Value.Should().BeEquivalentTo(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task RefreshToken_ServiceUnavailable()
+        {
+            var passwordService = new Mock<IPasswordService>().Object;
+
+            var jwtService = FakeJwtServiceFactory.FakeRefreshAccessToken(JwtTokenResult.TokenResult.Ok);
+
+            var cacheRepo = FakeCacheRepositoryFactory.FakeIsRefreshTokenBlockedAsync(CacheRepositoryResult.Ok);
+
+            var authRepoOptions = new AuthRepoOptionsBuilder()
+                .UserIsActive(true)
+                .AddTokensMethodReturns(AuthRepositoryResult.Error)
+                .GetUserByNameReturns(AuthRepositoryResult.Ok)
+                .Build();
+
+            var authRepo = FakeAuthRepositoryFactory.FakeAuthRepository(authRepoOptions);
+
+            var authService = new AuthService(jwtService, passwordService, cacheRepo, authRepo);
+
+            var bodyTokenModel = new BodyTokenModel
+            {
+                AccessToken = "adasdasd",
+                RefreshToken = "asdasdfsdf"
+            };
+
+            var result = await authService.RefreshToken(bodyTokenModel, CancellationToken.None);
+
+            result.Value.Should().BeEquivalentTo(HttpStatusCode.ServiceUnavailable);
+        }
+
+        [Fact]
+        public async Task RefrehToken_TokenNotValidated()
+        {
+
+            var passwordService = new Mock<IPasswordService>().Object;
+
+            var jwtService = FakeJwtServiceFactory.FakeRefreshAccessToken(JwtTokenResult.TokenResult.RefreshTokenInvalid);
+
+            var cacheRepo = FakeCacheRepositoryFactory.FakeIsRefreshTokenBlockedAsync(CacheRepositoryResult.Ok);
+
+            var authRepoOptions = new AuthRepoOptionsBuilder()
+                .UserIsActive(true)
+                .AddTokensMethodReturns(AuthRepositoryResult.Error)
+                .GetUserByNameReturns(AuthRepositoryResult.Ok)
+                .Build();
+
+            var authRepo = FakeAuthRepositoryFactory.FakeAuthRepository(authRepoOptions);
+
+            var authService = new AuthService(jwtService, passwordService, cacheRepo, authRepo);
+
+            var bodyTokenModel = new BodyTokenModel
+            {
+                AccessToken = "adasdasd",
+                RefreshToken = "asdasdfsdf"
+            };
+
+            var result = await authService.RefreshToken(bodyTokenModel, CancellationToken.None);
+
+            result.Value.Should().BeEquivalentTo(HttpStatusCode.Unauthorized);
         }
     }
 }
