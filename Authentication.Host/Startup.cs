@@ -29,6 +29,7 @@ using Prometheus;
 using Serilog;
 using StackExchange.Redis;
 using StackExchange.Redis.Extensions.Core.Abstractions;
+using VaultSharp.V1.AuthMethods.LDAP;
 
 namespace Authentication.Host
 {
@@ -63,6 +64,7 @@ namespace Authentication.Host
             services.AddSingleton(typeof(IProducerFactory<,>), typeof(ProducerFactory<,>));
             services.AddSingleton(typeof(ISerializer<>), typeof(ProtobufSerializer<>));
 
+            services.Configure<ProducerConfigs>(Configuration.GetSection("ProducerConfigs"));
 
             services.AddSwaggerGen(c =>
             {
@@ -90,6 +92,16 @@ namespace Authentication.Host
                         new string[] { }
                     }
                 });
+            });
+
+            
+            //Всё будет не так, надо будет переделать когда админы разберутся с Vault
+
+            services.AddVault(options =>
+            {
+                options.AuthMethod = new LDAPAuthMethodInfo("Username", "Password");
+                options.Server = "http://vaultAddress";
+                options.Port = "8200";
             });
 
             services.AddJwt();
@@ -120,6 +132,7 @@ namespace Authentication.Host
                 .AddRedis(redisOptions.ToString())
                 .AddPrometheus(Configuration.GetConnectionString("Prometheus"));
                 //.AddElasticsearch()
+
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -128,6 +141,8 @@ namespace Authentication.Host
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseVault();
 
             app.UseHealthChecks("/hc");
 
