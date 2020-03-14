@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using Newtonsoft.Json;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Authentication.Host.Models
 {
@@ -11,5 +9,7 @@ namespace Authentication.Host.Models
 
         [Required]
         public string Password { get; set; }
+
+        internal string IpAddress { get; set; } = null;
     }
 }

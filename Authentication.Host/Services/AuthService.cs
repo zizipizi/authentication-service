@@ -1,25 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text;
+﻿using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Schema;
-using Authentication.Data.Exceptions;
 using Authentication.Host.Models;
 using Authentication.Host.Models.Translators;
 using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Newtonsoft.Json;
 using NSV.Security.JWT;
 using NSV.Security.Password;
 
@@ -49,7 +37,7 @@ namespace Authentication.Host.Services
         public async Task<Result<HttpStatusCode, BodyTokenModel>> SignIn(LoginModel model, CancellationToken cancellationToken)
         {
             var userResult = await _authRepository.GetUserByNameAsync(model.UserName, cancellationToken);
-
+            
             switch (userResult.Value)
             {
                 case AuthRepositoryResult.UserNotFound:
@@ -70,8 +58,8 @@ namespace Authentication.Host.Services
                 return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.Unauthorized, message: "User is blocked");
 
             var newTokens = _jwtService.IssueAccessToken(userResult.Model.Id.ToString(), userResult.Model.Login, userResult.Model.Role);
-
-            await _authRepository.AddTokensAsync(userResult.Model.Id, newTokens.Tokens, cancellationToken);
+            
+            await _authRepository.AddTokensAsync(userResult.Model.Id, newTokens.Tokens, model.IpAddress, cancellationToken);
 
             return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.OK, newTokens.Tokens.toBodyTokenModel());
         }
@@ -87,7 +75,7 @@ namespace Authentication.Host.Services
                 if (isTokenBlocked.Value == CacheRepositoryResult.IsBlocked)
                     return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.Unauthorized, message:"Token is blocked");
 
-                var addToken = await _authRepository.AddTokensAsync(long.Parse(validateResult.UserId), validateResult.Tokens, cancellationToken);
+                var addToken = await _authRepository.AddTokensAsync(long.Parse(validateResult.UserId), validateResult.Tokens, cancellationToken: cancellationToken);
 
                 if (addToken.Value != AuthRepositoryResult.Ok)
                     return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.ServiceUnavailable, message: "Please, try again");

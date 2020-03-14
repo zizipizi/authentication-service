@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
+﻿using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Models;
@@ -9,8 +6,6 @@ using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Authentication.Tests.AuthServiceTests.Utils;
 using FluentAssertions;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Logging;
 using Moq;
 using NSV.Security.JWT;
 using NSV.Security.Password;

@@ -27,6 +27,9 @@ namespace Authentication.Data.Models.Entities
         [Column("ip_adress")]
         public string IpAdress { get; set; }
 
+        [Column("token_jti")]
+        public string Jti { get; set; }
+
         public UserEntity User { get; set; }
 
         [Column("refresh_token_jti")]

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Authentication.Data.Exceptions;
 using Authentication.Data.Models;
 using Authentication.Data.Models.Domain;
 using Authentication.Data.Models.Domain.Translators;
@@ -15,7 +14,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSV.Security.JWT;
-using static Authentication.Host.Results.ResultExtensions;
 
 namespace Authentication.Host.Repositories
 {
@@ -30,7 +28,7 @@ namespace Authentication.Host.Repositories
             _logger = logger ?? new NullLogger<AdminRepository>();
         }
         
-        public async Task<Result<AdminRepositoryResult, User>> CreateUserAsync(User user, CancellationToken cancellationToken)
+        public async Task<Result<AdminRepositoryResult, UserInfo>> CreateUserAsync(User user, CancellationToken cancellationToken)
         {
             try
             {
@@ -38,14 +36,12 @@ namespace Authentication.Host.Repositories
                 var userExist = await _context.Users.AnyAsync(c => c.Login == user.Login, cancellationToken);
 
                 if (userExist)
-                    return new Result<AdminRepositoryResult, User>(AdminRepositoryResult.UserExist);
-
-                await _context.Users.AddAsync(newUser, cancellationToken);
+                    return new Result<AdminRepositoryResult, UserInfo>(AdminRepositoryResult.UserExist);
 
                 var roles = await _context.Roles
                     .Where(x => user.Role.Contains(x.Role))
                     .Select(x => x.Id)
-                    .ToArrayAsync(cancellationToken);
+                    .ToListAsync(cancellationToken);
 
                 var userRoles = roles
                     .Select(roleId => new UserRolesEntity
@@ -54,16 +50,18 @@ namespace Authentication.Host.Repositories
                         RoleId = roleId
                     });
 
+                await _context.Users.AddAsync(newUser, cancellationToken);
+
                 await _context.UsersRoles.AddRangeAsync(userRoles, cancellationToken);
 
                 await _context.SaveChangesAsync(cancellationToken);
 
-                return new Result<AdminRepositoryResult, User>(AdminRepositoryResult.Ok, newUser.ToDomain());
+                return new Result<AdminRepositoryResult, UserInfo>(AdminRepositoryResult.Ok, newUser.ToUserInfo());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return new Result<AdminRepositoryResult, User>(AdminRepositoryResult.Error);
+                return new Result<AdminRepositoryResult, UserInfo>(AdminRepositoryResult.Error);
             }
         }
 
@@ -94,32 +92,31 @@ namespace Authentication.Host.Repositories
             }
         }
 
-        public Task<Result<AdminRepositoryResult>> DeleteUserAsync(long id, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<Result<AdminRepositoryResult, Dictionary<string, DateTime>>> GetTokensForBlock(long id, CancellationToken cancellationToken)
+        public async Task<Result<AdminRepositoryResult, IEnumerable<TokenModel>>> DeleteUserAsync(long id, CancellationToken cancellationToken)
         {
             try
             {
-                var tokens = await _context.RefreshTokens
-                    .Where(c => c.Id == id && c.Expired > DateTime.UtcNow)
+                var user = await _context.Users.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+
+                if (user == null)
+                    return new Result<AdminRepositoryResult, IEnumerable<TokenModel>>(AdminRepositoryResult.UserNotFound);
+
+                user.IsDeleted = true;
+
+                var userTokens = await _context.RefreshTokens
+                    .AsNoTracking()
+                    .Where(c => c.UserId == id && c.IsBlocked != true && c.Expired > DateTime.UtcNow)
+                    .Select(c => c.toTokenModel())
                     .ToListAsync(cancellationToken);
 
-                var tokenDict = new Dictionary<string, DateTime>();
+                await _context.SaveChangesAsync(cancellationToken);
 
-                foreach (var token in tokens)
-                {
-                    tokenDict.Add(token.Jti, token.Expired);
-                }
-
-                return new Result<AdminRepositoryResult, Dictionary<string, DateTime>>(AdminRepositoryResult.Ok, tokenDict);
+                return new Result<AdminRepositoryResult, IEnumerable<TokenModel>>(AdminRepositoryResult.Ok, userTokens);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return new Result<AdminRepositoryResult, Dictionary<string, DateTime>>(AdminRepositoryResult.Error);
+                return new Result<AdminRepositoryResult, IEnumerable<TokenModel>>(AdminRepositoryResult.Error);
             }
         }
 

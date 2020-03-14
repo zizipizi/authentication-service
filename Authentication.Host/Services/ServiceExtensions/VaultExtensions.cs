@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using VaultSharp;
 using VaultSharp.V1.AuthMethods;
-using VaultSharp.V1.AuthMethods.LDAP;
 
 namespace Authentication.Host.Services.ServiceExtensions
 {

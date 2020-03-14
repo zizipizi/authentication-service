@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -8,8 +9,10 @@ using Authentication.Host.Models;
 using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
-using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSV.Security.Password;
+using Processing.Kafka.Producer;
 
 namespace Authentication.Host.Services
 {
@@ -18,12 +21,19 @@ namespace Authentication.Host.Services
         private readonly IAdminRepository _adminRepository;
         private readonly ICacheRepository _cacheRepository;
         private readonly IPasswordService _passwordService;
-
-        public AdminService(IAdminRepository adminRepository, ICacheRepository cacheRepository, IPasswordService passwordService)
+        private readonly IProducerFactory<long, string> _kafka;
+        private readonly ILogger _logger;
+        public AdminService(IAdminRepository adminRepository, 
+                            ICacheRepository cacheRepository, 
+                            IPasswordService passwordService, 
+                            IProducerFactory<long, string> kafka,
+                            ILogger<AdminService> logger = null)
         {
             _adminRepository = adminRepository;
             _cacheRepository = cacheRepository;
             _passwordService = passwordService;
+            _kafka = kafka;
+            _logger = logger ?? new NullLogger<AdminService>();
         }
 
         public async Task<Result<HttpStatusCode, IEnumerable<User>>> GetAllUsersAsync(CancellationToken cancellationToken)
@@ -58,18 +68,12 @@ namespace Authentication.Host.Services
                     return new Result<HttpStatusCode, UserInfo>(HttpStatusCode.ServiceUnavailable, message: "Please, try again");
             }
 
-            var newUserInfo = new UserInfo
-            {
-                Id = createUserResult.Model.Id,
-                Login = model.Login
-            };
-
-            return new Result<HttpStatusCode, UserInfo>(HttpStatusCode.OK, newUserInfo, "User created");
+            return new Result<HttpStatusCode, UserInfo>(HttpStatusCode.OK, createUserResult.Model, "User created");
         }
 
-        public async Task<Result<HttpStatusCode>> BlockUserAsync(long id, CancellationToken token)
+        public async Task<Result<HttpStatusCode>> BlockUserAsync(long id, CancellationToken cancellationToken)
         {
-            var userBlockResult = await _adminRepository.BlockUserAsync(id, token);
+            var userBlockResult = await _adminRepository.BlockUserAsync(id, cancellationToken);
 
             switch (userBlockResult.Value)
             {
@@ -79,7 +83,17 @@ namespace Authentication.Host.Services
                     return new Result<HttpStatusCode>(HttpStatusCode.ServiceUnavailable);
             }
 
-            var addToBlacklistResult =  await _cacheRepository.AddRefreshTokensToBlacklistAsync(userBlockResult.Model, token);
+            using (var message = _kafka.GetOrCreate("BlockedTokens"))
+            {
+                foreach (var token in userBlockResult.Model)
+                {
+                    var res = await message.SendAsync(id, token.AccessToken.Value);
+                    if (res == ProduceResult.Failed)
+                        _logger.LogError("Kafka produce failed");
+                }
+            }
+
+            var addToBlacklistResult =  await _cacheRepository.AddRefreshTokensToBlacklistAsync(userBlockResult.Model, cancellationToken);
 
             if (addToBlacklistResult.Value == CacheRepositoryResult.Error)
                 return new Result<HttpStatusCode>(HttpStatusCode.ServiceUnavailable);
@@ -91,9 +105,20 @@ namespace Authentication.Host.Services
         {
             var deleteUserResult = await _adminRepository.DeleteUserAsync(id, cancellationToken);
 
-            return deleteUserResult.Value == AdminRepositoryResult.UserNotFound 
-                ? new Result<HttpStatusCode>(HttpStatusCode.NotFound) 
-                : new Result<HttpStatusCode>(HttpStatusCode.OK);
+            switch (deleteUserResult.Value)
+            {
+                case AdminRepositoryResult.UserNotFound:
+                    return new Result<HttpStatusCode>(HttpStatusCode.NotFound);
+                case AdminRepositoryResult.Error:
+                    return new Result<HttpStatusCode>(HttpStatusCode.ServiceUnavailable);
+            }
+
+            var addToBlackListResult = await _cacheRepository.AddRefreshTokensToBlacklistAsync(deleteUserResult.Model, cancellationToken);
+
+            if (addToBlackListResult.Value == CacheRepositoryResult.Error)
+                return new Result<HttpStatusCode>(HttpStatusCode.ServiceUnavailable);
+
+            return new Result<HttpStatusCode>(HttpStatusCode.OK);
         }
     }
 }

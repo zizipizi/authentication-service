@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
-using System.Text;
 using System.Threading;
 using Authentication.Data.Models.Domain;
 using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
-using Microsoft.AspNetCore.Mvc.Formatters;
 using Moq;
 using NSV.Security.JWT;
 
@@ -39,7 +35,7 @@ namespace Authentication.Tests.AuthServiceTests.Utils
 
     public class AuthRepoOptionsBuilder
     {
-        private AuthRepoOptions authRepoOptions;
+        private readonly AuthRepoOptions authRepoOptions;
 
         public AuthRepoOptionsBuilder()
         {
@@ -80,7 +76,7 @@ namespace Authentication.Tests.AuthServiceTests.Utils
                 .ReturnsAsync(new Result<AuthRepositoryResult, User>(options.GetUserByNameResult, options.User));
 
             authRepo.Setup(c =>
-                    c.AddTokensAsync(It.IsAny<long>(), It.IsAny<TokenModel>(), It.IsAny<CancellationToken>()))
+                    c.AddTokensAsync(It.IsAny<long>(), It.IsAny<TokenModel>(),It.IsAny<string>() ,It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Result<AuthRepositoryResult>(options.AddTokensResult));
 
             return authRepo.Object;

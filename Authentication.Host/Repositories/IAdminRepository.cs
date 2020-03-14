@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Models.Domain;
@@ -12,12 +10,12 @@ namespace Authentication.Host.Repositories
 {
     public interface IAdminRepository
     {
-        Task<Result<AdminRepositoryResult, User>> CreateUserAsync(User user, CancellationToken cancellationToken);
+        Task<Result<AdminRepositoryResult, UserInfo>> CreateUserAsync(User user, CancellationToken cancellationToken = default);
 
-        Task<Result<AdminRepositoryResult, IEnumerable<TokenModel>>> BlockUserAsync(long id, CancellationToken cancellationToken);
+        Task<Result<AdminRepositoryResult, IEnumerable<TokenModel>>> BlockUserAsync(long id, CancellationToken cancellationToken = default);
 
-        Task<Result<AdminRepositoryResult>> DeleteUserAsync(long id, CancellationToken cancellationToken);
+        Task<Result<AdminRepositoryResult, IEnumerable<TokenModel>>> DeleteUserAsync(long id, CancellationToken cancellationToken = default);
 
-        Task<Result<AdminRepositoryResult, IEnumerable<User>>> GetAllUsersAsync(CancellationToken cancellationToken);
+        Task<Result<AdminRepositoryResult, IEnumerable<User>>> GetAllUsersAsync(CancellationToken cancellationToken = default);
     }
 }

@@ -2,16 +2,13 @@
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Authentication.Data.Exceptions;
 using Authentication.Host.Models;
 using Authentication.Host.Models.Translators;
 using Authentication.Host.Repositories;
 using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
-using Confluent.Kafka;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSV.Security.JWT;
 using NSV.Security.Password;
 using Processing.Kafka.Producer;
@@ -24,13 +21,15 @@ namespace Authentication.Host.Services
         private readonly IPasswordService _passwordService;
         private readonly IJwtService _jwtService;
         private readonly ICacheRepository _cacheRepository;
-        private readonly IProducerFactory<int, string> _kafka;
+        private readonly IProducerFactory<long, string> _kafka;
+        private readonly ILogger _logger;
 
         public UserService(IUserRepository userRepository,
             IPasswordService passwordService, 
             IJwtService jwtService, 
             ICacheRepository cacheRepository,
-            IProducerFactory<int,string> kafka
+            IProducerFactory<long, string> kafka,
+            ILogger<UserService> logger = null
             )
         {
             _userRepository = userRepository;
@@ -38,6 +37,7 @@ namespace Authentication.Host.Services
             _jwtService = jwtService;
             _cacheRepository = cacheRepository;
             _kafka = kafka;
+            _logger = logger ?? new NullLogger<UserService>();
         }
 
         public async Task<Result<HttpStatusCode>> SignOutAsync(long id, string refreshJti, CancellationToken cancellationToken)
@@ -51,9 +51,11 @@ namespace Authentication.Host.Services
             if (isRefreshTokenBlockedResult.Value == CacheRepositoryResult.IsNotBlocked)
                 await _cacheRepository.AddRefreshTokenToBlacklistAsync(blockResult.Model, cancellationToken);
 
-            using (var message = _kafka.Create("BlockedTokens"))
+            using (var message = _kafka.GetOrCreate("BlockedTokens"))
             {
-                var res = await message.SendAsync((int)id, blockResult.Model.AccessToken.Value);
+                var res = await message.SendAsync(id, blockResult.Model.AccessToken.Value);
+                if (res == ProduceResult.Failed)
+                    _logger.LogError("Kafka produce failed");
             }
 
             return new Result<HttpStatusCode>(HttpStatusCode.NoContent);
@@ -84,9 +86,39 @@ namespace Authentication.Host.Services
 
             await _cacheRepository.AddRefreshTokensToBlacklistAsync(blockAllTokensResult.Model, cancellationToken);
 
+            using (var message = _kafka.GetOrCreate("BlockedTokens"))
+            {
+                foreach (var token in blockAllTokensResult.Model)
+                {
+                    await message.SendAsync(id, token.AccessToken.Value);
+                }
+            }
+
             var newTokens = _jwtService.IssueAccessToken(user.Model.Id.ToString(), user.Model.Login, user.Model.Role);
             
             return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.OK, model: newTokens.Tokens.toBodyTokenModel());
         }
+
+        //==================================================================
+        //public async Task<Result<HttpStatusCode>> SignOutAsync2(long id, string refreshJti, CancellationToken cancellationToken)
+        //{
+        //    var blockResult = await _userRepository.BlockRefreshTokenAsync(refreshJti, cancellationToken);
+
+        //    if (blockResult.IsEquals(UserRepositoryResult.Error))
+        //        return Result(HttpStatusCode.BadRequest);
+
+        //    var isRefreshTokenBlockedResult = await _cacheRepository.IsRefreshTokenBlockedAsync(refreshJti, cancellationToken);
+
+        //    if (isRefreshTokenBlockedResult.IsEquals(CacheRepositoryResult.IsNotBlocked))
+        //        await _cacheRepository.AddRefreshTokenToBlacklistAsync(blockResult.Model, cancellationToken);
+
+        //    using (var message = _kafka.GetOrCreate("BlockedTokens"))
+        //    {
+        //        var res = await message.SendAsync((int)id, blockResult.Model.AccessToken.Value);
+        //    }
+
+        //    return Result(HttpStatusCode.NoContent);
+        //}
+        //==================================================================
     }
 }

@@ -1,17 +1,10 @@
 ﻿using Authentication.Host.Controllers;
-using Authentication.Host.Services;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Authentication.Host.Results.Enums;
 using Authentication.Tests.AdminControllerTests.Utills;
 using FluentAssertions;
-using Microsoft.Extensions.Logging;
-using Moq;
 using Xunit;
 
 namespace Authentication.Tests.AdminControllerTests

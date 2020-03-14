@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Models;
@@ -26,11 +24,11 @@ namespace Authentication.Host.Repositories
             _logger = logger ?? new NullLogger<AuthRepository>();
         }
 
-        public async Task<Result<AuthRepositoryResult>> AddTokensAsync(long userId, TokenModel tokenModel, CancellationToken cancelationToken)
+        public async Task<Result<AuthRepositoryResult>> AddTokensAsync(long userId, TokenModel tokenModel, string ipAddress = null, CancellationToken cancellationToken = default)
         {
             try
             {
-                var refreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == tokenModel.RefreshToken.Jti, cancelationToken);
+                var refreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(c => c.Jti == tokenModel.RefreshToken.Jti, cancellationToken);
 
                 if (refreshToken != null)
                 {
@@ -40,10 +38,12 @@ namespace Authentication.Host.Repositories
                         Exprired = tokenModel.AccessToken.Expiration,
                         Token = tokenModel.AccessToken.Value,
                         UserId = userId,
-                        RefreshToken = refreshToken
+                        RefreshToken = refreshToken,
+                        Jti = tokenModel.AccessToken.Jti,
+                        IpAdress = ipAddress
                     };
 
-                    await _context.AccessTokens.AddAsync(accessTokenEntityWithoutRefresh, cancelationToken);
+                    await _context.AccessTokens.AddAsync(accessTokenEntityWithoutRefresh, cancellationToken);
                 }
                 else
                 {
@@ -64,14 +64,16 @@ namespace Authentication.Host.Repositories
                         Exprired = tokenModel.AccessToken.Expiration,
                         Token = tokenModel.AccessToken.Value,
                         UserId = userId,
-                        RefreshToken = refreshTokenEntity
+                        RefreshToken = refreshTokenEntity,
+                        Jti = tokenModel.AccessToken.Jti,
+                        IpAdress = ipAddress
                     };
 
-                    await _context.RefreshTokens.AddAsync(refreshTokenEntity, cancelationToken);
-                    await _context.AccessTokens.AddAsync(accessTokenEntity, cancelationToken);
+                    await _context.RefreshTokens.AddAsync(refreshTokenEntity, cancellationToken);
+                    await _context.AccessTokens.AddAsync(accessTokenEntity, cancellationToken);
                 }
 
-                await _context.SaveChangesAsync(cancelationToken);
+                await _context.SaveChangesAsync(cancellationToken);
                 return new Result<AuthRepositoryResult>(AuthRepositoryResult.Ok);
             }
             catch (Exception ex)
@@ -88,7 +90,6 @@ namespace Authentication.Host.Repositories
             {
                 userEntity = await _context.Users
                     .AsNoTracking()
-                    //.Where(x => x.IsActive)
                     .Include(p => p.Roles)
                     .ThenInclude(p => p.RoleEn)
                     .SingleOrDefaultAsync(obj => obj.Login == userName, cancelationToken);

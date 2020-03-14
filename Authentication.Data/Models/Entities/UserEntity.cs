@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -28,8 +27,11 @@ namespace Authentication.Data.Models.Entities
         [Column("created")]
         public DateTime Created { get; set; }
 
-        [Column("is_active")]
+        [Column("active")]
         public bool IsActive { get; set; }
+
+        [Column("deleted")]
+        public bool IsDeleted { get; set; }
 
         public virtual ICollection<UserRolesEntity> Roles { get; set; }
     }

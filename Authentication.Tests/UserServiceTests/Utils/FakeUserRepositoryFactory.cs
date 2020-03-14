@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using Authentication.Data.Models.Domain;
 using Authentication.Host.Repositories;
@@ -44,7 +43,7 @@ namespace Authentication.Tests.UserServiceTests.Utils
 
     public class UserRepoOptionsBuilder
     {
-        private UserRepoOptions userRepoOptions;
+        private readonly UserRepoOptions userRepoOptions;
 
         public UserRepoOptionsBuilder()
         {

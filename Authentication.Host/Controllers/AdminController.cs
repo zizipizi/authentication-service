@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Authentication.Host.Models;
 using Authentication.Host.Results;
-using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

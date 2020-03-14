@@ -1,15 +1,9 @@
-﻿using System.Net;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Models;
 using Authentication.Host.Results;
-using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Authentication.Host.Controllers
 {
@@ -18,12 +12,10 @@ namespace Authentication.Host.Controllers
     public class AuthController : Controller
     {
         private readonly IAuthService _authService;
-        private readonly ILogger _logger;
 
-        public AuthController(IAuthService authService, ILogger<AuthController> logger = null)
+        public AuthController(IAuthService authService)
         {
             _authService = authService;
-            _logger = logger ?? new NullLogger<AuthController>();
         }
 
         [ActionName("refresh")]
@@ -44,6 +36,8 @@ namespace Authentication.Host.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest();
+
+            model.IpAddress = HttpContext.Connection.RemoteIpAddress.ToString();
 
             var result = await _authService.SignIn(model, cancellationToken);
 

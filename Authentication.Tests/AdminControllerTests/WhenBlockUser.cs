@@ -1,18 +1,12 @@
 ﻿using Authentication.Host.Controllers;
-using Authentication.Host.Services;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Authentication.Host.Results.Enums;
 using Authentication.Tests.AdminControllerTests.Utills;
-using Moq;
 using Xunit;
-using Microsoft.Extensions.Logging;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 
 namespace Authentication.Tests.AdminControllerTests
 {
@@ -53,7 +47,7 @@ namespace Authentication.Tests.AdminControllerTests
 
             var result = await adminController.BlockUser(id, CancellationToken.None);
 
-            result.Should().BeOfType<StatusCodeResult>();
+            result.Should().Match<StatusCodeResult>(c => c.StatusCode == StatusCodes.Status503ServiceUnavailable);
         }
     }
 }

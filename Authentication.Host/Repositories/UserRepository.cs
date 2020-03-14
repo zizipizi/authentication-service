@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Authentication.Data.Exceptions;
 using Authentication.Data.Models;
 using Authentication.Data.Models.Domain;
 using Authentication.Data.Models.Domain.Translators;

@@ -1,23 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Authentication.Host.Controllers;
-using Authentication.Host.Models;
-using Authentication.Host.Repositories;
-using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
-using Authentication.Tests.AdminControllerTests.Utills;
 using Authentication.Tests.AdminServiceTests.Utils;
 using FluentAssertions;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Moq;
-using NSV.Security.JWT;
 using NSV.Security.Password;
+using Processing.Kafka.Producer;
 using Xunit;
 
 namespace Authentication.Tests.AdminServiceTests
@@ -29,10 +20,17 @@ namespace Authentication.Tests.AdminServiceTests
         {
             var id = 1;
             var passwordService = new Mock<IPasswordService>().Object;
-            var cacheRepo = new Mock<ICacheRepository>().Object;
+            var cacheRepository = FakeCacheRepositoryFactory.FakeAddRefreshTokensToBlacklistAsync(CacheRepositoryResult.Ok);
+
+            var kafka = new Mock<IProducerFactory<long, string>>();
+            var producer = new Mock<IKafkaProducer<long, string>>();
+
+            kafka.Setup(c => c.GetOrCreate(It.IsAny<string>(), null))
+                .Returns(producer.Object);
+
 
             var userRepo = FakeAdminRepositoryFactory.FakeDeleteUser(AdminRepositoryResult.Ok);
-            var userService = new AdminService(userRepo,cacheRepo, passwordService);
+            var userService = new AdminService(userRepo, cacheRepository, passwordService, kafka.Object);
 
             var result = await userService.DeleteUserAsync(id, CancellationToken.None);
 
@@ -44,14 +42,64 @@ namespace Authentication.Tests.AdminServiceTests
         {
             var id = 1;
             var passwordService = new Mock<IPasswordService>().Object;
-            var cacheRepo = new Mock<ICacheRepository>().Object;
 
+            var kafka = new Mock<IProducerFactory<long, string>>();
+            var producer = new Mock<IKafkaProducer<long, string>>();
+
+            kafka.Setup(c => c.GetOrCreate(It.IsAny<string>(), null))
+                .Returns(producer.Object);
+
+            var cacheRepository = FakeCacheRepositoryFactory.FakeAddRefreshTokensToBlacklistAsync(CacheRepositoryResult.Ok);
             var userRepo = FakeAdminRepositoryFactory.FakeDeleteUser(AdminRepositoryResult.UserNotFound);
-            var userService = new AdminService(userRepo, cacheRepo, passwordService);
+            var userService = new AdminService(userRepo, cacheRepository, passwordService, kafka.Object);
 
             var result = await userService.DeleteUserAsync(id, CancellationToken.None);
 
             result.Value.Should().BeEquivalentTo(HttpStatusCode.NotFound);
+        }
+
+        [Fact]
+        public async Task DeleteUser_ServiceUnavailable_FromCacheRepository()
+        {
+            var id = 1;
+            var passwordService = new Mock<IPasswordService>().Object;
+
+            var cacheRepository = FakeCacheRepositoryFactory.FakeAddRefreshTokensToBlacklistAsync(CacheRepositoryResult.Error);
+            var userRepo = FakeAdminRepositoryFactory.FakeDeleteUser(AdminRepositoryResult.Ok);
+
+            var kafka = new Mock<IProducerFactory<long, string>>();
+            var producer = new Mock<IKafkaProducer<long, string>>();
+
+            kafka.Setup(c => c.GetOrCreate(It.IsAny<string>(), null))
+                .Returns(producer.Object);
+
+            var userService = new AdminService(userRepo, cacheRepository, passwordService, kafka.Object);
+
+            var result = await userService.DeleteUserAsync(id, CancellationToken.None);
+
+            result.Value.Should().BeEquivalentTo(HttpStatusCode.ServiceUnavailable);
+        }
+
+        [Fact]
+        public async Task DeleteUser_ServiceUnavailable_FromAdminRepository()
+        {
+            var id = 1;
+            var passwordService = new Mock<IPasswordService>().Object;
+
+            var cacheRepository = FakeCacheRepositoryFactory.FakeAddRefreshTokensToBlacklistAsync(CacheRepositoryResult.Ok);
+            var userRepo = FakeAdminRepositoryFactory.FakeDeleteUser(AdminRepositoryResult.Error);
+
+            var kafka = new Mock<IProducerFactory<long, string>>();
+            var producer = new Mock<IKafkaProducer<long, string>>();
+
+            kafka.Setup(c => c.GetOrCreate(It.IsAny<string>(), null))
+                .Returns(producer.Object);
+
+            var userService = new AdminService(userRepo, cacheRepository, passwordService, kafka.Object);
+
+            var result = await userService.DeleteUserAsync(id, CancellationToken.None);
+
+            result.Value.Should().BeEquivalentTo(HttpStatusCode.ServiceUnavailable);
         }
 
     }

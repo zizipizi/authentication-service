@@ -1,24 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Authentication.Host.Models;
-using Authentication.Host.Repositories;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Authentication.Tests.UserServiceTests.Utils;
-using Confluent.Kafka;
 using FluentAssertions;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Moq;
 using NSV.Security.JWT;
 using NSV.Security.Password;
 using Processing.Kafka.Producer;
-using Processing.Kafka.Protobuf;
 using Xunit;
 
 namespace Authentication.Tests.UserServiceTests
@@ -34,14 +25,11 @@ namespace Authentication.Tests.UserServiceTests
 
             var cacheRepo = FakeCacheRepositoryFactory.FakeCacheRepository(CacheRepositoryResult.IsNotBlocked, CacheRepositoryResult.Ok);
 
-            var keySerializer = new ProtobufSerializer<int>();
-            var valueSerializer = new ProtobufSerializer<string>();
+            var kafka = new Mock<IProducerFactory<long, string>>();
+            var producer = new Mock<IKafkaProducer<long, string>>();
 
-            var producerConfigs = new Mock<IOptions<ProducerConfigs>>();
-            var kaf = new ProducerFactory<int, string>(keySerializer, valueSerializer, producerConfigs.Object);
-
-            
-            var kafka = new Mock<IProducerFactory<int, string>>();
+            kafka.Setup(c => c.GetOrCreate(It.IsAny<string>(), null))
+                .Returns(producer.Object);
 
             var userRepoOptions = new UserRepoOptionsBuilder()
                 .GetUserByIdReturns(UserRepositoryResult.Ok)
@@ -52,7 +40,7 @@ namespace Authentication.Tests.UserServiceTests
 
             var userRepo = FakeUserRepositoryFactory.FakeUserRepo(userRepoOptions);
 
-            var userService = new UserService(userRepo, passwordService, jwtService, cacheRepo, kaf);
+            var userService = new UserService(userRepo, passwordService, jwtService, cacheRepo, kafka.Object);
 
             var result = await userService.SignOutAsync(1, "asdasd", CancellationToken.None);
 
@@ -68,14 +56,7 @@ namespace Authentication.Tests.UserServiceTests
 
             var cacheRepo = FakeCacheRepositoryFactory.FakeCacheRepository(CacheRepositoryResult.IsNotBlocked, CacheRepositoryResult.Ok);
 
-            var keySerializer = new ProtobufSerializer<int>();
-            var valueSerializer = new ProtobufSerializer<string>();
-
-            var producerConfigs = new Mock<IOptions<ProducerConfigs>>();
-            var kaf = new ProducerFactory<int, string>(keySerializer, valueSerializer, producerConfigs.Object);
-
-
-            var kafka = new Mock<IProducerFactory<int, string>>();
+            var kafka = new Mock<IProducerFactory<long, string>>().Object;
 
             var userRepoOptions = new UserRepoOptionsBuilder()
                 .GetUserByIdReturns(UserRepositoryResult.Ok)
@@ -86,7 +67,7 @@ namespace Authentication.Tests.UserServiceTests
 
             var userRepo = FakeUserRepositoryFactory.FakeUserRepo(userRepoOptions);
 
-            var userService = new UserService(userRepo, passwordService, jwtService, cacheRepo, kaf);
+            var userService = new UserService(userRepo, passwordService, jwtService, cacheRepo, kafka);
 
             var result = await userService.SignOutAsync(1, "asdasd", CancellationToken.None);
 

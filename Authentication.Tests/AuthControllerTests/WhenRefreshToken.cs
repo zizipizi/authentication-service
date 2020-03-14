@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
+﻿using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Controllers;
 using Authentication.Host.Models;
-using Authentication.Host.Results.Enums;
 using Authentication.Tests.AuthControllerTests.Utils;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Moq;
 using Xunit;
 
 namespace Authentication.Tests.AuthControllerTests
@@ -46,10 +41,9 @@ namespace Authentication.Tests.AuthControllerTests
             };
 
             var authService = FakeAuthServiceFactory.FakeRefreshToken(HttpStatusCode.Unauthorized, bodyToken);
-            var logger = new Mock<ILogger<AuthController>>().Object;
 
 
-            var authController = new AuthController(authService, logger);
+            var authController = new AuthController(authService);
 
             var result = await authController.RefreshToken(bodyToken, CancellationToken.None);
 
@@ -71,7 +65,7 @@ namespace Authentication.Tests.AuthControllerTests
 
             var result = await authController.RefreshToken(bodyToken, CancellationToken.None);
 
-            result.Should().BeOfType(typeof(StatusCodeResult));
+            result.Should().Match<StatusCodeResult>(c => c.StatusCode == StatusCodes.Status503ServiceUnavailable);
         }
 
     }

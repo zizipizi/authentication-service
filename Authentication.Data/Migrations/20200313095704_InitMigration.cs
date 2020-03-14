@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Authentication.Data.Migrations
 {
-    public partial class InitMigrate : Migration
+    public partial class InitMigration : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -32,7 +32,8 @@ namespace Authentication.Data.Migrations
                     login = table.Column<string>(maxLength: 128, nullable: false),
                     password = table.Column<string>(maxLength: 1024, nullable: false),
                     created = table.Column<DateTime>(nullable: false),
-                    is_active = table.Column<bool>(nullable: false)
+                    active = table.Column<bool>(nullable: false),
+                    deleted = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -99,6 +100,7 @@ namespace Authentication.Data.Migrations
                     expired = table.Column<DateTime>(nullable: false),
                     created = table.Column<DateTime>(nullable: false),
                     ip_adress = table.Column<string>(nullable: true),
+                    token_jti = table.Column<string>(nullable: true),
                     RefreshTokenJti = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
@@ -130,8 +132,8 @@ namespace Authentication.Data.Migrations
 
             migrationBuilder.InsertData(
                 table: "User",
-                columns: new[] { "id", "created", "is_active", "login", "password", "user_name" },
-                values: new object[] { 1L, new DateTime(2020, 2, 27, 8, 5, 54, 687, DateTimeKind.Utc).AddTicks(8333), true, "Admin", "Bd+C/r8cbbBRAdxW+E6rX6j/76zBoqRv|1000|Aec62fL4vVsk6lVxO/OgQqQJZzPeDWiT", "admin" });
+                columns: new[] { "id", "created", "active", "deleted", "login", "password", "user_name" },
+                values: new object[] { 1L, new DateTime(2020, 3, 13, 9, 57, 4, 39, DateTimeKind.Utc).AddTicks(9620), true, false, "Admin", "8TmZ94UJv6zkZntGk0IQ0DZgyx4YzW3p|1000|CQ/LrH+yplj0rGTBGbmJihBwTMKeHXId", "admin" });
 
             migrationBuilder.InsertData(
                 table: "UserRole",

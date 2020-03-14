@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Models;
@@ -7,10 +6,7 @@ using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Authentication.Tests.AuthServiceTests.Utils;
 using FluentAssertions;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Logging;
 using Moq;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Query.ExpressionTranslators.Internal;
 using NSV.Security.JWT;
 using NSV.Security.Password;
 using Xunit;

@@ -1,18 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Models;
 using Authentication.Host.Repositories;
-using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Authentication.Tests.UserServiceTests.Utils;
 using FluentAssertions;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Logging;
 using Moq;
 using NSV.Security.JWT;
 using NSV.Security.Password;
@@ -32,7 +27,11 @@ namespace Authentication.Tests.UserServiceTests
 
             var cacheRepo = new Mock<ICacheRepository>().Object;
 
-            var kafka = new Mock<IProducerFactory<int,string>>().Object;
+            var kafka = new Mock<IProducerFactory<long, string>>();
+            var producer = new Mock<IKafkaProducer<long, string>>();
+
+            kafka.Setup(c => c.GetOrCreate(It.IsAny<string>(), null))
+                .Returns(producer.Object);
 
             var userRepoOptions = new UserRepoOptionsBuilder()
                 .GetUserByIdReturns(UserRepositoryResult.Ok)
@@ -40,10 +39,9 @@ namespace Authentication.Tests.UserServiceTests
                 .BlockAllRefreshTokensReturns(UserRepositoryResult.Ok)
                 .Build();
 
-
             var userRepo = FakeUserRepositoryFactory.FakeUserRepo(userRepoOptions);
 
-            var userService = new UserService(userRepo, passwordService, jwtService, cacheRepo, kafka);
+            var userService = new UserService(userRepo, passwordService, jwtService, cacheRepo, kafka.Object);
 
             var changePassModel = new ChangePassModel
             {
@@ -65,7 +63,7 @@ namespace Authentication.Tests.UserServiceTests
 
             var cacheRepo = new Mock<ICacheRepository>().Object;
 
-            var kafka = new Mock<IProducerFactory<int, string>>().Object;
+            var kafka = new Mock<IProducerFactory<long, string>>().Object;
 
             var userRepoOptions = new UserRepoOptionsBuilder()
                 .GetUserByIdReturns(UserRepositoryResult.Ok)
@@ -94,7 +92,7 @@ namespace Authentication.Tests.UserServiceTests
             var passwordService = new Mock<IPasswordService>().Object;
             var jwtService = new Mock<IJwtService>().Object;
             var cacheRepo = new Mock<ICacheRepository>().Object;
-            var kafka = new Mock<IProducerFactory<int, string>>().Object;
+            var kafka = new Mock<IProducerFactory<long, string>>().Object;
 
             var userRepoOptions = new UserRepoOptionsBuilder()
                 .GetUserByIdReturns(UserRepositoryResult.Ok)

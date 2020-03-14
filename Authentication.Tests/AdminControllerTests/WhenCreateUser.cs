@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
+﻿using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Controllers;
 using Authentication.Host.Models;
-using Authentication.Host.Results.Enums;
-using Authentication.Host.Services;
 using Authentication.Tests.AdminControllerTests.Utills;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Moq;
 using Xunit;
 
 namespace Authentication.Tests.AdminControllerTests
@@ -53,7 +46,7 @@ namespace Authentication.Tests.AdminControllerTests
 
             var result = await adminController.CreateUser(userModel, CancellationToken.None);
 
-            result.Should().BeOfType(typeof(StatusCodeResult));
+            result.Should().Match<StatusCodeResult>(c => c.StatusCode == StatusCodes.Status503ServiceUnavailable);
         }
     }
 }

@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Authentication.Host.Results
 {
@@ -21,7 +18,7 @@ namespace Authentication.Host.Results
         }
     }
 
-    public struct Result<TResult, TModel> where TResult : Enum where TModel : class
+    public struct Result<TResult, TModel> where TResult : Enum
     {
         public TResult Value { get; }
 
@@ -29,11 +26,11 @@ namespace Authentication.Host.Results
 
         public string Message { get; }
 
-        public Result(TResult value, TModel model = null, string message = "")
+        public Result(TResult value, TModel model = default, string message = "")
         {
             Value = value;
             Message = message;
-            Model = model;
+            Model =  model;
         }
     }
 
@@ -59,9 +56,15 @@ namespace Authentication.Host.Results
         // Not work if i set number of enum manually
         public static bool IsEquals<T>(this Result<T> result, T resultEnum) where T : Enum
         {
-            var tValues = Enum.GetValues(typeof(T));
-            var s = Array.IndexOf(tValues, result.Value);
-            if (s == int.Parse(resultEnum.ToString()))
+            if (result.Value.Equals(resultEnum))
+                return true;
+
+            return false;
+        }
+
+        public static bool IsEquals<Tr, Tm>(this Result<Tr, Tm> result, Tr resultEnum) where Tr : Enum where Tm : class
+        {
+            if (result.Value.Equals(resultEnum))
                 return true;
 
             return false;

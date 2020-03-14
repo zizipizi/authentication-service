@@ -1,20 +1,18 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Authentication.Data.Exceptions;
 using Authentication.Data.Models.Domain;
 using Authentication.Host.Models;
 using Authentication.Host.Repositories;
-using Authentication.Host.Results;
 using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Authentication.Tests.AdminServiceTests.Utils;
 using FluentAssertions;
-using Microsoft.Extensions.Logging;
 using Moq;
-using NSV.Security.JWT;
 using NSV.Security.Password;
+using Processing.Kafka.Producer;
 using Xunit;
 
 namespace Authentication.Tests.AdminServiceTests
@@ -42,10 +40,16 @@ namespace Authentication.Tests.AdminServiceTests
 
             var cacheRepo = new Mock<ICacheRepository>().Object;
 
+            var kafka = new Mock<IProducerFactory<long, string>>();
+            var producer = new Mock<IKafkaProducer<long, string>>();
+
+            kafka.Setup(c => c.GetOrCreate(It.IsAny<string>(), null))
+                .Returns(producer.Object);
+
             var passService = FakePasswordServiceFactory.FakeHashPassword(PasswordHashResult.HashResult.Ok);
             var adminRepo = FakeAdminRepositoryFactory.FakeCreateUser(AdminRepositoryResult.Ok, user);
 
-            var adminService = new AdminService(adminRepo, cacheRepo, passService);
+            var adminService = new AdminService(adminRepo, cacheRepo, passService, kafka.Object);
 
             var result = await adminService.CreateUserAsync(userCreateModel, CancellationToken.None);
 
@@ -59,8 +63,14 @@ namespace Authentication.Tests.AdminServiceTests
 
             var passService = FakePasswordServiceFactory.FakeHashPassword(PasswordHashResult.HashResult.Ok);
 
+            var kafka = new Mock<IProducerFactory<long, string>>();
+            var producer = new Mock<IKafkaProducer<long, string>>();
+
+            kafka.Setup(c => c.GetOrCreate(It.IsAny<string>(), null))
+                .Returns(producer.Object);
+
             var adminRepo = FakeAdminRepositoryFactory.FakeCreateUser(AdminRepositoryResult.UserExist);
-            var userService = new AdminService(adminRepo, cacheRepo, passService);
+            var userService = new AdminService(adminRepo, cacheRepo, passService, kafka.Object);
 
             var userCreateModel = new UserCreateModel
             {
@@ -82,8 +92,14 @@ namespace Authentication.Tests.AdminServiceTests
 
             var passService = FakePasswordServiceFactory.FakeHashPassword(PasswordHashResult.HashResult.Ok);
 
+            var kafka = new Mock<IProducerFactory<long, string>>();
+            var producer = new Mock<IKafkaProducer<long, string>>();
+
+            kafka.Setup(c => c.GetOrCreate(It.IsAny<string>(), null))
+                .Returns(producer.Object);
+
             var adminRepo = FakeAdminRepositoryFactory.FakeCreateUser(AdminRepositoryResult.Error);
-            var userService = new AdminService(adminRepo, cacheRepo, passService);
+            var userService = new AdminService(adminRepo, cacheRepo, passService, kafka.Object);
 
             var userCreateModel = new UserCreateModel
             {
@@ -105,8 +121,14 @@ namespace Authentication.Tests.AdminServiceTests
 
             var passService = FakePasswordServiceFactory.FakeHashPassword(PasswordHashResult.HashResult.PasswordEmpty);
 
+            var kafka = new Mock<IProducerFactory<long, string>>();
+            var producer = new Mock<IKafkaProducer<long, string>>();
+
+            kafka.Setup(c => c.GetOrCreate(It.IsAny<string>(), null))
+                .Returns(producer.Object);
+
             var adminRepo = FakeAdminRepositoryFactory.FakeCreateUser(AdminRepositoryResult.Ok);
-            var userService = new AdminService(adminRepo, cacheRepo, passService);
+            var userService = new AdminService(adminRepo, cacheRepo, passService, kafka.Object);
 
             var userCreateModel = new UserCreateModel
             {

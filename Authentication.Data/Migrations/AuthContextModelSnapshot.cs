@@ -3,7 +3,6 @@ using System;
 using Authentication.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Authentication.Data.Migrations
@@ -37,6 +36,10 @@ namespace Authentication.Data.Migrations
 
                     b.Property<string>("IpAdress")
                         .HasColumnName("ip_adress")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Jti")
+                        .HasColumnName("token_jti")
                         .HasColumnType("text");
 
                     b.Property<string>("RefreshTokenJti")
@@ -153,7 +156,11 @@ namespace Authentication.Data.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnName("is_active")
+                        .HasColumnName("active")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnName("deleted")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Login")
@@ -185,10 +192,11 @@ namespace Authentication.Data.Migrations
                         new
                         {
                             Id = 1L,
-                            Created = new DateTime(2020, 2, 27, 8, 5, 54, 687, DateTimeKind.Utc).AddTicks(8333),
+                            Created = new DateTime(2020, 3, 13, 9, 57, 4, 39, DateTimeKind.Utc).AddTicks(9620),
                             IsActive = true,
+                            IsDeleted = false,
                             Login = "Admin",
-                            Password = "Bd+C/r8cbbBRAdxW+E6rX6j/76zBoqRv|1000|Aec62fL4vVsk6lVxO/OgQqQJZzPeDWiT",
+                            Password = "8TmZ94UJv6zkZntGk0IQ0DZgyx4YzW3p|1000|CQ/LrH+yplj0rGTBGbmJihBwTMKeHXId",
                             UserName = "admin"
                         });
                 });

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Authentication.Data.Models.Domain;
 using Authentication.Host.Models;
 using Authentication.Host.Results;
-using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Moq;
 
@@ -24,7 +23,7 @@ namespace Authentication.Tests.AdminControllerTests.Utills
         }
 
         // Block user
-        public static IAdminService BlockUser(HttpStatusCode statusCode, string message = "")
+        public static IAdminService BlockUser(HttpStatusCode statusCode)
         {
             var userServiceFake = new Mock<IAdminService>();
 

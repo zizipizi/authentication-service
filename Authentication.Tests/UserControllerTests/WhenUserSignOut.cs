@@ -1,20 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
+﻿using System.Net;
 using System.Security.Claims;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Controllers;
-using Authentication.Host.Results.Enums;
 using Authentication.Tests.UserControllerTests.Utils;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.JsonWebTokens;
-using Moq;
-using NSV.Security.JWT;
 using Xunit;
 
 namespace Authentication.Tests.UserControllerTests
@@ -87,7 +80,7 @@ namespace Authentication.Tests.UserControllerTests
 
             var result = await userController.SignOut(tokenModel, CancellationToken.None);
 
-            result.Should().BeOfType(typeof(StatusCodeResult));
+            result.Should().Match<StatusCodeResult>(c => c.StatusCode == StatusCodes.Status503ServiceUnavailable);
         }
     }
 }

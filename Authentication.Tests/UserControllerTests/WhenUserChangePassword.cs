@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Controllers;
-using Authentication.Host.Results.Enums;
 using Authentication.Tests.UserControllerTests.Utils;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
@@ -114,8 +113,7 @@ namespace Authentication.Tests.UserControllerTests
 
             var result = await userController.ChangePassword(changePassModel, CancellationToken.None);
 
-            result.Should().BeOfType<StatusCodeResult>();
-            //Assert.IsType<NoContentResult>(result);
+            result.Should().Match<StatusCodeResult>(c => c.StatusCode == StatusCodes.Status503ServiceUnavailable);
         }
 
     }

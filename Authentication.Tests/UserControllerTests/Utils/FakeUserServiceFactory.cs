@@ -1,13 +1,9 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Threading;
-using System.Threading.Tasks;
 using Authentication.Host.Models;
 using Authentication.Host.Results;
-using Authentication.Host.Results.Enums;
 using Authentication.Host.Services;
 using Moq;
-using NSV.Security.JWT;
 
 namespace Authentication.Tests.UserControllerTests.Utils
 {

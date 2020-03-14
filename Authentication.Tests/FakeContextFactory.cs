@@ -1,18 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Authentication.Data.Models;
 using Authentication.Data.Models.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using Moq;
 
 namespace Authentication.Tests
-{
+{ 
     public static class FakeContextFactory
     {
         #region GetUserById
@@ -87,19 +81,30 @@ namespace Authentication.Tests
             {
                 Login = "Login",
                 Password = "Password",
-                Id = userId
             };
 
             var user2 = new UserEntity
             {
                 Login = "Login2",
                 Password = "Password2",
-                Id = userId + 1
             };
 
             context.Add(user);
             context.Add(user2);
             context.SaveChanges();
+
+            return context;
+        }
+
+        public static AuthContext GetUserByName_NotFound()
+        {
+            var options = new DbContextOptionsBuilder<AuthContext>()
+                .UseInMemoryDatabase(databaseName: "Get_User_By_Name_NotFound")
+                .Options;
+
+            AuthContext context = new AuthContext(options);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
 
             return context;
         }
@@ -123,10 +128,10 @@ namespace Authentication.Tests
             return context;
         }
 
-        public static AuthContext CreateUser_EntityException()
+        public static AuthContext CreateUser_UserExist()
         {
             var options = new DbContextOptionsBuilder<AuthContext>()
-                .UseInMemoryDatabase(databaseName: "CreateUser_Exception")
+                .UseInMemoryDatabase(databaseName: "CreateUser_Exist")
                 .Options;
 
             AuthContext context = new AuthContext(options);
@@ -165,23 +170,20 @@ namespace Authentication.Tests
             return context;
         }
 
-        public static AuthContext BlockUser_EntityException(out long userId)
+        public static AuthContext BlockUser_UserNotFound()
         {
             var options = new DbContextOptionsBuilder<AuthContext>()
-                .UseInMemoryDatabase(databaseName: "BlockUser_Ok")
+                .UseInMemoryDatabase(databaseName: "BlockUser_UserNotFound")
                 .Options;
 
             AuthContext context = new AuthContext(options);
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
-            userId = context.Users.Max(c => c.Id) + 1;
-
             var user = new UserEntity
             {
                 Login = "Login",
                 Password = "Password",
-                Id = userId,
                 IsActive = true
             };
 
@@ -190,8 +192,38 @@ namespace Authentication.Tests
 
             return context;
         }
-        #endregion
 
+        public static AuthContext BlockUser_Exception()
+        {
+            //var options = new DbContextOptionsBuilder<AuthContext>()
+            //    .UseInMemoryDatabase(databaseName: "BlockUser_Exception")
+            //    .Options;
+
+            //AuthContext context = new AuthContext(options);
+            //context.Database.EnsureDeleted();
+            //context.Database.EnsureCreated();
+
+            //var user = new UserEntity
+            //{
+            //    Login = "Login",
+            //    Password = "Password",
+            //    IsActive = true
+            //};
+
+            //context.Users.Add(user);
+            //context.SaveChanges();
+            var context = new Mock<AuthContext>();
+            var dbSet = new Mock<DbSet<UserEntity>>();
+
+            dbSet.As<IQueryable<UserEntity>>().Setup(c => c.GetEnumerator())
+                .Throws(new Exception("asd"));
+
+            context.Setup(c => c.Users).Returns(dbSet.Object);
+
+
+            return context.Object;
+        }
+        #endregion
 
         #region UpdateUserPassword
 
@@ -412,8 +444,54 @@ namespace Authentication.Tests
             return context;
         }
 
-        
-
         #endregion
+
+        public static AuthContext BlockRefreshToken_Ok(out string refreshJti)
+        {
+            var options = new DbContextOptionsBuilder<AuthContext>()
+                .UseInMemoryDatabase(databaseName: "Block_Refresh_Token_Ok")
+                .Options;
+
+            AuthContext context = new AuthContext(options);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
+            var user = new UserEntity
+            {
+                Login = "Login",
+                Password = "Password",
+                IsActive = true
+            };
+
+            context.Users.Add(user);
+            context.SaveChanges();
+
+            refreshJti = "1234567890-0987654321-1234567890";
+
+            var refreshToken = new RefreshTokenEntity
+            {
+                Created = DateTime.Now,
+                Expired = DateTime.Now.AddMinutes(15),
+                IsBlocked = false,
+                Jti = refreshJti,
+                Token = "laksddfkjsdfjsdkfljsdkfjwioef",
+                User = user
+            };
+
+            var accessToken = new AccessTokenEntity
+            {
+                Created = DateTime.Now,
+                Exprired = DateTime.Now.AddMinutes(30),
+                RefreshToken = refreshToken,
+                Token = "asdasdasda213213",
+                User = user
+            };
+
+            context.RefreshTokens.Add(refreshToken);
+            context.AccessTokens.Add(accessToken);
+            context.SaveChanges();
+
+            return context;
+        }
     }
 }
