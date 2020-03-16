@@ -34,7 +34,7 @@ namespace Authentication.Host.Repositories
                 {
                     var accessTokenEntityWithoutRefresh = new AccessTokenEntity
                     {
-                        Created = DateTime.Now,
+                        Created = DateTime.UtcNow,
                         Exprired = tokenModel.AccessToken.Expiration,
                         Token = tokenModel.AccessToken.Value,
                         UserId = userId,
@@ -83,21 +83,22 @@ namespace Authentication.Host.Repositories
             }
         }
 
-        public async Task<Result<AuthRepositoryResult, User>> GetUserByNameAsync(string userName, CancellationToken cancelationToken)
+        public async Task<Result<AuthRepositoryResult, User>> GetUserByNameAsync(string userName, CancellationToken cancellationToken)
         {
-            UserEntity userEntity;
             try
             {
+                UserEntity userEntity;
+
                 userEntity = await _context.Users
                     .AsNoTracking()
                     .Include(p => p.Roles)
                     .ThenInclude(p => p.RoleEn)
-                    .SingleOrDefaultAsync(obj => obj.Login == userName, cancelationToken);
+                    .SingleOrDefaultAsync(obj => obj.Login == userName, cancellationToken);
 
                 if (userEntity == null)
                     return new Result<AuthRepositoryResult, User>(AuthRepositoryResult.UserNotFound);
 
-                return new Result<AuthRepositoryResult, User>(AuthRepositoryResult.Ok, userEntity.ToDomain());
+                return new Result<AuthRepositoryResult, User>(AuthRepositoryResult.Ok, userEntity.ToUserModel());
             }
             catch (Exception ex)
             {

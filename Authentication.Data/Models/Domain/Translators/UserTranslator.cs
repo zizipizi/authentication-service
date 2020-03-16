@@ -6,7 +6,7 @@ namespace Authentication.Data.Models.Domain.Translators
 {
     public static class UserTranslator
     {
-        public static User ToDomain(this UserEntity entity)
+        public static User ToUserModel(this UserEntity entity)
         {
             if (entity == null)
                 return null;

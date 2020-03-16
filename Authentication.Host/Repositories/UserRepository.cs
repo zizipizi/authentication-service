@@ -29,10 +29,10 @@ namespace Authentication.Host.Repositories
 
         public async Task<Result<UserRepositoryResult, User>> GetUserByIdAsync(long id, CancellationToken token)
         {
-            UserEntity user;
             try
             {
-                 user = await _context.Users
+                UserEntity user;
+                user = await _context.Users
                     .AsNoTracking()
                     .Include(p => p.Roles)
                     .ThenInclude(p => p.RoleEn)
@@ -40,7 +40,7 @@ namespace Authentication.Host.Repositories
 
                  return user == null 
                      ? new Result<UserRepositoryResult, User>(UserRepositoryResult.UserNotFound) 
-                     : new Result<UserRepositoryResult, User>(UserRepositoryResult.Ok, user.ToDomain());
+                     : new Result<UserRepositoryResult, User>(UserRepositoryResult.Ok, user.ToUserModel());
             }
             catch (Exception ex)
             {
@@ -60,7 +60,7 @@ namespace Authentication.Host.Repositories
                 token.IsBlocked = true;
                 await _context.SaveChangesAsync(cancellationToken);
 
-                return new Result<UserRepositoryResult, TokenModel>(UserRepositoryResult.Ok, token.toTokenModel());
+                return new Result<UserRepositoryResult, TokenModel>(UserRepositoryResult.Ok, token.ToTokenModel());
             }
             catch (Exception ex)
             {
@@ -82,7 +82,7 @@ namespace Authentication.Host.Repositories
                 foreach (var token in tokens)
                 {
                     token.IsBlocked = true;
-                    tokenList.Add(token.toTokenModel());
+                    tokenList.Add(token.ToTokenModel());
                 }
 
                 await _context.SaveChangesAsync(cancellationToken);

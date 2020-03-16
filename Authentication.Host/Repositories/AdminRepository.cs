@@ -79,7 +79,7 @@ namespace Authentication.Host.Repositories
                 var userTokens = await _context.RefreshTokens
                     .AsNoTracking()
                     .Where(c => c.UserId == id && c.IsBlocked != true && c.Expired > DateTime.UtcNow)
-                    .Select(c => c.toTokenModel()).ToListAsync(cancellationToken);
+                    .Select(c => c.ToTokenModel()).ToListAsync(cancellationToken);
 
                 await _context.SaveChangesAsync(cancellationToken);
 
@@ -106,7 +106,7 @@ namespace Authentication.Host.Repositories
                 var userTokens = await _context.RefreshTokens
                     .AsNoTracking()
                     .Where(c => c.UserId == id && c.IsBlocked != true && c.Expired > DateTime.UtcNow)
-                    .Select(c => c.toTokenModel())
+                    .Select(c => c.ToTokenModel())
                     .ToListAsync(cancellationToken);
 
                 await _context.SaveChangesAsync(cancellationToken);
@@ -128,7 +128,7 @@ namespace Authentication.Host.Repositories
                     .AsNoTracking()
                     .Include(s => s.Roles)
                     .ThenInclude(s => s.RoleEn)
-                    .Select(u => u.ToDomain())
+                    .Select(u => u.ToUserModel())
                     .ToListAsync(cancellationToken);
 
                 return new Result<AdminRepositoryResult, IEnumerable<User>>(AdminRepositoryResult.Ok, users);

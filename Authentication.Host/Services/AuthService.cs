@@ -61,7 +61,7 @@ namespace Authentication.Host.Services
             
             await _authRepository.AddTokensAsync(userResult.Model.Id, newTokens.Tokens, model.IpAddress, cancellationToken);
 
-            return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.OK, newTokens.Tokens.toBodyTokenModel());
+            return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.OK, newTokens.Tokens.ToBodyTokenModel());
         }
 
         public async Task<Result<HttpStatusCode, BodyTokenModel>> RefreshToken(BodyTokenModel model, CancellationToken cancellationToken)
@@ -80,7 +80,7 @@ namespace Authentication.Host.Services
                 if (addToken.Value != AuthRepositoryResult.Ok)
                     return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.ServiceUnavailable, message: "Please, try again");
 
-                return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.OK, validateResult.Tokens.toBodyTokenModel());
+                return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.OK, validateResult.Tokens.ToBodyTokenModel());
             }
 
             return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.Unauthorized, message: validateResult.Result.ToString());

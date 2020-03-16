@@ -41,7 +41,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Authentication.Data\Authentication.Data.csproj" />
-    <ProjectReference Include="..\Processing.Kafka\Processing.Kafka.Protobuf\Processing.Kafka.Protobuf.csproj" />
     <ProjectReference Include="..\Processing.Kafka\Processing.Kafka\Processing.Kafka.csproj" />
   </ItemGroup>
 

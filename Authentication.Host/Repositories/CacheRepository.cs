@@ -17,6 +17,7 @@ namespace Authentication.Host.Repositories
         private readonly AuthContext _context;
         private readonly IDistributedCache _cache;
         private readonly ILogger _logger;
+        private const string blackList = "blacklist";
 
         public CacheRepository(IDistributedCache cache,AuthContext context, ILogger<CacheRepository> logger = null)
         {
@@ -28,7 +29,7 @@ namespace Authentication.Host.Repositories
         {
             try
             {
-                var result = await _cache.GetAsync($"blacklist:{refreshJti}", cancellationToken);
+                var result = await _cache.GetAsync($"{blackList}:{refreshJti}", cancellationToken);
 
                 return result != null 
                     ? new Result<CacheRepositoryResult>(CacheRepositoryResult.IsBlocked) 
@@ -47,7 +48,7 @@ namespace Authentication.Host.Repositories
             {
                 foreach (var token in tokens)
                 {
-                    await _cache.SetStringAsync($"blacklist:{token.RefreshToken.Value}", token.RefreshToken.Value,
+                    await _cache.SetStringAsync($"{blackList}:{token.RefreshToken.Value}", token.RefreshToken.Value,
                         new DistributedCacheEntryOptions
                         {
                             AbsoluteExpiration = token.RefreshToken.Expiration
@@ -67,7 +68,7 @@ namespace Authentication.Host.Repositories
         {
             try
             {
-                await _cache.SetStringAsync($"blacklist:{token.RefreshToken.Jti}", token.RefreshToken.Jti, new DistributedCacheEntryOptions
+                await _cache.SetStringAsync($"{blackList}:{token.RefreshToken.Jti}", token.RefreshToken.Jti, new DistributedCacheEntryOptions
                 {
                     AbsoluteExpiration = token.RefreshToken.Expiration
                 }, cancellationToken);

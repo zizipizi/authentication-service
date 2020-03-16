@@ -96,7 +96,7 @@ namespace Authentication.Host.Services
 
             var newTokens = _jwtService.IssueAccessToken(user.Model.Id.ToString(), user.Model.Login, user.Model.Role);
             
-            return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.OK, model: newTokens.Tokens.toBodyTokenModel());
+            return new Result<HttpStatusCode, BodyTokenModel>(HttpStatusCode.OK, model: newTokens.Tokens.ToBodyTokenModel());
         }
 
         //==================================================================

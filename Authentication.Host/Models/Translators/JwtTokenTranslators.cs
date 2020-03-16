@@ -6,7 +6,7 @@ namespace Authentication.Host.Models.Translators
 {
     public static class JwtTokenTranslators
     {
-        public static BodyTokenModel toBodyTokenModel(this TokenModel model)
+        public static BodyTokenModel ToBodyTokenModel(this TokenModel model)
         {
             return new BodyTokenModel
             {
@@ -16,7 +16,7 @@ namespace Authentication.Host.Models.Translators
         }
 
         //TODO Change token.jti to accessToken.Jti
-        public static TokenModel toTokenModel(this RefreshTokenEntity token)
+        public static TokenModel ToTokenModel(this RefreshTokenEntity token)
         {
             TokenModel tokenModel;
             if (token.AccessToken == null)
