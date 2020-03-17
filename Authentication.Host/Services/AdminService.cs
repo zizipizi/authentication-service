@@ -12,6 +12,7 @@ using Authentication.Host.Results.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSV.Security.Password;
+using Processing.ControlSystem.InternalInteractionModels.InternalAuthEvent;
 using Processing.Kafka.Producer;
 
 namespace Authentication.Host.Services
@@ -21,12 +22,12 @@ namespace Authentication.Host.Services
         private readonly IAdminRepository _adminRepository;
         private readonly ICacheRepository _cacheRepository;
         private readonly IPasswordService _passwordService;
-        private readonly IProducerFactory<long, string> _kafka;
+        private readonly IProducerFactory<string, BlockedTokenModel> _kafka;
         private readonly ILogger _logger;
         public AdminService(IAdminRepository adminRepository, 
                             ICacheRepository cacheRepository, 
                             IPasswordService passwordService, 
-                            IProducerFactory<long, string> kafka,
+                            IProducerFactory<string, BlockedTokenModel> kafka,
                             ILogger<AdminService> logger = null)
         {
             _adminRepository = adminRepository;
@@ -85,9 +86,14 @@ namespace Authentication.Host.Services
 
             using (var message = _kafka.GetOrCreate("BlockedTokens"))
             {
+                var blockedTokenModel = new BlockedTokenModel();
                 foreach (var token in userBlockResult.Model)
                 {
-                    var res = await message.SendAsync(id, token.AccessToken.Value);
+                    blockedTokenModel.AccessToken = token.AccessToken.Value;
+                    blockedTokenModel.Expiration = token.AccessToken.Expiration;
+                    blockedTokenModel.UserId = id;
+
+                    var res = await message.SendAsync(token.AccessToken.Jti, blockedTokenModel);
                     if (res == ProduceResult.Failed)
                         _logger.LogError("Kafka produce failed");
                 }

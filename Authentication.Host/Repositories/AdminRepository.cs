@@ -102,6 +102,7 @@ namespace Authentication.Host.Repositories
                     return new Result<AdminRepositoryResult, IEnumerable<TokenModel>>(AdminRepositoryResult.UserNotFound);
 
                 user.IsDeleted = true;
+                user.IsActive = false;
 
                 var userTokens = await _context.RefreshTokens
                     .AsNoTracking()

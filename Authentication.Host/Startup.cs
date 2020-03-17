@@ -22,6 +22,8 @@ using Prometheus;
 using Serilog;
 using StackExchange.Redis;
 using VaultSharp.V1.AuthMethods.LDAP;
+using VaultSharp.V1.AuthMethods.Token;
+using VaultSharp.V1.AuthMethods.UserPass;
 
 namespace Authentication.Host
 {
@@ -89,16 +91,6 @@ namespace Authentication.Host
                 });
             });
 
-            
-            //Всё будет не так, надо будет переделать когда админы разберутся с Vault
-
-            services.AddVault(options =>
-            {
-                options.AuthMethod = new LDAPAuthMethodInfo("Username", "Password");
-                options.Server = "http://vaultAddress";
-                options.Port = "8200";
-            });
-
             services.AddJwt();
 
             services.AddAuthentication(options =>
@@ -136,8 +128,6 @@ namespace Authentication.Host
             {
                 app.UseDeveloperExceptionPage();
             }
-
-            app.UseVault();
 
             app.UseHealthChecks("/hc");
 

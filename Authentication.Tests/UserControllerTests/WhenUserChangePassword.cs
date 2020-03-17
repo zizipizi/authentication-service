@@ -87,8 +87,6 @@ namespace Authentication.Tests.UserControllerTests
             var tokenModel = FakeModels.FakeTokenModel();
             var changePassModel = FakeModels.FakePasswords();
 
-            var logger = new Mock<ILogger<UserController>>().Object;
-
             var userService = FakeUserServiceFactory.UserChangePassword(HttpStatusCode.ServiceUnavailable, tokenModel);
             var user = new ClaimsPrincipal(new ClaimsIdentity(new []
                 {
@@ -99,7 +97,7 @@ namespace Authentication.Tests.UserControllerTests
                 }
             ));
 
-            var userController = new UserController(userService, logger)
+            var userController = new UserController(userService)
             {
                 ControllerContext = new ControllerContext()
                 {

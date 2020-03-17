@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSV.Security.JWT;
 using NSV.Security.Password;
+using Processing.ControlSystem.InternalInteractionModels.InternalAuthEvent;
 using Processing.Kafka.Producer;
 
 namespace Authentication.Host.Services
@@ -21,14 +22,14 @@ namespace Authentication.Host.Services
         private readonly IPasswordService _passwordService;
         private readonly IJwtService _jwtService;
         private readonly ICacheRepository _cacheRepository;
-        private readonly IProducerFactory<long, string> _kafka;
+        private readonly IProducerFactory<string, BlockedTokenModel> _kafka;
         private readonly ILogger _logger;
 
         public UserService(IUserRepository userRepository,
             IPasswordService passwordService, 
             IJwtService jwtService, 
             ICacheRepository cacheRepository,
-            IProducerFactory<long, string> kafka,
+            IProducerFactory<string, BlockedTokenModel> kafka,
             ILogger<UserService> logger = null
             )
         {
@@ -51,9 +52,16 @@ namespace Authentication.Host.Services
             if (isRefreshTokenBlockedResult.Value == CacheRepositoryResult.IsNotBlocked)
                 await _cacheRepository.AddRefreshTokenToBlacklistAsync(blockResult.Model, cancellationToken);
 
-            using (var message = _kafka.GetOrCreate("BlockedTokens"))
+            var blockedTokenModel = new BlockedTokenModel
             {
-                var res = await message.SendAsync(id, blockResult.Model.AccessToken.Value);
+                AccessToken = blockResult.Model.AccessToken.Value,
+                Expiration = blockResult.Model.AccessToken.Expiration,
+                UserId = id
+            };
+
+                using (var message = _kafka.GetOrCreate("BlockedTokens"))
+            {
+                var res = await message.SendAsync(blockResult.Model.AccessToken.Jti, blockedTokenModel);
                 if (res == ProduceResult.Failed)
                     _logger.LogError("Kafka produce failed");
             }
@@ -88,9 +96,14 @@ namespace Authentication.Host.Services
 
             using (var message = _kafka.GetOrCreate("BlockedTokens"))
             {
+                BlockedTokenModel blockedTokenModel = new BlockedTokenModel();
                 foreach (var token in blockAllTokensResult.Model)
                 {
-                    await message.SendAsync(id, token.AccessToken.Value);
+                    blockedTokenModel.AccessToken = token.AccessToken.Value;
+                    blockedTokenModel.Expiration = token.AccessToken.Expiration;
+                    blockedTokenModel.UserId = id;
+
+                    await message.SendAsync(token.AccessToken.Jti, blockedTokenModel);
                 }
             }
 

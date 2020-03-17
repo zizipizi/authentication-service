@@ -16,11 +16,9 @@ namespace Authentication.Host.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IAdminService _adminService;
-        private readonly ILogger _logger;
-        public AdminController(IAdminService adminService, ILogger<AdminController> logger = null)
+        public AdminController(IAdminService adminService)
         {
             _adminService = adminService;
-            _logger = logger ?? new NullLogger<AdminController>();
         }
 
         [ActionName("all")]

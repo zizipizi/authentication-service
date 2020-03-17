@@ -19,12 +19,10 @@ namespace Authentication.Host.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly ILogger _logger;
 
-        public UserController(IUserService userService, ILogger<UserController> logger = null)
+        public UserController(IUserService userService)
         {
             _userService = userService;
-            _logger = logger ?? new NullLogger<UserController>();
         }
         [ActionName("signout")]
         [HttpPost("signout")]

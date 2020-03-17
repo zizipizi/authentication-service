@@ -11,6 +11,7 @@ using FluentAssertions;
 using Moq;
 using NSV.Security.JWT;
 using NSV.Security.Password;
+using Processing.ControlSystem.InternalInteractionModels.InternalAuthEvent;
 using Processing.Kafka.Producer;
 using Xunit;
 
@@ -27,8 +28,8 @@ namespace Authentication.Tests.UserServiceTests
 
             var cacheRepo = new Mock<ICacheRepository>().Object;
 
-            var kafka = new Mock<IProducerFactory<long, string>>();
-            var producer = new Mock<IKafkaProducer<long, string>>();
+            var kafka = new Mock<IProducerFactory<string, BlockedTokenModel>>();
+            var producer = new Mock<IKafkaProducer<string, BlockedTokenModel>>();
 
             kafka.Setup(c => c.GetOrCreate(It.IsAny<string>(), null))
                 .Returns(producer.Object);
@@ -63,7 +64,7 @@ namespace Authentication.Tests.UserServiceTests
 
             var cacheRepo = new Mock<ICacheRepository>().Object;
 
-            var kafka = new Mock<IProducerFactory<long, string>>().Object;
+            var kafka = new Mock<IProducerFactory<string, BlockedTokenModel>>().Object;
 
             var userRepoOptions = new UserRepoOptionsBuilder()
                 .GetUserByIdReturns(UserRepositoryResult.Ok)
@@ -92,7 +93,7 @@ namespace Authentication.Tests.UserServiceTests
             var passwordService = new Mock<IPasswordService>().Object;
             var jwtService = new Mock<IJwtService>().Object;
             var cacheRepo = new Mock<ICacheRepository>().Object;
-            var kafka = new Mock<IProducerFactory<long, string>>().Object;
+            var kafka = new Mock<IProducerFactory<string, BlockedTokenModel>>().Object;
 
             var userRepoOptions = new UserRepoOptionsBuilder()
                 .GetUserByIdReturns(UserRepositoryResult.Ok)
