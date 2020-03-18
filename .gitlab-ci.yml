@@ -2,10 +2,6 @@ image : microsoft/dotnet:latest
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  
-before_script:
-  - git submodule init
-  - git submodule update
 
 stages:
   - build
