@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using Authentication.Data.Models.Entities;
+﻿using System.Collections.Generic;
 
 namespace Authentication.Data.Models.Domain
 {
@@ -15,6 +13,8 @@ namespace Authentication.Data.Models.Domain
         public string Password { get; set; }
 
         public bool IsActive { get; set; }
+
+        public string IpAddress { get; set; } = null;
 
         public IEnumerable<string> Role { get; set; }
     }

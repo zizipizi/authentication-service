@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Host.Controllers;
 using Authentication.Host.Models;
-using Authentication.Host.Results.Enums;
 using Authentication.Tests.AuthControllerTests.Utils;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Moq;
 using Xunit;
 
 namespace Authentication.Tests.AuthControllerTests
@@ -20,33 +16,46 @@ namespace Authentication.Tests.AuthControllerTests
         [Fact]
         public async Task RefreshToken_Ok()
         {
-            var authService = FakeAuthServiceFactory.FakeRefreshToken(AuthResult.Ok);
-            var logger = new Mock<ILogger<AuthController>>().Object;
-
-
-            var authController = new AuthController(authService, logger);
-
             var bodyToken = new BodyTokenModel
             {
                 AccessToken = "ajsdasjdiaosd",
                 RefreshToken = "klfodkfokdok"
             };
+
+            var authService = FakeAuthServiceFactory.FakeRefreshToken(HttpStatusCode.OK, bodyToken);
+
+            var authController = new AuthController(authService);
 
             var result = await authController.RefreshToken(bodyToken, CancellationToken.None);
 
             result.Should().BeOfType<OkObjectResult>();
-
-            //Assert.IsType<OkObjectResult>(result);
         }
 
         [Fact]
-        public async Task RefreshToken_TokenvalidationProblem()
+        public async Task RefreshToken_TokenIsBlocked()
         {
-            var authService = FakeAuthServiceFactory.FakeRefreshToken(AuthResult.TokenValidationProblem);
-            var logger = new Mock<ILogger<AuthController>>().Object;
+            var bodyToken = new BodyTokenModel
+            {
+                AccessToken = "ajsdasjdiaosd",
+                RefreshToken = "klfodkfokdok"
+            };
+
+            var authService = FakeAuthServiceFactory.FakeRefreshToken(HttpStatusCode.Unauthorized, bodyToken);
 
 
-            var authController = new AuthController(authService, logger);
+            var authController = new AuthController(authService);
+
+            var result = await authController.RefreshToken(bodyToken, CancellationToken.None);
+
+            result.Should().BeOfType<UnauthorizedResult>();
+        }
+
+        [Fact]
+        public async Task RefreshToken_ServiceUnavailable()
+        {
+            var authService = FakeAuthServiceFactory.FakeRefreshToken(HttpStatusCode.ServiceUnavailable);
+
+            var authController = new AuthController(authService);
 
             var bodyToken = new BodyTokenModel
             {
@@ -56,57 +65,8 @@ namespace Authentication.Tests.AuthControllerTests
 
             var result = await authController.RefreshToken(bodyToken, CancellationToken.None);
 
-            result.Should().BeOfType<ConflictObjectResult>();
-
-            //Assert.IsType<ConflictObjectResult>(result);
+            result.Should().Match<StatusCodeResult>(c => c.StatusCode == StatusCodes.Status503ServiceUnavailable);
         }
-
-
-        [Fact]
-        public async Task RefreshToken_TokenExpired()
-        {
-            var authService = FakeAuthServiceFactory.FakeRefreshToken(AuthResult.TokenIsBlocked);
-            var logger = new Mock<ILogger<AuthController>>().Object;
-
-
-            var authController = new AuthController(authService, logger);
-
-            var bodyToken = new BodyTokenModel
-            {
-                AccessToken = "ajsdasjdiaosd",
-                RefreshToken = "klfodkfokdok"
-            };
-
-            var result = await authController.RefreshToken(bodyToken, CancellationToken.None);
-
-            result.Should().BeOfType<UnauthorizedObjectResult>();
-
-            //Assert.IsType<UnauthorizedObjectResult>(result);
-        }
-
-        [Fact]
-        public async Task RefreshToken_ErrorWhileRefresh()
-        {
-            var authService = FakeAuthServiceFactory.FakeRefreshToken(AuthResult.Error);
-            var logger = new Mock<ILogger<AuthController>>().Object;
-
-
-            var authController = new AuthController(authService, logger);
-
-            var bodyToken = new BodyTokenModel
-            {
-                AccessToken = "ajsdasjdiaosd",
-                RefreshToken = "klfodkfokdok"
-            };
-
-            var result = await authController.RefreshToken(bodyToken, CancellationToken.None);
-
-            result.Should().BeOfType<BadRequestObjectResult>();
-
-            //Assert.IsType<BadRequestObjectResult>(result);
-        }
-
-
 
     }
 }

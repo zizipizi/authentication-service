@@ -1,36 +1,31 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Models.Entities;
 using Authentication.Host.Repositories;
+using Authentication.Host.Results.Enums;
 using FluentAssertions;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Logging;
-using Moq;
 using NSV.Security.JWT;
 using Xunit;
 
-namespace Authentication.Tests.RepositoryTests
+namespace Authentication.Tests.RepositoryTests.AuthRepositoryTests
 {
     public class WhenAddTokens
     {
         [Fact]
-        public async Task AddTokensWithRefresh()
+        public async Task AddTokens_Ok()
         {
             var authContext = FakeContextFactory.AddTokensWithRefresh(out long id);
-            var logger = new Mock<ILogger<TokenRepository>>().Object;
-            var cache = new Mock<IDistributedCache>().Object;
 
-            var tokenRepository = new TokenRepository(authContext, logger, cache);
-            
             var refreshJti = "123123podaps123123";
             var tokenModel = new TokenModel(
                 ("asdakasdjaksjdkad", DateTime.Now.AddMinutes(15), "1231123123"),
                 ("sdfk;sldkfsdl;fksdf0", DateTime.Now.AddMinutes(30), refreshJti)
                 );
 
-            await tokenRepository.AddTokensAsync(id, tokenModel, CancellationToken.None);
+            var authRepository = new AuthRepository(authContext);
+
+            var addTokenResult = await authRepository.AddTokensAsync(id, tokenModel);
 
             var refreshToken = authContext.RefreshTokens.FirstOrDefault(c => c.Jti == refreshJti);
             var accessToken = authContext.AccessTokens.FirstOrDefault(c => c.RefreshToken == refreshToken);
@@ -38,17 +33,14 @@ namespace Authentication.Tests.RepositoryTests
             refreshToken.Should().NotBeNull();
             refreshToken.Jti.Should().BeEquivalentTo(refreshJti);
             accessToken.Should().NotBeNull();
-            //Assert.NotNull(refreshToken);
-            //Assert.Equal(refreshJti, refreshToken.Jti);
-            //Assert.NotNull(accessToken);
+            addTokenResult.Value.Should().BeEquivalentTo(AuthRepositoryResult.Ok);
         }
 
         [Fact]
-        public async Task AddTokenWithoutRefresh()
+        public async Task AddTokens_WithoutRefresh()
         {
             var authContext = FakeContextFactory.AddTokenWithoutRefresh(out var id);
-            var logger = new Mock<ILogger<TokenRepository>>().Object;
-            var cache = new Mock<IDistributedCache>().Object;
+
             var refreshJti = "123123podaps123123";
 
             var tokenModel = new TokenModel(
@@ -69,16 +61,15 @@ namespace Authentication.Tests.RepositoryTests
             authContext.RefreshTokens.Add(refreshToken);
             authContext.SaveChanges();
 
-            var tokenRepository = new TokenRepository(authContext, logger, cache);
+            var authRepository = new AuthRepository(authContext);
 
-            await tokenRepository.AddTokensAsync(id, tokenModel, CancellationToken.None);
+            var addTokensResult = await authRepository.AddTokensAsync(id, tokenModel);
 
             var accessToken = authContext.AccessTokens.FirstOrDefault(c => c.RefreshToken == refreshToken);
 
             accessToken.Should().NotBeNull();
             accessToken.Token.Should().BeEquivalentTo("asdakasdjaksjdkad");
-            //Assert.NotNull(accessToken);
-            //Assert.Equal("asdakasdjaksjdkad", accessToken.Token);
+            addTokensResult.Value.Should().BeEquivalentTo(AuthRepositoryResult.Ok);
         }
     }
 }

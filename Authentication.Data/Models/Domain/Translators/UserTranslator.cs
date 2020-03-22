@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Authentication.Data.Models.Entities;
 
 namespace Authentication.Data.Models.Domain.Translators
 {
     public static class UserTranslator
     {
-        public static User ToDomain(this UserEntity entity)
+        public static User ToUserModel(this UserEntity entity)
         {
             if (entity == null)
                 return null;
@@ -21,6 +19,30 @@ namespace Authentication.Data.Models.Domain.Translators
                 Password = entity.Password,
                 IsActive = entity.IsActive,
                 Role = entity.Roles.Select(p => p.RoleEn.Role).ToList()
+            };
+        }
+
+        public static UserInfo ToUserInfo(this UserEntity entity)
+        {
+            if (entity == null)
+                return null;
+
+            return new UserInfo
+            {
+                Id = entity.Id,
+                Login = entity.Login
+            };
+        }
+
+        public static UserInfo ToUserInfo(this User user)
+        {
+            if (user == null)
+                return null;
+
+            return new UserInfo
+            {
+                Id = user.Id,
+                Login = user.Login
             };
         }
 

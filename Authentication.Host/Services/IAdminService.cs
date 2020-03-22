@@ -1,21 +1,21 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Authentication.Data.Models.Domain;
 using Authentication.Host.Models;
 using Authentication.Host.Results;
-using Authentication.Host.Results.Enums;
 
 namespace Authentication.Host.Services
 {
     public interface IAdminService
     {
-        Task<IEnumerable<User>> GetAllAsync();
+        Task<Result<HttpStatusCode, IEnumerable<User>>> GetAllUsersAsync(CancellationToken cancellationToken = default);
 
-        Task<Result<AdminResult, UserInfo>> CreateUserAsync(UserCreateModel model, CancellationToken token);
+        Task<Result<HttpStatusCode, UserInfo>> CreateUserAsync(UserCreateModel model, CancellationToken cancellationToken = default);
 
-        Task<Result<AdminResult>> BlockUserAsync(int id, CancellationToken token);
+        Task<Result<HttpStatusCode>> BlockUserAsync(long id, CancellationToken cancellationToken = default);
 
-        Task<Result<AdminResult>> DeleteUserAsync(int id, CancellationToken token);
+        Task<Result<HttpStatusCode>> DeleteUserAsync(long id, CancellationToken cancellationToken = default);
     }
 }

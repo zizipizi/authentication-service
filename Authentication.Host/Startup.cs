@@ -1,5 +1,3 @@
-using System;
-using System.Net.Http;
 using Authentication.Data.Models;
 using Authentication.Host.Healthchecks;
 using Authentication.Host.Middlewares;
@@ -18,18 +16,14 @@ using Microsoft.OpenApi.Models;
 using NSV.Security.JWT;
 using NSV.Security.Password;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Logging;
-using Processing.Kafka.Consumer;
 using Processing.Kafka.Producer;
-using Processing.Kafka.Protobuf;
+using Processing.Kafka.Serialization;
 using Prometheus;
 using Serilog;
 using StackExchange.Redis;
-using StackExchange.Redis.Extensions.Core.Abstractions;
 using VaultSharp.V1.AuthMethods.LDAP;
+using VaultSharp.V1.AuthMethods.Token;
+using VaultSharp.V1.AuthMethods.UserPass;
 
 namespace Authentication.Host
 {
@@ -50,19 +44,22 @@ namespace Authentication.Host
             services.AddDbContext<AuthContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("Db")));
 
+            services.AddUserService();
             services.AddUserRepository();
-            services.AddTokenRepository();
 
             services.AddAuthService();
-            services.AddUserService();
+            services.AddScoped<IAuthRepository, AuthRepository>();
+
+            services.AddScoped<ICacheRepository, CacheRepository>();
+
             services.AddAdminService();
+            services.AddScoped<IAdminRepository, AdminRepository>();
 
             services.AddControllers();
 
-            services.AddSingleton(typeof(IConsumerFactory<,>), typeof(ConsumerFactory<,>));
-            services.AddSingleton(typeof(IDeserializer<>), typeof(ProtobufSerializer<>));
+            services.AddSingleton(typeof(IDeserializer<>), typeof(JsonSerializer<>));
             services.AddSingleton(typeof(IProducerFactory<,>), typeof(ProducerFactory<,>));
-            services.AddSingleton(typeof(ISerializer<>), typeof(ProtobufSerializer<>));
+            services.AddSingleton(typeof(ISerializer<>), typeof(JsonSerializer<>));
 
             services.Configure<ProducerConfigs>(Configuration.GetSection("ProducerConfigs"));
 
@@ -94,16 +91,6 @@ namespace Authentication.Host
                 });
             });
 
-            
-            //Всё будет не так, надо будет переделать когда админы разберутся с Vault
-
-            services.AddVault(options =>
-            {
-                options.AuthMethod = new LDAPAuthMethodInfo("Username", "Password");
-                options.Server = "http://vaultAddress";
-                options.Port = "8200";
-            });
-
             services.AddJwt();
 
             services.AddAuthentication(options =>
@@ -126,13 +113,13 @@ namespace Authentication.Host
                 });
 
             services.AddHttpClient();
+            services.AddHttpContextAccessor();
 
             services.AddHealthChecks()
                 .AddDbContextCheck<AuthContext>()
                 .AddRedis(redisOptions.ToString())
                 .AddPrometheus(Configuration.GetConnectionString("Prometheus"));
                 //.AddElasticsearch()
-
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -141,8 +128,6 @@ namespace Authentication.Host
             {
                 app.UseDeveloperExceptionPage();
             }
-
-            app.UseVault();
 
             app.UseHealthChecks("/hc");
 
@@ -160,12 +145,15 @@ namespace Authentication.Host
 
             app.UseRouting();
             app.UseHttpMetrics();
-            
+
             app.UseRequestCounterMetrics();
-            
+
+            app.UseForwardedHeaders();
+
             app.UseAuthentication();
             app.UseAuthorization();
-           
+            
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

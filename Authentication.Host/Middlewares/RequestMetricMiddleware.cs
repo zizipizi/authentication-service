@@ -10,7 +10,7 @@ namespace Authentication.Host.Middlewares
     {
         private readonly RequestDelegate _next;
 
-        private readonly List<string> _ignoreRequests = new List<string> { "metrics", "swagger" };
+        private readonly List<string> _ignoreRequests = new List<string> { "metrics", "swagger", "/swagger" };
 
         public RequestMetricMiddleware(RequestDelegate next)
         {
