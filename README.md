@@ -1,0 +1,1 @@
+User authentication service based on JWT tokens
